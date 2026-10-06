@@ -1,0 +1,125 @@
+/* ===========================================================================
+   设计令牌 —— 与 design/mockup.html 保持一致
+   明暗两套在这里一次定义好，M3 做深色模式时不用回头改组件
+   =========================================================================== */
+
+:root {
+  /* 品牌 */
+  --accent:        #5B76F7;
+  --accent-ink:    #4257D6;
+  --accent-soft:   #EEF1FE;
+  --accent-soft-2: #C9D3FB;   /* 选中态描边，比 soft 强一档 */
+  --accent-ring:   rgba(91, 118, 247, .28);
+
+  /* 语义色 */
+  --ok:            #3E9E76;
+  --ok-soft:       #E8F5EF;
+  --warn:          #C98A2B;
+  --warn-soft:     #FDF3E2;
+  --danger:        #CE5F5C;
+  --danger-soft:   #FCEDEC;
+
+  /* 底色与表面 */
+  --bg:            #F6F7F9;
+  --surface:       #FFFFFF;
+  --surface-hover: #FAFBFD;
+  --surface-sunken:#F1F3F7;
+  --sidebar:       #FBFCFD;
+
+  /* 描边 */
+  --border:        #E9EBF0;
+  --border-strong: #D8DCE5;
+
+  /* 文字 */
+  --text-1:        #1F2430;
+  --text-2:        #5C6472;
+  --text-3:        #8A92A0;
+
+  /* 变量别名。
+     早期样式表用的是 --ink-* / --line / --surface-2 / --r-sm 这套名字，
+     但 tokens 里只定义了 --text-* / --border / --r-inner。
+     **CSS 变量未定义时整条声明会失效**（不是退化成默认色，而是变成
+     inherit），于是深色模式下出现「有些文字看不清」—— 它们其实继承了
+     父元素的颜色。核对过：app.css 里 --ink* 被用了 14 次却从未定义。
+     这里补齐别名，两套名字都能用，不用去改一堆选择器。 */
+  --ink:        var(--text-1);
+  --ink-2:      var(--text-2);
+  --ink-3:      var(--text-3);
+  --line:       var(--border);
+  --surface-2:  var(--surface-sunken);
+  --surface-3:  var(--surface-hover);
+
+  --r-sm:  8px;
+  --r-md: 12px;
+  --dur:   var(--dur-base);
+
+  --font-mono: ui-monospace, "Cascadia Mono", "Consolas",
+               "Microsoft YaHei UI", monospace;
+
+  /* 圆角 */
+  --r-card:  14px;
+  --r-inner: 10px;
+  --r-pill:  999px;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, .04);
+  --shadow-md: 0 4px 14px rgba(16, 24, 40, .07);
+
+  /* 动效：全部 <= 260ms，避免拖沓 */
+  --ease:      cubic-bezier(.32, .72, 0, 1);
+  --dur-fast:  140ms;
+  --dur-base:  180ms;
+  --dur-page:  220ms;
+  --dur-row:   260ms;
+
+  /* 字号。
+     原来 --fs-small 只有 11.5px，界面上大量说明文字都用它，偏小。
+     整体上调约 1px，同时保证行高不变得太挤。 */
+  --fs-title:  20px;
+  --fs-body:   13.5px;
+  --fs-small:  12.5px;
+
+  --font: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI",
+          "Microsoft YaHei", system-ui, sans-serif;
+  --font-num: "Segoe UI Variable Text", "Segoe UI", ui-monospace, monospace;
+}
+
+/* ---------------------------------------------------------------- 深色 */
+[data-theme="dark"] {
+  --accent:        #7C92FF;
+  --accent-ink:    #A8B8FF;
+  --accent-soft:   #232842;
+  --accent-soft-2: #3A4270;
+  --accent-ring:   rgba(124, 146, 255, .32);
+
+  --ok:            #55B98C;
+  --ok-soft:       #1B2E26;
+  --warn:          #D9A24E;
+  --warn-soft:     #322717;
+  --danger:        #E47975;
+  --danger-soft:   #35211F;
+
+  --bg:            #14161B;
+  --surface:       #1B1E25;
+  --surface-hover: #21252E;
+  --surface-sunken:#111318;
+  --sidebar:       #171A20;
+
+  --border:        #272B34;
+  --border-strong: #363B47;
+
+  --text-1:        #E8EAF0;
+  --text-2:        #AAB2C0;
+  /* 深色下原来这个值是 #6E7684，对背景的对比度只有约 3.9:1，
+     而它大量用在小字上（小字要 4.5:1）。调亮到约 5.9:1。 */
+  --text-3:        #8E97A8;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, .4);
+}
+
+/* 尊重系统的「减少动态效果」设置 */
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-fast: 0ms; --dur-base: 0ms; --dur-page: 0ms; --dur-row: 0ms; }
+  * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}

@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GameBoost Next — UI 草图</title>
+<style>
+/* ============================================================
+   GameBoost Next — UI 设计草图
+   ------------------------------------------------------------
+   这是设计原型（静态数据），用于确认观感、排版与动效。
+   设计语言：柔和、留白舒展、低对比度描边、克制的强调色。
+   ============================================================ */
+
+/* ---------- 设计令牌 ---------- */
+:root{
+  --bg:#F6F7F9;
+  --surface:#FFFFFF;
+  --surface-2:#FBFCFD;
+  --surface-hover:#F7F8FB;
+  --border:#E9EBF0;
+  --border-strong:#DFE2E9;
+
+  --text:#1F2430;
+  --text-2:#5C6472;
+  --text-3:#98A0AD;
+
+  --accent:#5B76F7;
+  --accent-ink:#4257D6;
+  --accent-soft:#EEF1FE;
+  --accent-soft-2:#E3E8FD;
+
+  --ok:#3E9E76;      --ok-soft:#E9F6F0;
+  --warn:#C98A2B;    --warn-soft:#FBF3E4;
+  --danger:#CE5F5C;  --danger-soft:#FBEDEC;
+
+  --shadow-sm:0 1px 2px rgba(16,24,40,.04);
+  --shadow-md:0 1px 2px rgba(16,24,40,.04), 0 8px 22px rgba(16,24,40,.06);
+  --shadow-pop:0 12px 32px rgba(16,24,40,.14);
+
+  --r-card:14px;
+  --r-ctl:10px;
+  --r-pill:999px;
+
+  --ease:cubic-bezier(.32,.72,0,1);   /* 柔和收尾，不弹跳 */
+  --dur:.22s;
+  --dur-fast:.14s;
+}
+html[data-theme="dark"]{
+  --bg:#14161B;
+  --surface:#1B1E25;
+  --surface-2:#20242C;
+  --surface-hover:#232833;
+  --border:#2A2F3A;
+  --border-strong:#353B48;
+
+  --text:#E8EAF0;
+  --text-2:#A7AEBD;
+  --text-3:#727A8A;
+
+  --accent:#7C93FF;
+  --accent-ink:#9AACFF;
+  --accent-soft:#232A44;
+  --accent-soft-2:#2B3355;
+
+  --ok:#57BE92;      --ok-soft:#1C2E27;
+  --warn:#DDA84C;    --warn-soft:#2E2718;
+  --danger:#E47975;  --danger-soft:#2E1F1F;
+
+  --shadow-sm:0 1px 2px rgba(0,0,0,.24);
+  --shadow-md:0 1px 2px rgba(0,0,0,.24), 0 8px 22px rgba(0,0,0,.32);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",
+              system-ui,-apple-system,sans-serif;
+  font-size:14px; line-height:1.6;
+  color:var(--text); background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+  transition:background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+svg{display:block;flex:none}
+
+/* ---------- 外壳 ---------- */
+.app{display:flex;height:100vh}
+
+/* ---------- 侧栏 ---------- */
+.sidebar{
+  width:212px;flex:none;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:14px 12px;
+  transition:background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 16px}
+.brand-mark{
+  width:30px;height:30px;border-radius:9px;flex:none;overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+.brand-mark img{width:100%;height:100%;display:block}
+.brand-name{font-size:14px;font-weight:600;letter-spacing:.2px}
+.brand-sub{font-size:11px;color:var(--text-3);margin-top:-3px}
+
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav-item{
+  position:relative;display:flex;align-items:center;gap:10px;
+  height:38px;padding:0 10px;border-radius:var(--r-ctl);
+  color:var(--text-2);font-size:13.5px;
+  transition:background var(--dur-fast) var(--ease),
+             color var(--dur-fast) var(--ease);
+}
+.nav-item:hover{background:var(--surface-hover);color:var(--text)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent-ink);font-weight:550}
+.nav-item .bar{
+  position:absolute;left:-12px;top:50%;width:3px;height:0;
+  background:var(--accent);border-radius:0 3px 3px 0;
+  transform:translateY(-50%);
+  transition:height var(--dur) var(--ease);
+}
+.nav-item.active .bar{height:18px}
+.nav-item svg{opacity:.85}
+.nav-item.active svg{opacity:1}
+
+.sidebar-foot{margin-top:auto;padding:10px 8px 2px;border-top:1px solid var(--border)}
+.theme-btn{
+  display:flex;align-items:center;gap:8px;width:100%;
+  height:34px;padding:0 8px;border-radius:var(--r-ctl);
+  color:var(--text-2);font-size:12.5px;
+  transition:background var(--dur-fast) var(--ease);
+}
+.theme-btn:hover{background:var(--surface-hover);color:var(--text)}
+
+/* ---------- 主区 ---------- */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{
+  height:52px;flex:none;display:flex;align-items:center;gap:10px;
+  padding:0 20px;border-bottom:1px solid var(--border);
+  background:var(--surface);
+  transition:background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.crumb{font-size:13px;color:var(--text-3)}
+.crumb b{color:var(--text);font-weight:600}
+.topbar .spacer{flex:1}
+
+.viewport{flex:1;overflow-y:auto;overflow-x:hidden;padding:22px}
+.viewport::-webkit-scrollbar{width:10px}
+.viewport::-webkit-scrollbar-thumb{
+  background:var(--border-strong);border-radius:99px;
+  border:3px solid var(--bg);background-clip:padding-box;
+}
+.viewport::-webkit-scrollbar-thumb:hover{background:var(--text-3);background-clip:padding-box}
+
+/* ---------- 页面切换动效（核心） ---------- */
+.page{display:none}
+.page.active{display:block;animation:pageIn var(--dur) var(--ease) both}
+@keyframes pageIn{
+  from{opacity:0;transform:translateY(8px)}
+  to  {opacity:1;transform:translateY(0)}
+}
+/* 列表项逐条淡入，最多错开 5 条，避免拖沓 */
+.stagger>*{animation:rowIn .26s var(--ease) both}
+.stagger>*:nth-child(1){animation-delay:.00s}
+.stagger>*:nth-child(2){animation-delay:.03s}
+.stagger>*:nth-child(3){animation-delay:.06s}
+.stagger>*:nth-child(4){animation-delay:.09s}
+.stagger>*:nth-child(5){animation-delay:.12s}
+.stagger>*:nth-child(n+6){animation-delay:.14s}
+@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+/* ?noanim=1 —— 关掉所有动效，供截图/评审用，避免时序干扰 */
+html[data-noanim="1"] *,
+html[data-noanim="1"] *::before,
+html[data-noanim="1"] *::after{
+  animation:none !important;transition:none !important;
+}
+
+/* ---------- 通用元件 ---------- */
+.page-head{margin-bottom:18px}
+.page-title{font-size:19px;font-weight:600;letter-spacing:.2px}
+.page-desc{font-size:13px;color:var(--text-2);margin-top:3px;max-width:62ch}
+
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-card);box-shadow:var(--shadow-sm);
+  transition:background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.card+.card{margin-top:14px}
+
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  height:34px;padding:0 14px;border-radius:var(--r-ctl);
+  font-size:13px;font-weight:500;white-space:nowrap;
+  border:1px solid var(--border-strong);background:var(--surface);
+  transition:background var(--dur-fast) var(--ease),
+             border-color var(--dur-fast) var(--ease),
+             transform var(--dur-fast) var(--ease),
+             box-shadow var(--dur-fast) var(--ease);
+}
+.btn:hover{background:var(--surface-hover)}
+.btn:active{transform:scale(.985)}
+.btn-primary{
+  background:var(--accent);border-color:var(--accent);color:#fff;
+  box-shadow:0 1px 2px rgba(91,118,247,.28);
+}
+.btn-primary:hover{background:var(--accent-ink);border-color:var(--accent-ink)}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--text-2)}
+.btn-ghost:hover{background:var(--surface-hover);color:var(--text)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+.pill{
+  display:inline-flex;align-items:center;gap:4px;
+  height:20px;padding:0 8px;border-radius:var(--r-pill);
+  font-size:11.5px;font-weight:500;letter-spacing:.1px;
+}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.danger{background:var(--danger-soft);color:var(--danger)}
+
+.size{
+  font-variant-numeric:tabular-nums;font-weight:550;
+  font-size:13.5px;color:var(--text);
+}
+.size.dim{color:var(--text-3);font-weight:400}
+
+/* ---------- 开关 ---------- */
+.toggle{
+  position:relative;width:36px;height:21px;flex:none;
+  border-radius:99px;background:var(--border-strong);
+  transition:background var(--dur) var(--ease);
+}
+.toggle::after{
+  content:"";position:absolute;top:2.5px;left:2.5px;
+  width:16px;height:16px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 2px rgba(16,24,40,.2);
+  transition:transform var(--dur) var(--ease);
+}
+.toggle.on{background:var(--accent)}
+.toggle.on::after{transform:translateX(15px)}
+
+/* ---------- 功能选择列表（重点：排版舒适） ---------- */
+.group{margin-bottom:14px}
+.group-head{
+  display:flex;align-items:center;gap:9px;
+  padding:10px 16px;border-bottom:1px solid var(--border);
+}
+.group-head .chev{
+  color:var(--text-3);
+  transition:transform var(--dur) var(--ease);
+}
+.group.collapsed .chev{transform:rotate(-90deg)}
+.group-name{font-size:12.5px;font-weight:600;color:var(--text-2);letter-spacing:.3px}
+.group-meta{margin-left:auto;font-size:12px;color:var(--text-3);font-variant-numeric:tabular-nums}
+
+.rows{padding:6px}
+.group.collapsed .rows{display:none}
+
+.row{
+  display:grid;
+  grid-template-columns:auto 1fr auto auto;
+  align-items:center;gap:12px;
+  padding:11px 12px;border-radius:var(--r-ctl);
+  cursor:pointer;
+  transition:background var(--dur-fast) var(--ease);
+}
+.row:hover{background:var(--surface-hover)}
+.row.on{background:var(--accent-soft)}
+.row.on:hover{background:var(--accent-soft-2)}
+.row-main{min-width:0}
+.row-title{font-size:13.5px;font-weight:520;display:flex;align-items:center;gap:8px}
+.row-desc{
+  font-size:12px;color:var(--text-3);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.row-num{
+  font-size:12px;color:var(--text-3);
+  font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;
+}
+.row.on .row-desc{color:var(--text-2)}
+
+/* ---------- 概览卡片 ---------- */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.metric{padding:16px 18px}
+.metric-label{font-size:12.5px;color:var(--text-3);display:flex;align-items:center;gap:6px}
+.metric-value{
+  font-size:26px;font-weight:600;letter-spacing:-.4px;margin-top:6px;
+  font-variant-numeric:tabular-nums;
+}
+.metric-value small{font-size:13px;font-weight:500;color:var(--text-3);margin-left:3px}
+.metric-foot{font-size:12px;color:var(--text-3);margin-top:6px}
+
+.meter{height:7px;border-radius:99px;background:var(--border);overflow:hidden;margin-top:12px}
+.meter>i{
+  display:block;height:100%;border-radius:99px;
+  background:linear-gradient(90deg,#6D86FF,#8E7BFF);
+  transition:width .6s var(--ease);
+}
+.meter>i.warn{background:linear-gradient(90deg,#E0B45C,#D99A34)}
+.meter>i.danger{background:linear-gradient(90deg,#E58583,#D2605D)}
+
+.quick{display:flex;flex-direction:column;gap:8px;padding:14px}
+.quick-btn{
+  display:flex;align-items:center;gap:11px;
+  padding:12px 13px;border-radius:var(--r-ctl);
+  border:1px solid var(--border);
+  transition:background var(--dur-fast) var(--ease),
+             border-color var(--dur-fast) var(--ease);
+  text-align:left;width:100%;
+}
+.quick-btn:hover{background:var(--surface-hover);border-color:var(--border-strong)}
+.quick-ico{
+  width:32px;height:32px;flex:none;border-radius:9px;
+  display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-ink);
+}
+.quick-body{flex:1;min-width:0}
+.quick-t{display:block;font-size:13.5px;font-weight:520}
+.quick-d{display:block;font-size:11.5px;color:var(--text-3);margin-top:1px}
+.quick-btn .arrow{margin-left:auto;color:var(--text-3);flex:none}
+
+/* ---------- 扫描进度 ---------- */
+.scanbar{
+  display:none;align-items:center;gap:12px;
+  padding:11px 16px;border-bottom:1px solid var(--border);
+  background:var(--surface-2);
+}
+.scanbar.on{display:flex}
+.scan-text{font-size:12.5px;color:var(--text-2);min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scan-track{
+  height:5px;flex:1;border-radius:99px;background:var(--border);overflow:hidden;position:relative;
+}
+.scan-track>i{
+  position:absolute;inset:0;width:40%;border-radius:99px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  animation:shimmer 1.3s linear infinite;
+}
+@keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(320%)}}
+
+/* ---------- 底部固定操作条 ---------- */
+.actionbar{
+  flex:none;display:flex;align-items:center;gap:12px;
+  padding:12px 22px;border-top:1px solid var(--border);
+  background:color-mix(in srgb, var(--surface) 86%, transparent);
+  backdrop-filter:blur(10px);
+}
+.actionbar .sum{font-size:12.5px;color:var(--text-2);font-variant-numeric:tabular-nums}
+.actionbar .sum b{color:var(--text);font-weight:600;font-size:14px;margin:0 2px}
+.actionbar .spacer{flex:1}
+
+/* ---------- 说明条 ---------- */
+.note{
+  display:flex;gap:10px;padding:12px 14px;border-radius:var(--r-ctl);
+  background:var(--surface-2);border:1px solid var(--border);
+  font-size:12.5px;color:var(--text-2);
+}
+.note svg{color:var(--text-3);margin-top:1px}
+.note b{color:var(--text);font-weight:550}
+
+/* ---------- 小功能网格 ---------- */
+.tools{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:12px;
+  margin-bottom:14px;
+}
+.tool{
+  display:flex;gap:12px;align-items:flex-start;text-align:left;
+  padding:14px;border-radius:var(--r-card);
+  background:var(--surface);border:1px solid var(--border);
+  box-shadow:var(--shadow-sm);cursor:pointer;width:100%;
+  transition:background var(--dur-fast) var(--ease),
+             border-color var(--dur-fast) var(--ease),
+             transform var(--dur-fast) var(--ease),
+             box-shadow var(--dur-fast) var(--ease);
+}
+.tool:hover{
+  background:var(--surface-hover);border-color:var(--border-strong);
+  transform:translateY(-1px);box-shadow:var(--shadow-md);
+}
+.tool:active{transform:translateY(0) scale(.995)}
+.tool-ico{
+  width:34px;height:34px;flex:none;border-radius:10px;
+  display:grid;place-items:center;
+  background:var(--accent-soft);color:var(--accent-ink);
+}
+.tool-body{min-width:0;flex:1}
+.tool-t{
+  font-size:13.5px;font-weight:550;display:flex;align-items:center;gap:7px;
+}
+.tool-d{font-size:11.5px;color:var(--text-3);margin-top:3px;line-height:1.5}
+.tool.todo .tool-ico{background:var(--border);color:var(--text-3)}
+.tool.todo .tool-t{color:var(--text-2)}
+
+/* 添加更多 */
+.tool-add{
+  grid-column:1 / -1;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:16px;border-radius:var(--r-card);
+  border:1.5px dashed var(--border-strong);background:transparent;
+  color:var(--text-3);font-size:13px;cursor:pointer;
+  transition:border-color var(--dur-fast) var(--ease),
+             color var(--dur-fast) var(--ease),
+             background var(--dur-fast) var(--ease);
+}
+.tool-add:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+/* 草图水印（放在顶栏内，避免遮挡底部操作按钮） */
+.draft{
+  display:inline-flex;align-items:center;
+  font-size:11px;color:var(--text-3);
+  background:var(--surface-2);border:1px solid var(--border);
+  padding:3px 9px;border-radius:99px;
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= 侧栏 ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <img src="brand-mark@2x.png" alt="GameBoost">
+      </div>
+      <div>
+        <div class="brand-name">GameBoost</div>
+        <div class="brand-sub">Next · 预览</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <button class="nav-item active" data-page="home">
+        <span class="bar"></span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/>
+          <rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/>
+        </svg>
+        概览
+      </button>
+      <button class="nav-item" data-page="mem">
+        <span class="bar"></span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="6" y="6" width="12" height="12" rx="2.5"/>
+          <path d="M9.5 2v3M14.5 2v3M9.5 19v3M14.5 19v3M2 9.5h3M2 14.5h3M19 9.5h3M19 14.5h3"/>
+        </svg>
+        内存优化
+      </button>
+      <button class="nav-item" data-page="junk">
+        <span class="bar"></span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 7h16M9.5 7V5.2A1.2 1.2 0 0 1 10.7 4h2.6a1.2 1.2 0 0 1 1.2 1.2V7"/>
+          <path d="M6.5 7l.8 12.1A1.9 1.9 0 0 0 9.2 21h5.6a1.9 1.9 0 0 0 1.9-1.9L17.5 7"/>
+          <path d="M10.5 11v6M13.5 11v6"/>
+        </svg>
+        垃圾清理
+      </button>
+      <button class="nav-item" data-page="tools">
+        <span class="bar"></span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l2.2 5.3 5.8.5-4.4 3.8 1.3 5.7L12 15.4 7.1 18.3l1.3-5.7L4 8.8l5.8-.5z"/>
+        </svg>
+        小功能
+      </button>
+      <button class="nav-item" data-page="settings">
+        <span class="bar"></span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3.2"/>
+          <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 14.2H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 9 3h.1A2 2 0 1 1 13 3v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>
+        </svg>
+        设置
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <button class="theme-btn" id="themeBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+        </svg>
+        <span id="themeLabel">深色模式</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ================= 主区 ================= -->
+  <main class="main">
+    <header class="topbar">
+      <div class="crumb">GameBoost <span style="opacity:.5">/</span> <b id="crumb">概览</b></div>
+      <span class="draft">UI 草图 · 静态数据</span>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" id="adminBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3 4.5 6.2v5.3c0 4.5 3.1 8.2 7.5 9.5 4.4-1.3 7.5-5 7.5-9.5V6.2L12 3z"/>
+        </svg>
+        以管理员重启
+      </button>
+    </header>
+
+    <div class="viewport" id="viewport">
+
+      <!-- ---------- 概览 ---------- -->
+      <section class="page active" id="page-home">
+        <div class="page-head">
+          <div class="page-title">概览</div>
+          <div class="page-desc">当前的机器状态，以及可以立刻执行的操作。</div>
+        </div>
+
+        <div class="grid stagger">
+          <div class="card metric">
+            <div class="metric-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2.5"/><path d="M9.5 2v3M14.5 2v3M9.5 19v3M14.5 19v3M2 9.5h3M2 14.5h3M19 9.5h3M19 14.5h3"/></svg>
+              物理内存
+            </div>
+            <div class="metric-value">8.7<small>/ 15.4 GB</small></div>
+            <div class="meter"><i style="width:56%"></i></div>
+            <div class="metric-foot">可用 6.7 GB · 系统缓存 2.1 GB</div>
+          </div>
+
+          <div class="card metric">
+            <div class="metric-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3 1.8"/></svg>
+              磁盘空间
+            </div>
+            <div class="metric-value">18.9<small>/ 137 GB 可用</small></div>
+            <div class="meter"><i class="danger" style="width:86%"></i></div>
+            <div class="metric-foot">C 盘偏紧 · 可清理约 2.1 GB</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <div class="group-head" style="border-bottom:1px solid var(--border)">
+            <span class="group-name">快速操作</span>
+          </div>
+          <div class="quick stagger">
+            <button class="quick-btn" onclick="go('mem')">
+              <span class="quick-ico">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.2h6L10 22l9-11.4h-6.2L13 2z"/></svg>
+              </span>
+              <span class="quick-body">
+                <span class="quick-t">一键游戏加速</span>
+                <span class="quick-d">关闭后台程序 · 清理内存 · 提升帧率</span>
+              </span>
+              <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+            <button class="quick-btn" onclick="go('junk')">
+              <span class="quick-ico" style="background:var(--ok-soft);color:var(--ok)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V5.2A1.2 1.2 0 0 1 10.7 4h2.6a1.2 1.2 0 0 1 1.2 1.2V7"/><path d="M6.5 7l.8 12.1A1.9 1.9 0 0 0 9.2 21h5.6a1.9 1.9 0 0 0 1.9-1.9L17.5 7"/></svg>
+              </span>
+              <span class="quick-body">
+                <span class="quick-t">扫描磁盘垃圾</span>
+                <span class="quick-d">48 条规则 · 覆盖应用缓存与系统残留</span>
+              </span>
+              <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 内存优化 ---------- -->
+      <section class="page" id="page-mem">
+        <div class="page-head">
+          <div class="page-title">内存优化</div>
+          <div class="page-desc">选择要执行的项目，然后点右下角「一键加速」。受保护进程会自动跳过。</div>
+        </div>
+
+        <div class="card">
+          <div class="group-head">
+            <span class="group-name">优化项目</span>
+            <span class="group-meta">已选 4 项</span>
+          </div>
+          <div class="rows stagger">
+            <div class="row on" data-size="11">
+              <div class="toggle on"></div>
+              <div class="row-main">
+                <div class="row-title">关闭后台应用 <span class="pill ok">安全</span></div>
+                <div class="row-desc">从安全名单关闭云同步、Xbox 覆盖、更新器等纯后台程序</div>
+              </div>
+              <div class="row-num">预计释放<br>约 900 MB</div>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3)"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+
+            <div class="row" data-size="0">
+              <div class="toggle"></div>
+              <div class="row-main">
+                <div class="row-title">同时关闭可选应用 <span class="pill warn">谨慎</span></div>
+                <div class="row-desc">微信 / QQ / 浏览器 / Office —— 未保存的内容会丢失</div>
+              </div>
+              <div class="row-num">按当前占用<br>动态计算</div>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3)"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+
+            <div class="row on">
+              <div class="toggle on"></div>
+              <div class="row-main">
+                <div class="row-title">清理进程工作集 <span class="pill ok">安全</span></div>
+                <div class="row-desc">把闲置进程占着不用的物理内存页交还给系统</div>
+              </div>
+              <div class="row-num">约 300 MB</div>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3)"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+
+            <div class="row on">
+              <div class="toggle on"></div>
+              <div class="row-main">
+                <div class="row-title">清空待机内存列表 <span class="pill ok">安全</span> <span class="pill warn">需管理员</span></div>
+                <div class="row-desc">回收 Windows 的文件缓存，通常能腾出 1~3 GB</div>
+              </div>
+              <div class="row-num">约 2.1 GB</div>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3)"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+
+            <div class="row" data-size="0">
+              <div class="toggle"></div>
+              <div class="row-main">
+                <div class="row-title">禁用 Xbox 后台录制 · 开启游戏模式 <span class="pill ok">安全</span></div>
+                <div class="row-desc">小幅但真实的帧率提升，可随时还原</div>
+              </div>
+              <div class="row-num">—</div>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3)"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+
+            <div class="row on">
+              <div class="toggle on"></div>
+              <div class="row-main">
+                <div class="row-title">深度内存优化（PCL 同款） <span class="pill warn">谨慎</span></div>
+                <div class="row-desc">7 项系统级内核操作，降数字最猛；会带来 1~2 秒全机卡顿</div>
+              </div>
+              <div class="row-num">展开配置</div>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3)"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:22px">
+          <div class="group-head">
+            <span class="group-name">游戏进程优先级</span>
+            <span class="group-meta">当前：原神 (PID 8812)</span>
+          </div>
+          <div style="padding:14px 16px;display:flex;gap:10px;align-items:center">
+            <div class="row-num" style="text-align:left">设为</div>
+            <button class="btn">高</button>
+            <button class="btn btn-ghost">高于正常</button>
+            <div class="spacer" style="flex:1"></div>
+            <button class="btn">应用</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 垃圾清理 ---------- -->
+      <section class="page" id="page-junk">
+        <div class="page-head">
+          <div class="page-title">垃圾清理</div>
+          <div class="page-desc">只清理缓存与临时文件；不碰用户数据、不碰系统组件存储。</div>
+        </div>
+
+        <div class="card" style="overflow:hidden">
+          <div class="scanbar" id="scanbar">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.9" stroke-linecap="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
+            <span class="scan-text" id="scanText">正在扫描 Edge 缓存…</span>
+            <div class="scan-track"><i></i></div>
+          </div>
+
+          <div class="group-head">
+            <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            <span class="group-name">可清理的垃圾</span>
+            <span class="group-meta" id="junkMeta">共 48 项 · 已选 12 项</span>
+          </div>
+
+          <div class="rows stagger" id="junkRows">
+            <div class="row on">
+              <div class="toggle on"></div>
+              <div class="row-main">
+                <div class="row-title">Edge 缓存 <span class="pill ok">安全</span></div>
+                <div class="row-desc">网页缓存 / GPU / WebGPU / 着色器，覆盖所有配置文件</div>
+              </div>
+              <div class="row-num">536 MB<br>2090 文件</div>
+            </div>
+
+            <div class="row">
+              <div class="toggle"></div>
+              <div class="row-main">
+                <div class="row-title">开发构建残留 <span class="pill warn">谨慎</span></div>
+                <div class="row-desc">node_modules / __pycache__ / venv —— 可重建，但下次构建要重装依赖</div>
+              </div>
+              <div class="row-num">1.09 GB<br>245 目录</div>
+            </div>
+
+            <div class="row on">
+              <div class="toggle on"></div>
+              <div class="row-main">
+                <div class="row-title">其他应用缓存与日志 <span class="pill ok">安全</span></div>
+                <div class="row-desc">社区规则库覆盖的上千个应用（本机命中 23 个目录）</div>
+              </div>
+              <div class="row-num">875 MB<br>451 文件</div>
+            </div>
+
+            <div class="row on">
+              <div class="toggle on"></div>
+              <div class="row-main">
+                <div class="row-title">用户临时文件 <span class="pill ok">安全</span></div>
+                <div class="row-desc">程序运行时留下的临时文件，删完系统自动重建</div>
+              </div>
+              <div class="row-num">161 MB<br>2332 文件</div>
+            </div>
+
+            <div class="row on">
+              <div class="toggle on"></div>
+              <div class="row-main">
+                <div class="row-title">WeGame 缓存与日志 <span class="pill warn">谨慎</span></div>
+                <div class="row-desc">已跳过反作弊目录（tenprotect / AntiCheatExpert）</div>
+              </div>
+              <div class="row-num">46.9 MB<br>504 文件</div>
+            </div>
+
+            <div class="row">
+              <div class="toggle"></div>
+              <div class="row-main">
+                <div class="row-title">组件存储清理 (DISM) <span class="pill warn">谨慎</span> <span class="pill warn">需管理员</span></div>
+                <div class="row-desc">微软官方唯一安全的 WinSxS 清理方式，耗时 5~20 分钟</div>
+              </div>
+              <div class="row-num">WinSxS 现占<br>18.5 GB</div>
+            </div>
+
+            <div class="row">
+              <div class="toggle"></div>
+              <div class="row-main">
+                <div class="row-title">回收站 <span class="pill danger">不可恢复</span></div>
+                <div class="row-desc">清空后无法还原，默认不勾选</div>
+              </div>
+              <div class="row-num">69 KB<br>24 项</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-bottom:22px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+          <div><b>正在被占用的文件会自动跳过</b>，不会强制删除；扫描后为空的项（本机没装的软件）默认隐藏。</div>
+        </div>
+      </section>
+
+      <!-- ---------- 小功能 ---------- -->
+      <section class="page" id="page-tools">
+        <div class="page-head">
+          <div class="page-title">小功能</div>
+          <div class="page-desc">
+            已确定的四项工具箱功能。每项都只做「查看 + 可控操作」，不做自动处置。
+          </div>
+        </div>
+
+        <div class="tools stagger">
+          <button class="tool">
+            <span class="tool-ico">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v9"/><path d="M6.5 6.5a8 8 0 1 0 11 0"/></svg>
+            </span>
+            <span class="tool-body">
+              <span class="tool-t">启动项管理</span>
+              <span class="tool-d">
+                列出注册表 Run / 启动文件夹 / 计划任务里的自启项。
+                禁用前先备份原值，可一键还原；不删除任何东西。
+              </span>
+            </span>
+          </button>
+
+          <button class="tool">
+            <span class="tool-ico" style="background:var(--warn-soft);color:var(--warn)">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="5" rx="2"/><path d="M7 8.5h.01M7 16.5h.01"/></svg>
+            </span>
+            <span class="tool-body">
+              <span class="tool-t">硬件与磁盘健康</span>
+              <span class="tool-d">
+                CPU / 显卡 / 内存条 / 主板 / 硬盘速览，含硬盘 SMART
+                通电时长、通电次数与健康状态。
+              </span>
+            </span>
+          </button>
+
+          <button class="tool">
+            <span class="tool-ico" style="background:var(--ok-soft);color:var(--ok)">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h7l2 2h9v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 13h6"/></svg>
+            </span>
+            <span class="tool-body">
+              <span class="tool-t">大文件查找</span>
+              <span class="tool-d">
+                按体积排序找出占空间的大文件（可设阈值、可指定目录）。
+                <b>只列出不删除</b>，需要清理时引导到资源管理器自己处理。
+              </span>
+            </span>
+          </button>
+
+          <button class="tool">
+            <span class="tool-ico" style="background:var(--warn-soft);color:var(--warn)">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="11" height="11" rx="2"/><rect x="10" y="10" width="11" height="11" rx="2"/></svg>
+            </span>
+            <span class="tool-body">
+              <span class="tool-t">重复文件查找</span>
+              <span class="tool-d">
+                先按大小分组、再对同大小文件算哈希，避免全盘哈希拖慢速度。
+                <b>默认只列出，不自动勾选</b>；重复文件未必是垃圾，取舍权在你。
+              </span>
+            </span>
+          </button>
+
+          <button class="tool-add">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            以后想到再加，告诉我名字即可
+          </button>
+        </div>
+
+        <div class="note" style="margin-bottom:22px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+          <div>
+            这四项的共同点：<b>只读为主，写操作都可还原</b>。
+            「大文件查找」「重复文件查找」全程不删任何东西；
+            「启动项管理」的禁用可一键还原；硬件信息只读。
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 设置 ---------- -->
+      <section class="page" id="page-settings">
+        <div class="page-head">
+          <div class="page-title">设置</div>
+          <div class="page-desc">清理规则、保护名单与运行选项。</div>
+        </div>
+
+        <div class="card">
+          <div class="group-head"><span class="group-name">运行选项</span></div>
+          <div class="rows stagger">
+            <div class="row on"><div class="toggle on"></div>
+              <div class="row-main"><div class="row-title">启动时自动检查管理员权限</div>
+              <div class="row-desc">没有权限时在顶部给出提示，不影响其他功能</div></div>
+              <div class="row-num">开</div></div>
+            <div class="row"><div class="toggle"></div>
+              <div class="row-main"><div class="row-title">关闭窗口时最小化到托盘</div>
+              <div class="row-desc">而不是直接退出</div></div>
+              <div class="row-num">关</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="group-head"><span class="group-name">保护名单</span>
+            <span class="group-meta">159 个进程 · 17 个目录</span></div>
+          <div class="rows">
+            <div class="row"><div style="width:36px"></div>
+              <div class="row-main"><div class="row-title">系统核心 / 杀毒软件 / 输入法 / 驱动</div>
+              <div class="row-desc">火绒 · HipsDaemon、向日葵 · AweSun、Windows Defender…</div></div>
+              <div class="row-num">只读</div>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3)"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+            <div class="row"><div style="width:36px"></div>
+              <div class="row-main"><div class="row-title">反作弊与隐私数据</div>
+              <div class="row-desc">反作弊进程、Cookie / 历史 / 密码 / 书签 —— 永不触碰</div></div>
+              <div class="row-num">只读</div>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3)"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /viewport -->
+
+    <!-- 底部操作条 -->
+    <div class="actionbar" id="actionbar">
+      <div class="sum" id="sum">已选 <b>4</b> 项 · 预计释放 <b>3.3 GB</b></div>
+      <div class="spacer"></div>
+      <button class="btn" id="rescanBtn">重新扫描</button>
+      <button class="btn btn-primary" id="runBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.2h6L10 22l9-11.4h-6.2L13 2z"/></svg>
+        <span id="runLabel">一键加速</span>
+      </button>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   仅用于演示交互与动效；真实程序里这些逻辑由 Python 后端驱动。
+   支持 ?page=junk&theme=dark 直接定位到某个页面（方便逐页评审）
+   ============================================================ */
+
+const PAGES = {
+  home:     {crumb:'概览',     label:'一键加速', bar:true},
+  mem:      {crumb:'内存优化', label:'一键加速', bar:true},
+  junk:     {crumb:'垃圾清理', label:'开始清理', bar:true},
+  tools:    {crumb:'小功能',   label:null,       bar:false},
+  settings: {crumb:'设置',     label:null,       bar:false},
+};
+
+function go(id){
+  const btn = document.querySelector(`.nav-item[data-page="${id}"]`);
+  if(btn) btn.click();
+}
+
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    const id = item.dataset.page;
+    if(item.classList.contains('active')) return;
+
+    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+    item.classList.add('active');
+
+    // 页面交叉淡入 + 轻微上移
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    const page = document.getElementById('page-'+id);
+    void page.offsetWidth;          // 重启动画
+    page.classList.add('active');
+
+    document.getElementById('crumb').textContent = PAGES[id].crumb;
+    const label = PAGES[id].label;
+    document.getElementById('actionbar').style.display = PAGES[id].bar ? '' : 'none';
+    if(label) document.getElementById('runLabel').textContent = label;
+
+    document.getElementById('viewport').scrollTop = 0;
+    updateSum();
+  });
+});
+
+/* 开关：整行可点 */
+document.querySelectorAll('.row .toggle').forEach(t=>{
+  t.closest('.row').addEventListener('click', e=>{
+    if(e.target.closest('.toggle') !== t && !t.closest('.row').contains(e.target)) return;
+    t.classList.toggle('on');
+    t.closest('.row').classList.toggle('on');
+    updateSum();
+  });
+});
+
+function updateSum(){
+  const on = document.querySelectorAll('.page.active .row.on').length;
+  const sum = document.getElementById('sum');
+  const n = document.querySelectorAll('.page.active .group-meta').length;
+  if(document.getElementById('page-junk').classList.contains('active')){
+    sum.innerHTML = `已选 <b>${on}</b> 项 · 预计释放 <b>1.6 GB</b>`;
+  }else{
+    sum.innerHTML = `已选 <b>${on}</b> 项 · 预计释放 <b>3.3 GB</b>`;
+  }
+}
+
+/* 顶栏管理员按钮 → 模拟重启提示 */
+document.getElementById('adminBtn').addEventListener('click', function(){
+  const b = this;
+  b.style.opacity = '.5';
+  b.querySelector('svg').style.animation = 'shimmer 1s linear infinite';
+  setTimeout(()=>{ b.style.opacity=''; b.querySelector('svg').style.animation=''; }, 1400);
+});
+
+/* 扫描演示：进度条 + 逐个填充 */
+document.getElementById('rescanBtn').addEventListener('click', ()=>{
+  const nav = document.querySelector('.nav-item[data-page="junk"]');
+  if(!nav.classList.contains('active')) nav.click();
+  const bar = document.getElementById('scanbar');
+  const txt = document.getElementById('scanText');
+  const steps = ['正在扫描 Edge 缓存…','正在扫描 用户临时文件…',
+                 '正在扫描 其他应用缓存（社区规则库）…','正在统计 不能删的目录…'];
+  bar.classList.add('on');
+  let i = 0;
+  const timer = setInterval(()=>{
+    txt.textContent = steps[i % steps.length]; i++;
+    if(i > steps.length + 2){
+      clearInterval(timer);
+      bar.classList.remove('on');
+      document.getElementById('junkMeta').textContent = '共 48 项 · 已选 12 项 · 合计 2.1 GB';
+    }
+  }, 900);
+});
+
+/* 深浅色切换 */
+document.getElementById('themeBtn').addEventListener('click', ()=>{
+  const html = document.documentElement;
+  const dark = html.dataset.theme === 'dark';
+  html.dataset.theme = dark ? 'light' : 'dark';
+  document.getElementById('themeLabel').textContent = dark ? '深色模式' : '浅色模式';
+});
+
+/* URL 参数：?page=junk&theme=dark —— 便于逐页评审与截图 */
+(function(){
+  const q = new URLSearchParams(location.search);
+  if(q.get('noanim')) document.documentElement.dataset.noanim = '1';
+  const theme = q.get('theme');
+  if(theme === 'dark'){
+    document.documentElement.dataset.theme = 'dark';
+    document.getElementById('themeLabel').textContent = '浅色模式';
+  }
+  const page = q.get('page');
+  if(page && PAGES[page]) requestAnimationFrame(()=>go(page));
+})();
+
+updateSum();
+</script>
+</body>
+</html>

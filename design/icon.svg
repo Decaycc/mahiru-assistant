@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  GameBoost Next — 应用图标（矢量源文件 · 唯一真源）
+  ===============================================================
+  形象：卡通/Chibi 风格的银白长发、蓝瞳少女（原创矢量绘制，非抓取现成图）。
+
+  设计约束：
+    · 图标要在 16px 任务栏尺寸下仍能看出「浅发色的人物」
+      → 只保留最大色块（头发 / 脸 / 眼睛），去掉一切细节
+    · 银白头发配暖色底才跳得出来，所以底色用柔和奶油粉而非品牌靛蓝
+    · 整体压在同一色温里，小尺寸下不显脏
+
+  注意：XML 注释里禁止出现连续两个连字符，装饰线请用等号。
+  由 tools/make_icon.py 经 Edge 无头渲染为多尺寸 ICO。
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bg" x1="0.1" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#FFF4F7"/>
+      <stop offset="0.5" stop-color="#FFE3EE"/>
+      <stop offset="1" stop-color="#FFCFE1"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="0.2" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FCFCFF"/>
+      <stop offset="0.45" stop-color="#EFF1FA"/>
+      <stop offset="1" stop-color="#D6DBEC"/>
+    </linearGradient>
+    <linearGradient id="hairSide" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#EDF0F9"/>
+      <stop offset="1" stop-color="#CDD3E6"/>
+    </linearGradient>
+    <linearGradient id="iris" x1="0" y1="0" x2="0.2" y2="1">
+      <stop offset="0" stop-color="#2F5FAE"/>
+      <stop offset="0.5" stop-color="#6BA2E2"/>
+      <stop offset="1" stop-color="#C6DDF7"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.42" r="0.55">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+
+    <clipPath id="card">
+      <rect x="0" y="0" width="256" height="256" rx="58"/>
+    </clipPath>
+  </defs>
+
+  <!-- 底板 -->
+  <rect x="0" y="0" width="256" height="256" rx="58" fill="url(#bg)"/>
+  <rect x="0" y="0" width="256" height="256" rx="58" fill="url(#glow)"/>
+
+  <g clip-path="url(#card)">
+
+    <!-- 后发：长发瀑布，一路垂到底 -->
+    <path d="M32 134C32 60 74 18 128 18s96 42 96 116v124H32z" fill="url(#hair)"/>
+    <!-- 后发内侧暗面，做出层次（同时给浅色头发拉出对比） -->
+    <path d="M52 150c0-52 30-84 76-84s76 32 76 84v108H52z"
+          fill="#D3D9EE" opacity="0.72"/>
+
+    <!-- 肩与身体（略带冷调的白，避免和暖色背景糊在一起） -->
+    <path d="M62 256c0-44 30-68 66-68s66 24 66 68z" fill="#F5F9FF"/>
+    <path d="M62 256c0-44 30-68 66-68s66 24 66 68z" fill="none"
+          stroke="#DCE4F5" stroke-width="2.5"/>
+    <!-- 领口 -->
+    <path d="M106 190l22 30 22-30 12 7-34 41-34-41z" fill="#8FB3E4"/>
+    <path d="M124 196h8v44h-8z" fill="#EDF3FC" opacity="0.9"/>
+
+    <!-- 脖子（缩短 + 加下颌阴影，避免看起来像方柱） -->
+    <path d="M117 160h22v34h-22z" fill="#EBC5B2"/>
+    <path d="M117 160h22v11c-7 4-15 4-22 0z" fill="#D6A895" opacity="0.75"/>
+
+    <!-- 脸 -->
+    <ellipse cx="128" cy="116" rx="47" ry="51" fill="#FDE8DA"/>
+
+    <!-- 侧发：贴着脸颊两侧垂下 -->
+    <path d="M79 96c-11 26-13 70-9 112l20 2c-5-40-3-78 3-100z" fill="url(#hairSide)"/>
+    <path d="M177 96c11 26 13 70 9 112l-20 2c5-40 3-78-3-100z" fill="url(#hairSide)"/>
+
+    <!-- 刘海：整块发盖 + 三处发尖 -->
+    <path d="M78 126C78 70 98 48 128 48s50 22 50 78
+             c-6-16-16-14-23-26
+             c-7 16-18 10-24-2
+             c-8 16-19 14-26 2
+             c-8 14-19 12-27 26z" fill="url(#hair)"/>
+
+    <!-- 眼睛 -->
+    <g>
+      <ellipse cx="105" cy="132" rx="12.5" ry="15" fill="#2C3A56"/>
+      <ellipse cx="151" cy="132" rx="12.5" ry="15" fill="#2C3A56"/>
+      <ellipse cx="105" cy="133" rx="10.5" ry="13" fill="url(#iris)"/>
+      <ellipse cx="151" cy="133" rx="10.5" ry="13" fill="url(#iris)"/>
+      <ellipse cx="105" cy="139" rx="5" ry="5.5" fill="#1D2941"/>
+      <ellipse cx="151" cy="139" rx="5" ry="5.5" fill="#1D2941"/>
+      <ellipse cx="101" cy="127" rx="4.2" ry="4.6" fill="#FFFFFF"/>
+      <ellipse cx="147" cy="127" rx="4.2" ry="4.6" fill="#FFFFFF"/>
+      <circle cx="110" cy="140" r="2.1" fill="#FFFFFF" opacity="0.9"/>
+      <circle cx="156" cy="140" r="2.1" fill="#FFFFFF" opacity="0.9"/>
+    </g>
+
+    <!-- 眉 -->
+    <path d="M95 111c6-4 14-4 19 0" stroke="#CBD0DF" stroke-width="3"
+          fill="none" stroke-linecap="round"/>
+    <path d="M161 111c-6-4-14-4-19 0" stroke="#CBD0DF" stroke-width="3"
+          fill="none" stroke-linecap="round"/>
+
+    <!-- 腮红 -->
+    <ellipse cx="90" cy="144" rx="11" ry="6.5" fill="#F8AEBE" opacity="0.5"/>
+    <ellipse cx="166" cy="144" rx="11" ry="6.5" fill="#F8AEBE" opacity="0.5"/>
+
+    <!-- 嘴：小小的微笑 -->
+    <path d="M121 153c3.5 5 10.5 5 14 0" stroke="#D98A90" stroke-width="2.6"
+          fill="none" stroke-linecap="round"/>
+
+    <!-- 发丝高光 -->
+    <path d="M96 70c12-11 30-14 44-11" stroke="#FFFFFF" stroke-width="4.5"
+          fill="none" stroke-linecap="round" opacity="0.9"/>
+    <path d="M150 66c11 5 19 14 23 26" stroke="#FFFFFF" stroke-width="3.2"
+          fill="none" stroke-linecap="round" opacity="0.7"/>
+    <path d="M62 150c-3 30-3 62-1 92" stroke="#FFFFFF" stroke-width="3"
+          fill="none" stroke-linecap="round" opacity="0.5"/>
+    <path d="M194 150c3 30 3 62 1 92" stroke="#FFFFFF" stroke-width="3"
+          fill="none" stroke-linecap="round" opacity="0.5"/>
+
+  </g>
+
+  <!-- 极细描边，浅色背景上有边界感 -->
+  <rect x="1.5" y="1.5" width="253" height="253" rx="56.5"
+        fill="none" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="3"/>
+</svg>

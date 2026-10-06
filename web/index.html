@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mahiru小助手</title>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ==================================================== 侧栏 -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><img src="assets/brand-mark.png" alt="mahiru"></div>
+      <div>
+        <div class="brand-name">mahiru小助手</div>
+        <div class="brand-sub"><span id="ver">—</span></div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item" data-page="overview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+             stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7.5" height="7.5" rx="2"/>
+          <rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/>
+          <rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/>
+          <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/>
+        </svg>概览
+      </button>
+
+      <button class="nav-item" data-page="memory">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1
+                   M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>
+          <circle cx="12" cy="12" r="3.4"/>
+        </svg>内存优化
+      </button>
+
+      <button class="nav-item" data-page="junk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 7h16M9.5 7V5h5v2M6 7l1 13h10l1-13"/>
+        </svg>垃圾清理
+      </button>
+
+      <button class="nav-item" data-page="tools">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l2.2 5.3 5.8.5-4.4 3.8 1.3 5.7L12 15.4 7.1 18.3l1.3-5.7L4 8.8l5.8-.5z"/>
+        </svg>小功能
+      </button>
+
+      <button class="nav-item" data-page="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3.2"/>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7
+                   1.7 0 0 0-2.9 1.2v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-3-1.2l-.1.1a2
+                   2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15a2 2 0 1 1 0-4h.2a1.7 1.7
+                   0 0 0 1.2-3l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7
+                   1.7 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 3 1.2l.1-.1a2 2 0 1
+                   1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V10a1.7 1.7 0 0 0 1.5 1h.2a2 2
+                   0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1z"/>
+        </svg>设置
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <button class="nav-item" id="theme-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.5 14.3A8.5 8.5 0 1 1 9.7 3.5a6.8 6.8 0 0 0 10.8 10.8z"/>
+        </svg><span id="theme-label">深色模式</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ==================================================== 主区 -->
+  <div class="main">
+    <header class="topbar">
+      <span class="crumb" id="crumb">概览</span>
+      <div class="topbar-right">
+        <span class="badge badge-mute" id="admin-badge">检查中</span>
+        <button class="btn" id="relaunch-btn" disabled>以管理员重启</button>
+      </div>
+    </header>
+
+    <div class="viewport" id="viewport">
+
+      <!-- 启动占位 -->
+      <div class="center-note" id="boot">
+        <div class="spinner"></div>
+        <div>正在连接后端…</div>
+      </div>
+
+      <!-- ---------------------------------------------- 概览 -->
+      <section class="page" id="page-overview">
+        <h1 class="page-title">概览</h1>
+        <!-- 这里原来有一行「Python 3.12.14 · 打包运行」。
+             这类信息属于排查用，日常看没意义，挪到「设置 → 运行环境」即可。
+             保留一个隐藏节点，冒烟仍要断言它的内容，改动接口不会漏测。 -->
+        <p class="page-desc hide" id="env-note" aria-hidden="true">正在读取环境…</p>
+
+        <div class="grid-2 stagger">
+          <div class="card">
+            <div class="stat-label">物理内存</div>
+            <div class="stat-value" id="ov-mem">—</div>
+            <div class="bar" id="ov-mem-bar"><i style="width:0%"></i></div>
+            <div class="stat-foot" id="ov-mem-foot">—</div>
+          </div>
+
+          <div class="card">
+            <div class="stat-label">磁盘空间</div>
+            <div class="disk-list" id="ov-disks"><div class="muted">读取中…</div></div>
+          </div>
+
+          <div class="card">
+            <div class="stat-label">清理规则</div>
+            <div class="stat-value" id="ov-rules">—</div>
+            <div class="stat-foot" id="ov-rules-foot">—</div>
+          </div>
+
+          <div class="card">
+            <div class="stat-label">社区规则库</div>
+            <div class="stat-value" id="ov-tp">—</div>
+            <div class="stat-foot" id="ov-tp-foot">—</div>
+          </div>
+
+          <div class="card">
+            <div class="stat-label">回收站</div>
+            <div class="stat-value" id="ov-rb">—</div>
+            <div class="stat-foot" id="ov-rb-foot">—</div>
+          </div>
+
+          <div class="card">
+            <div class="stat-label">快捷操作</div>
+            <div class="quick">
+              <button class="quick-item" id="ov-to-memory">
+                <span class="quick-ico accent">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="1.8" stroke-linecap="round">
+                    <path d="M13 2 4.5 13.2h6L10 22l9-11.4h-6.2L13 2z"/>
+                  </svg>
+                </span>
+                <span class="quick-body">
+                  <b>内存优化</b>
+                  <i>查看进程占用，选择要整理或关闭的</i>
+                </span>
+                <span class="chev">›</span>
+              </button>
+              <button class="quick-item" id="ov-to-junk">
+                <span class="quick-ico ok">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 7h16M9.5 7V5h5v2M6 7l1 13h10l1-13"/>
+                  </svg>
+                </span>
+                <span class="quick-body">
+                  <b>垃圾清理</b>
+                  <i>50 条规则，覆盖应用缓存与系统残留</i>
+                </span>
+                <span class="chev">›</span>
+              </button>
+            </div>
+            <div style="margin-top:10px">
+              <button class="btn" id="ov-refresh">刷新</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 环境自检：设置页的「环境自检」按钮也会触发这里 -->
+        <div class="card" id="diag-card">
+          <div class="row-between">
+            <h2 class="section-h">环境自检</h2>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="muted" id="diag-progress"
+                    style="font-size:11.5px">未运行</span>
+              <span class="badge badge-mute" id="diag-state">未运行</span>
+              <button class="btn btn-sm" id="diag-btn">运行</button>
+            </div>
+          </div>
+          <div class="log" id="diag-log"><span class="muted">点「运行」会在后台线程里跑一遍本机环境，日志实时回传。整个过程只读，不修改任何东西。</span></div>
+        </div>
+      </section>
+
+      <!-- ---------------------------------------------- 内存优化 -->
+      <section class="page" id="page-memory" aria-hidden="true">
+        <h1 class="page-title">内存优化</h1>
+        <p class="page-desc">
+          按占用排序的进程列表。受保护的进程（杀软、反作弊、远程控制、本程序自身）
+          不会出现在可关闭范围里。
+        </p>
+
+        <!-- 权限引导：非管理员时说明哪些功能受限 -->
+        <div class="banner hide" id="admin-banner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round">
+            <path d="M12 3l8 3.5v5c0 4.6-3.2 8.4-8 9.5-4.8-1.1-8-4.9-8-9.5v-5z"/>
+            <path d="M12 9v4M12 16h.01"/>
+          </svg>
+          <div>
+            <b>当前是普通权限</b> —— 「清空待机内存列表」需要管理员，
+            关闭系统级进程也会失败。其余功能正常。
+          </div>
+          <button class="btn btn-sm" id="mem-relaunch">以管理员重启</button>
+        </div>
+
+        <!-- 最近一次动作的结果 -->
+        <div class="card result-card hide" id="mem-result"></div>
+
+        <div class="card">
+          <div class="row-between" style="margin-bottom:12px">
+            <h2 class="section-h">一键加速选项</h2>
+            <span class="muted" style="font-size:var(--fs-small)"
+                  id="mem-opts-note">勾选项会在点「一键加速」时一起执行</span>
+          </div>
+          <div class="opts" id="mem-opts">
+            <label class="opt">
+              <input type="checkbox" class="switch" data-opt="kill_safe" checked>
+              <span><b>关闭安全级后台应用</b>
+                <i>常见可关的常驻程序（如各类助手、更新器）</i></span>
+            </label>
+            <label class="opt">
+              <input type="checkbox" class="switch" data-opt="kill_optional">
+              <span><b>关闭可选级后台应用</b>
+                <i>你自己装的软件，关了可能影响正在做的事</i></span>
+            </label>
+            <label class="opt">
+              <input type="checkbox" class="switch" data-opt="trim" checked>
+              <span><b>清理进程工作集</b>
+                <i>把闲置内存还给系统，不关闭进程</i></span>
+            </label>
+            <label class="opt" id="opt-standby-row">
+              <input type="checkbox" class="switch" data-opt="standby" checked>
+              <span><b>清空待机内存列表</b>
+                <i>释放文件缓存；需要管理员。清理后首次打开软件会略慢，属正常</i></span>
+            </label>
+            <label class="opt">
+              <input type="checkbox" class="switch" data-opt="gamedvr">
+              <span><b>关闭 Xbox 后台录制 / 开启游戏模式</b>
+                <i>可还原</i></span>
+            </label>
+            <label class="opt">
+              <input type="checkbox" class="switch" data-opt="power">
+              <span><b>切换到高性能电源计划</b>
+                <i>可还原</i></span>
+            </label>
+          </div>
+          <div class="opt-actions">
+            <button class="btn" id="mem-boost">一键加速</button>
+            <button class="btn" id="mem-relaunch-closed">重启已关闭的应用</button>
+            <button class="btn" id="mem-revert">还原系统设置</button>
+          </div>
+        </div>
+
+        <!-- 游戏优先级：旧版 tkinter 的核心功能之一，这里按原判据恢复 -->
+        <div class="card" id="mem-prio">
+          <div class="row-between" style="margin-bottom:12px">
+            <h2 class="section-h">游戏优先级</h2>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="muted" id="prio-count" style="font-size:var(--fs-small)">—</span>
+              <button class="btn btn-sm" id="prio-refresh">刷新列表</button>
+            </div>
+          </div>
+
+          <div class="prio-row">
+            <select class="select prio-select" id="prio-target"></select>
+            <span class="muted">设为</span>
+            <select class="select" id="prio-level">
+              <option value="high">高</option>
+              <option value="above">高于正常</option>
+              <option value="normal">正常</option>
+              <option value="below">低于正常</option>
+              <option value="idle">低</option>
+            </select>
+            <button class="btn btn-primary" id="prio-apply">应用</button>
+            <label class="chk" title="记住后，下次游戏启动点一下「一键应用」即可">
+              <input type="checkbox" id="prio-remember"> 记住
+            </label>
+          </div>
+
+          <div class="hide" id="prio-saved-box" style="margin-top:12px">
+            <div class="stat-foot" style="margin:0 0 8px">已记住的优先级：</div>
+            <div class="prio-saved" id="prio-saved-list"></div>
+            <div style="margin-top:10px">
+              <button class="btn btn-sm" id="prio-apply-saved">一键应用到正在运行的程序</button>
+            </div>
+          </div>
+
+          <div class="stat-foot" style="margin-top:12px">
+            提升游戏进程优先级可减少卡顿（数值越高越优先占用 CPU 时间片）。
+            列表只显示<b>有窗口的程序</b> —— 后台进程混进来就没法挑了。
+            「实时」不在选项里：它会把整个系统拖卡，风险大于收益。
+          </div>
+        </div>
+
+        <!-- 深度内存优化：默认折叠，避免误触 -->
+        <details class="card deep" id="mem-deep">
+          <summary>
+            <span class="deep-title">深度内存优化（高级）</span>
+            <span class="badge badge-mute" id="mem-deep-count">7 项内核接口</span>
+            <span class="muted deep-hint">直接调用内核，降数字更猛；展开查看</span>
+          </summary>
+          <div class="deep-body">
+            <div class="note" style="margin-bottom:12px">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>
+              </svg>
+              <div>
+                这些是直接调内核的接口，效果比「整理内存」更猛，但<b>不区分进程</b>。
+                想要逐进程整理（会跳过受保护与反作弊进程），请用上面的
+                <b>一键加速 → 清理进程工作集</b>。
+              </div>
+            </div>
+            <div class="opts" id="mem-deep-opts"></div>
+            <div class="opt-actions">
+              <button class="btn btn-primary" id="mem-deep-run">执行深度优化</button>
+              <button class="btn btn-sm" id="mem-deep-safe">只勾免管理员的</button>
+              <button class="btn btn-sm" id="mem-deep-all">全选</button>
+            </div>
+          </div>
+        </details>
+
+        <div class="card pad0">
+          <div class="toolbar">
+            <label class="chk"><input type="checkbox" id="mem-all"> 全选</label>
+            <label class="chk"><input type="checkbox" id="mem-only-closable"> 只看可操作</label>
+            <input class="search" id="mem-search" placeholder="搜索进程名…">
+            <span class="spacer"></span>
+            <span class="muted" id="mem-stat">—</span>
+          </div>
+          <div class="plist" id="mem-list"></div>
+        </div>
+
+        <!-- 任务日志：动作执行时展开 -->
+        <div class="card hide" id="mem-log-card">
+          <div class="row-between">
+            <h2 class="section-h" id="mem-log-title">执行中</h2>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="muted" id="mem-log-progress"
+                    style="font-size:11.5px">—</span>
+              <span class="badge badge-warn" id="mem-log-state">运行中</span>
+              <button class="btn btn-sm" id="mem-log-cancel">取消</button>
+            </div>
+          </div>
+          <div class="log" id="mem-log"></div>
+        </div>
+      </section>
+
+      <!-- ---------------------------------------------- 垃圾清理 -->
+      <section class="page" id="page-junk" aria-hidden="true">
+        <h1 class="page-title">垃圾清理</h1>
+        <p class="page-desc">
+          共 50 条规则，按安全等级分级。<b>谨慎项默认不勾选</b> ——
+          它们能重建但有可见副作用，需要你自己确认。
+        </p>
+
+        <!-- 扫描结果汇总 -->
+        <div class="card result-card hide" id="junk-result"></div>
+
+        <div class="card pad0">
+          <div class="toolbar">
+            <button class="btn btn-sm" data-pick="default">按推荐勾选</button>
+            <button class="btn btn-sm" data-pick="safe">全选安全项</button>
+            <button class="btn btn-sm" data-pick="none">全部取消</button>
+            <input class="search" id="junk-search" placeholder="搜索规则…">
+            <span class="spacer"></span>
+            <span class="muted" id="junk-stat">—</span>
+          </div>
+          <div class="jlist" id="junk-list"></div>
+        </div>
+
+        <!-- 规则详情 -->
+        <div class="card hide" id="junk-detail-card">
+          <div class="row-between">
+            <h2 class="section-h" id="junk-detail-title">规则详情</h2>
+            <button class="btn btn-sm" id="junk-detail-close">关闭</button>
+          </div>
+          <div id="junk-detail-body"></div>
+        </div>
+
+        <!-- 任务日志 -->
+        <div class="card hide" id="junk-log-card">
+          <div class="row-between">
+            <h2 class="section-h" id="junk-log-title">执行中</h2>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="muted" id="junk-log-progress"
+                    style="font-size:11.5px">—</span>
+              <span class="badge badge-warn" id="junk-log-state">运行中</span>
+              <button class="btn btn-sm" id="junk-log-cancel">取消</button>
+            </div>
+          </div>
+          <div class="log" id="junk-log"></div>
+        </div>
+
+        <p class="hint">
+          扫描只统计不删除。清理时：占用中的文件会跳过（不做强制删除）、
+          符号链接与目录联接一律不跟随、保护清单与隐私数据在删除前逐条校验。
+        </p>
+
+        <!-- 系统级清理：不属于「文件垃圾」，但都是标准的系统维护动作 -->
+        <div class="card">
+          <div class="row-between" style="margin-bottom:12px">
+            <h2 class="section-h">系统级清理</h2>
+            <span class="muted" style="font-size:var(--fs-small)">
+              交给系统自己的工具处理，不自行删除</span>
+          </div>
+          <div class="sys-grid">
+            <div class="sys-item">
+              <div class="sys-info">
+                <b>回收站</b>
+                <i id="junk-rb-info">读取中…</i>
+              </div>
+              <button class="btn btn-sm" id="junk-rb-empty">清空回收站</button>
+            </div>
+            <div class="sys-item">
+              <div class="sys-info">
+                <b>WinSxS 组件清理（DISM）</b>
+                <i>移除被取代的旧组件。耗时可能十几分钟，期间可取消</i>
+              </div>
+              <button class="btn btn-sm" id="junk-dism">开始 DISM</button>
+            </div>
+          </div>
+          <div class="stat-foot" style="margin-top:12px">
+            WinSxS 不能手删 —— 系统用它来修复和更新自身。只能由 DISM 判断哪些
+            组件已被取代，所以这一步交给微软自己的工具。
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------------------------------------------- 小功能 -->
+      <section class="page" id="page-tools" aria-hidden="true">
+        <h1 class="page-title">小功能</h1>
+        <p class="page-desc">
+          四项工具箱功能。只做「查看 + 可控操作」，不做自动处置。
+        </p>
+
+        <!-- 选项卡：四个功能都挺长，堆在一页会很难找 -->
+        <div class="tabs" id="tools-tabs">
+          <button class="tab active" data-tool="startup">启动项管理</button>
+          <button class="tab" data-tool="hardware">硬件与磁盘</button>
+          <button class="tab" data-tool="large">大文件查找</button>
+          <button class="tab" data-tool="dup">重复文件查找</button>
+        </div>
+
+        <!-- ============================================ 启动项管理 -->
+        <div class="tool-panel" id="tool-startup">
+          <div class="card">
+            <div class="row-between" style="margin-bottom:12px">
+              <h2 class="section-h">启动项</h2>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="muted" id="startup-count" style="font-size:var(--fs-small)">—</span>
+                <button class="btn btn-sm" id="startup-refresh">刷新</button>
+              </div>
+            </div>
+            <div id="startup-list" class="entry-list"></div>
+            <div class="stat-foot" style="margin-top:12px">
+              禁用是**把项移到旁边的「禁用区」或给文件加 `.disabled` 后缀**，
+              不是删除 —— 随时能在这里还原，即使本工具没了你也能自己看明白。
+              HKLM 下的项需要管理员权限。
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================ 硬件与磁盘 -->
+        <div class="tool-panel hide" id="tool-hardware">
+          <div class="card">
+            <div class="row-between" style="margin-bottom:12px">
+              <h2 class="section-h">硬件</h2>
+              <button class="btn btn-sm" id="hw-refresh">刷新</button>
+            </div>
+            <div id="hw-body"><span class="muted">读取中…</span></div>
+          </div>
+          <div class="card" style="margin-top:14px">
+            <h2 class="section-h" style="margin-bottom:12px">磁盘健康</h2>
+            <div id="disk-body"><span class="muted">读取中…</span></div>
+            <div class="stat-foot" style="margin-top:12px">
+              SMART 的**失败预测**需要管理员权限。通电时长、重分配扇区数这类
+              细节各家厂商格式不同，Windows 也不统一提供 —— 拿不到就不显示，
+              不编造数值。
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================ 大文件查找 -->
+        <div class="tool-panel hide" id="tool-large">
+          <div class="card">
+            <div class="row-between" style="margin-bottom:12px">
+              <h2 class="section-h">大文件查找</h2>
+              <span class="badge badge-mute">只列出，不删除</span>
+            </div>
+            <div class="scan-row">
+              <label class="field">
+                <span>最小</span>
+                <input class="input" type="number" id="large-min" value="200" min="1" step="50">
+                <span class="muted">MB</span>
+              </label>
+              <span class="muted">扫描范围</span>
+              <div class="root-chips" id="large-roots"></div>
+              <button class="btn btn-primary" id="large-run">开始查找</button>
+              <button class="btn btn-sm hide" id="large-cancel">取消</button>
+            </div>
+            <div class="stat-foot" id="large-status" style="margin-top:10px">
+              找大文件是只读操作。想删哪个自己去资源管理器处理 ——
+              本工具不提供「一键删除大文件」这种按钮。
+            </div>
+            <div class="log hide" id="large-log"></div>
+            <div id="large-body"></div>
+          </div>
+        </div>
+
+        <!-- ============================================ 重复文件查找 -->
+        <div class="tool-panel hide" id="tool-dup">
+          <div class="card">
+            <div class="row-between" style="margin-bottom:12px">
+              <h2 class="section-h">重复文件查找</h2>
+              <span class="badge badge-mute">只列出，不删除</span>
+            </div>
+            <div class="scan-row">
+              <label class="field">
+                <span>最小</span>
+                <input class="input" type="number" id="dup-min" value="1" min="1" step="1">
+                <span class="muted">MB</span>
+              </label>
+              <span class="muted">扫描范围</span>
+              <div class="root-chips" id="dup-roots"></div>
+              <button class="btn btn-primary" id="dup-run">开始查找</button>
+              <button class="btn btn-sm hide" id="dup-cancel">取消</button>
+            </div>
+            <div class="stat-foot" id="dup-status" style="margin-top:10px">
+              先按文件大小分组，只对同尺寸的算哈希 —— 不会一上来就全盘哈希。
+              全盘扫描可能要几分钟。
+            </div>
+            <div class="log hide" id="dup-log"></div>
+            <div id="dup-body"></div>
+          </div>
+        </div>
+
+        <div class="note">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>
+          </svg>
+          <div>这四项的共同点：<b>只读为主，写操作都可还原</b>。
+            「大文件查找」「重复文件查找」全程不删任何东西；
+            「启动项管理」的禁用可一键还原；硬件信息只读。</div>
+        </div>
+      </section>
+
+      <!-- ---------------------------------------------- 设置 -->
+      <section class="page" id="page-settings" aria-hidden="true">
+        <h1 class="page-title">设置</h1>
+        <p class="page-desc">外观、权限与运行环境。</p>
+
+        <div class="grid-2 stagger">
+          <div class="card">
+            <div class="stat-label">外观</div>
+            <label class="switch-row">
+              <span>深色模式</span>
+              <input type="checkbox" class="switch" id="set-dark">
+            </label>
+            <div class="stat-foot">
+              <span id="set-dark-hint">当前是浅色模式（默认）</span>。
+              默认浅色是因为深色下部分文字对比度不够；切换后立即生效并记住。
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="stat-label">权限</div>
+            <div class="stat-foot" style="margin:0 0 12px">
+              内存整理（清空工作集、清理待机列表）需要管理员权限。
+            </div>
+            <button class="btn" id="set-relaunch">以管理员重启</button>
+          </div>
+
+          <div class="card">
+            <div class="stat-label">运行环境</div>
+            <dl class="kv" id="set-env"><dt>—</dt><dd>—</dd></dl>
+          </div>
+
+          <div class="card">
+            <div class="stat-label">配置</div>
+            <div style="display:flex;gap:9px;flex-wrap:wrap">
+              <button class="btn" id="set-open-config">打开配置目录</button>
+              <button class="btn" id="set-diagnose">环境自检</button>
+            </div>
+            <div class="stat-foot">
+              自检会枚举内存、磁盘、进程与规则规模，结果只读。
+            </div>
+          </div>
+
+          <!-- 清理规则更新：来自开源规则库，需要联网 -->
+          <div class="card" style="grid-column:1/-1">
+            <div class="row-between" style="margin-bottom:10px">
+              <div class="stat-label" style="margin:0">清理规则库</div>
+              <span class="badge badge-mute" id="rules-badge">读取中…</span>
+            </div>
+
+            <div class="stat-foot" id="rules-status" style="margin:0 0 10px">
+              正在读取…
+            </div>
+
+            <div class="rules-src hide" id="rules-src"></div>
+
+            <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:12px">
+              <button class="btn btn-primary" id="rules-update">检查并更新</button>
+              <button class="btn" id="rules-check">只看有没有新版</button>
+              <button class="btn" id="rules-offline"
+                      title="断网时用上次下载的缓存重新生成">离线重建</button>
+            </div>
+
+            <div class="stat-foot" style="margin-top:12px">
+              规则来自 <b>Winapp2 / Winapp3 / BleachBit</b> 三个开源规则库
+              （活跃维护，CC-BY-SA-4.0 / GPL-3.0）。<br>
+              更新后的规则写在配置目录里，<b>内置规则不受影响</b>；
+              加载时优先用新的，删掉那个文件就退回内置版本。<br>
+              更新要联网，且 GitHub 未认证接口限 60 次/小时 —— 撞上限额会
+              明确报错并<b>放弃写入</b>，绝不会把可用的规则覆盖成空的。
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ==================================================== 底部操作条 -->
+    <!-- data-on 指定该元素只在哪些页显示；路由切换时统一开关。
+         不做的话会把内存页和垃圾页的按钮同时堆在底栏上。 -->
+    <footer class="actionbar hidden" id="actionbar">
+      <span id="mem-sel" class="muted" data-on="memory">已选 0 项</span>
+      <span id="junk-sel" class="muted" data-on="junk">已选 0 项</span>
+      <span class="spacer"></span>
+      <button class="btn" id="mem-apply" data-on="memory" disabled>整理内存</button>
+      <button class="btn" id="mem-close" data-on="memory" disabled>关闭进程</button>
+      <button class="btn" id="junk-apply" data-on="junk" disabled>开始扫描</button>
+      <button class="btn btn-primary hide" id="junk-clean" data-on="junk" disabled>开始清理</button>
+      <button class="btn btn-primary hide" id="action-primary" data-on="memory">一键加速</button>
+    </footer>
+  </div>
+</div>
+
+<!-- Pages 容器必须先于页面脚本声明 -->
+<script>var Pages = {};</script>
+<script src="js/ui.js"></script>
+<script src="js/store.js"></script>
+<script src="js/bridge.js"></script>
+<script src="js/router.js"></script>
+<script src="js/pages/overview.js"></script>
+<script src="js/pages/memory.js"></script>
+<script src="js/pages/junk.js"></script>
+<script src="js/pages/tools.js"></script>
+<script src="js/pages/settings.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

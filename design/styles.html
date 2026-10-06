@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>mahiru 界面风格预览</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI",
+                 "Microsoft YaHei", system-ui, sans-serif;
+    background: #0E1014; color: #E8EAF0; padding: 14px;
+  }
+  .page-h {
+    font-size: 15px; font-weight: 600; margin-bottom: 4px;
+  }
+  .page-s { font-size: 11.5px; color: #8E97A8; margin-bottom: 12px; }
+  .grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .cell { }
+  .cell-label {
+    font-size: 12px; font-weight: 600; margin-bottom: 5px;
+    display: flex; align-items: baseline; gap: 7px;
+  }
+  .cell-label span {
+    font-weight: 400; font-size: 10.5px; color: #7C8595;
+  }
+  .demo {
+    height: 232px; border-radius: 10px; overflow: hidden;
+    display: flex; font-size: 9.5px; line-height: 1.35;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .side {
+    width: 30%; padding: 9px 8px; display: flex; flex-direction: column; gap: 3px;
+  }
+  .brand { font-weight: 600; font-size: 10px; margin-bottom: 6px; }
+  .n { padding: 4px 6px; border-radius: 6px; font-size: 9px; }
+  .main { flex: 1; padding: 9px 10px; overflow: hidden; }
+  .h1 { font-size: 13px; font-weight: 650; margin-bottom: 8px; }
+  .card { padding: 7px 8px; margin-bottom: 6px; }
+  .lbl { font-size: 8.5px; margin-bottom: 3px; }
+  .val { font-size: 17px; font-weight: 650; letter-spacing: -.4px; }
+  .bar { height: 4px; border-radius: 3px; margin-top: 5px; }
+  .row2 { display: flex; gap: 6px; }
+  .row2 > * { flex: 1; }
+  .opt { display: flex; align-items: center; gap: 5px; margin: 3px 0; }
+  .dot { width: 13px; height: 8px; border-radius: 5px; flex: none; }
+  .btnrow { display: flex; gap: 5px; margin-top: 6px; }
+  .b { padding: 3px 9px; border-radius: 6px; font-size: 8.5px; }
+
+  /* ============ 1. 当前风格：柔和浅色卡片 ============ */
+  .s1 { background: #F6F7F9; color: #1F2430; }
+  .s1 .side { background: #FBFCFD; border-right: 1px solid #E9EBF0; color: #5C6472; }
+  .s1 .n.on { background: #EEF1FE; color: #4257D6; font-weight: 600; }
+  .s1 .card { background: #fff; border: 1px solid #E9EBF0; border-radius: 8px; }
+  .s1 .lbl { color: #8A92A0; }
+  .s1 .bar { background: #EEF1FE; }
+  .s1 .bar > i { display: block; width: 46%; height: 100%; background: #5B76F7; border-radius: 3px; }
+  .s1 .dot { background: #5B76F7; }
+  .s1 .b { background: #fff; border: 1px solid #D8DCE5; }
+  .s1 .b.p { background: #5B76F7; color: #fff; border-color: #5B76F7; }
+
+  /* ============ 2. Fluent / Mica：Win11 原生感 ============ */
+  .s2 { background: linear-gradient(140deg,#EEF2F8,#E4EAF4); color: #1A1D24; }
+  .s2 .side {
+    background: rgba(255,255,255,.55); backdrop-filter: blur(18px);
+    border-right: 1px solid rgba(0,0,0,.06); color: #4A5260;
+  }
+  .s2 .n.on {
+    background: rgba(255,255,255,.9); color: #0F6CBD;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06); font-weight: 600;
+  }
+  .s2 .card {
+    background: rgba(255,255,255,.62); border: 1px solid rgba(255,255,255,.85);
+    border-radius: 10px; box-shadow: 0 2px 8px rgba(20,40,80,.06);
+  }
+  .s2 .lbl { color: #6B7280; }
+  .s2 .bar { background: rgba(15,108,189,.14); }
+  .s2 .bar > i { display: block; width: 46%; height: 100%; background: #0F6CBD; border-radius: 3px; }
+  .s2 .dot { background: #0F6CBD; }
+  .s2 .b { background: rgba(255,255,255,.8); border: 1px solid rgba(0,0,0,.08); border-radius: 7px; }
+  .s2 .b.p { background: #0F6CBD; color: #fff; border-color: #0F6CBD; }
+
+  /* ============ 3. 紧凑工具风：高密度 ============ */
+  .s3 { background: #FFFFFF; color: #16191F; font-size: 9px; }
+  .s3 .side { background: #F2F3F5; border-right: 1px solid #DDE0E5; color: #4B535F; }
+  .s3 .n { border-radius: 3px; }
+  .s3 .n.on { background: #DCE4F5; color: #1B3A7A; font-weight: 600; }
+  .s3 .card { background: #FAFBFC; border: 1px solid #E2E5EA; border-radius: 3px; }
+  .s3 .h1 { font-size: 12px; }
+  .s3 .lbl { color: #6A7280; text-transform: uppercase; letter-spacing: .4px; font-size: 8px; }
+  .s3 .val { font-size: 15px; font-variant-numeric: tabular-nums; }
+  .s3 .bar { background: #E7EAEF; border-radius: 1px; height: 3px; }
+  .s3 .bar > i { display: block; width: 46%; height: 100%; background: #3A6FD8; }
+  .s3 .dot { background: #3A6FD8; border-radius: 2px; }
+  .s3 .b { background: #fff; border: 1px solid #CFD4DC; border-radius: 3px; }
+  .s3 .b.p { background: #3A6FD8; color: #fff; border-color: #3A6FD8; }
+
+  /* ============ 4. 极简黑白 + 单色强调 ============ */
+  .s4 { background: #FFFFFF; color: #0A0A0A; }
+  .s4 .side { background: #FAFAFA; border-right: 1px solid #EAEAEA; color: #666; }
+  .s4 .n.on { background: #F0F0F0; color: #0A0A0A; font-weight: 600; }
+  .s4 .card { background: #fff; border: 1px solid #EAEAEA; border-radius: 6px; }
+  .s4 .lbl { color: #8F8F8F; }
+  .s4 .val { letter-spacing: -.6px; }
+  .s4 .bar { background: #EFEFEF; }
+  .s4 .bar > i { display: block; width: 46%; height: 100%; background: #0A0A0A; }
+  .s4 .dot { background: #0A0A0A; }
+  .s4 .b { background: #fff; border: 1px solid #DDD; border-radius: 6px; }
+  .s4 .b.p { background: #0A0A0A; color: #fff; border-color: #0A0A0A; }
+
+  /* ============ 5. 深色电竞：霓虹强调 ============ */
+  .s5 { background: #0B0E14; color: #E6EDF3; }
+  .s5 .side { background: #0F131B; border-right: 1px solid #1C2230; color: #8B96A8; }
+  .s5 .n.on {
+    background: linear-gradient(90deg, rgba(0,229,255,.14), transparent);
+    color: #00E5FF; font-weight: 600;
+    box-shadow: inset 2px 0 0 #00E5FF;
+  }
+  .s5 .card { background: #111621; border: 1px solid #1E2735; border-radius: 7px; }
+  .s5 .lbl { color: #7A8698; }
+  .s5 .val { color: #fff; text-shadow: 0 0 14px rgba(0,229,255,.35); }
+  .s5 .bar { background: #1A2230; }
+  .s5 .bar > i {
+    display: block; width: 46%; height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg,#00E5FF,#7C4DFF);
+  }
+  .s5 .dot { background: #00E5FF; box-shadow: 0 0 7px rgba(0,229,255,.6); }
+  .s5 .b { background: #161D2A; border: 1px solid #263041; color: #C6D0DC; }
+  .s5 .b.p {
+    background: linear-gradient(90deg,#00E5FF,#4DA3FF); color: #06121C;
+    border: 0; font-weight: 700;
+  }
+
+  /* ============ 6. 柔和拟物 Soft UI ============ */
+  .s6 { background: #E8ECF3; color: #2B3244; }
+  .s6 .side { background: #E8ECF3; color: #5A6379; }
+  .s6 .n.on {
+    background: #E8ECF3; color: #3D55C9; font-weight: 600;
+    box-shadow: inset 2px 2px 5px rgba(163,177,198,.6),
+                inset -2px -2px 5px rgba(255,255,255,.85);
+  }
+  .s6 .card {
+    background: #E8ECF3; border: 0; border-radius: 10px;
+    box-shadow: 4px 4px 9px rgba(163,177,198,.55),
+                -4px -4px 9px rgba(255,255,255,.9);
+  }
+  .s6 .lbl { color: #7A839A; }
+  .s6 .val { color: #2B3244; }
+  .s6 .bar {
+    background: #E8ECF3; height: 6px;
+    box-shadow: inset 1px 1px 3px rgba(163,177,198,.7),
+                inset -1px -1px 3px rgba(255,255,255,.9);
+  }
+  .s6 .bar > i {
+    display: block; width: 46%; height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg,#6E86F0,#5B76F7);
+  }
+  .s6 .dot {
+    background: #E8ECF3;
+    box-shadow: inset 1px 1px 2px rgba(163,177,198,.6),
+                inset -1px -1px 2px rgba(255,255,255,.9);
+    position: relative;
+  }
+  .s6 .dot::after {
+    content: ''; position: absolute; left: 1px; top: 1px;
+    width: 7px; height: 6px; border-radius: 4px; background: #5B76F7;
+  }
+  .s6 .b {
+    background: #E8ECF3; border: 0;
+    box-shadow: 3px 3px 6px rgba(163,177,198,.55),
+                -3px -3px 6px rgba(255,255,255,.9);
+  }
+  .s6 .b.p { color: #3D55C9; font-weight: 650; }
+</style>
+</head>
+<body>
+
+<div class="page-h">mahiru小助手 · 界面风格对比</div>
+<div class="page-s">
+  同一个界面（内存优化页）在六种风格下的样子。布局、信息结构完全一样，
+  只有视觉语言不同 —— 方便对比而不是重新想象。
+</div>
+
+<div class="grid">
+
+  <!-- ================================================ 1 -->
+  <div class="cell">
+    <div class="cell-label">① 当前风格<span>柔和浅色 · 你现在用的</span></div>
+    <div class="demo s1">
+      <div class="side">
+        <div class="brand">mahiru小助手</div>
+        <div class="n on">内存优化</div><div class="n">垃圾清理</div>
+        <div class="n">小功能</div><div class="n">设置</div>
+      </div>
+      <div class="main">
+        <div class="h1">内存优化</div>
+        <div class="card">
+          <div class="lbl">物理内存</div><div class="val">7.23 GB</div>
+          <div class="bar"><i></i></div>
+        </div>
+        <div class="card">
+          <div class="opt"><span class="dot"></span>关闭安全级后台应用</div>
+          <div class="opt"><span class="dot"></span>清理进程工作集</div>
+        </div>
+        <div class="btnrow"><div class="b p">一键加速</div><div class="b">还原</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================ 2 -->
+  <div class="cell">
+    <div class="cell-label">② Fluent / Mica<span>Win11 原生质感 · 半透明</span></div>
+    <div class="demo s2">
+      <div class="side">
+        <div class="brand">mahiru小助手</div>
+        <div class="n on">内存优化</div><div class="n">垃圾清理</div>
+        <div class="n">小功能</div><div class="n">设置</div>
+      </div>
+      <div class="main">
+        <div class="h1">内存优化</div>
+        <div class="card">
+          <div class="lbl">物理内存</div><div class="val">7.23 GB</div>
+          <div class="bar"><i></i></div>
+        </div>
+        <div class="card">
+          <div class="opt"><span class="dot"></span>关闭安全级后台应用</div>
+          <div class="opt"><span class="dot"></span>清理进程工作集</div>
+        </div>
+        <div class="btnrow"><div class="b p">一键加速</div><div class="b">还原</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================ 3 -->
+  <div class="cell">
+    <div class="cell-label">③ 紧凑工具风<span>高信息密度 · 弱圆角</span></div>
+    <div class="demo s3">
+      <div class="side">
+        <div class="brand">mahiru小助手</div>
+        <div class="n on">内存优化</div><div class="n">垃圾清理</div>
+        <div class="n">小功能</div><div class="n">设置</div>
+      </div>
+      <div class="main">
+        <div class="h1">内存优化</div>
+        <div class="card">
+          <div class="lbl">物理内存</div><div class="val">7.23 GB</div>
+          <div class="bar"><i></i></div>
+        </div>
+        <div class="card">
+          <div class="opt"><span class="dot"></span>关闭安全级后台应用</div>
+          <div class="opt"><span class="dot"></span>清理进程工作集</div>
+        </div>
+        <div class="btnrow"><div class="b p">一键加速</div><div class="b">还原</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================ 4 -->
+  <div class="cell">
+    <div class="cell-label">④ 极简黑白<span>无彩色 · 单色强调</span></div>
+    <div class="demo s4">
+      <div class="side">
+        <div class="brand">mahiru小助手</div>
+        <div class="n on">内存优化</div><div class="n">垃圾清理</div>
+        <div class="n">小功能</div><div class="n">设置</div>
+      </div>
+      <div class="main">
+        <div class="h1">内存优化</div>
+        <div class="card">
+          <div class="lbl">物理内存</div><div class="val">7.23 GB</div>
+          <div class="bar"><i></i></div>
+        </div>
+        <div class="card">
+          <div class="opt"><span class="dot"></span>关闭安全级后台应用</div>
+          <div class="opt"><span class="dot"></span>清理进程工作集</div>
+        </div>
+        <div class="btnrow"><div class="b p">一键加速</div><div class="b">还原</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================ 5 -->
+  <div class="cell">
+    <div class="cell-label">⑤ 深色电竞<span>霓虹强调 · 贴游戏定位</span></div>
+    <div class="demo s5">
+      <div class="side">
+        <div class="brand">mahiru小助手</div>
+        <div class="n on">内存优化</div><div class="n">垃圾清理</div>
+        <div class="n">小功能</div><div class="n">设置</div>
+      </div>
+      <div class="main">
+        <div class="h1">内存优化</div>
+        <div class="card">
+          <div class="lbl">物理内存</div><div class="val">7.23 GB</div>
+          <div class="bar"><i></i></div>
+        </div>
+        <div class="card">
+          <div class="opt"><span class="dot"></span>关闭安全级后台应用</div>
+          <div class="opt"><span class="dot"></span>清理进程工作集</div>
+        </div>
+        <div class="btnrow"><div class="b p">一键加速</div><div class="b">还原</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================ 6 -->
+  <div class="cell">
+    <div class="cell-label">⑥ 柔和拟物 Soft UI<span>凸起质感 · 双阴影</span></div>
+    <div class="demo s6">
+      <div class="side">
+        <div class="brand">mahiru小助手</div>
+        <div class="n on">内存优化</div><div class="n">垃圾清理</div>
+        <div class="n">小功能</div><div class="n">设置</div>
+      </div>
+      <div class="main">
+        <div class="h1">内存优化</div>
+        <div class="card">
+          <div class="lbl">物理内存</div><div class="val">7.23 GB</div>
+          <div class="bar"><i></i></div>
+        </div>
+        <div class="card">
+          <div class="opt"><span class="dot"></span>关闭安全级后台应用</div>
+          <div class="opt"><span class="dot"></span>清理进程工作集</div>
+        </div>
+        <div class="btnrow"><div class="b p">一键加速</div><div class="b">还原</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

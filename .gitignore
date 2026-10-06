@@ -1,0 +1,24 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# ---- 打包产物 ----
+build/
+dist/
+*.spec
+
+# ---- 运行时数据（含本机路径与用户配置，不该入库）----
+config/
+!.gitkeep
+
+# ---- 规则下载缓存（约 2.4 MB，可重新下载）----
+tools/.rule_cache/
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+*.swp
