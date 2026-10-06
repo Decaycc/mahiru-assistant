@@ -1061,6 +1061,39 @@ _SKIP_WALK_DIRS = {
     "$windows.~bt", "$windows.~ws",
 }
 
+# types 类规则（dir:node_modules 之类）的**路径黑名单**。
+#
+# 光靠目录名判断太危险：`node_modules` 不只出现在开发项目里，
+# 也出现在**已安装的 Electron 应用内部** —— 而那里的 node_modules
+# 是应用的运行依赖，删掉软件直接起不来。
+#
+# 真实案例：本机扫出 200 个命中目录，其中 3 个是
+#     D:\dsh\resources\app.asar.unpacked\dsh\node_modules
+#     D:\workbuddy\resources\app.asar.unpacked\node_modules
+#     D:\workbuddy\resources\app.asar.unpacked\cli\node_modules
+# 一旦用户勾选这条规则并清理，DSH 和 WorkBuddy 就会被删坏。
+#
+# 同理，解释器自己的 `Lib\__pycache__` 和 site-packages 里的缓存
+# 也不该动 —— 那是运行环境的一部分，不是"散落的构建残留"。
+_TYPES_DENY_SUBSTR = (
+    "app.asar",                    # Electron 打包目录（DSH / WorkBuddy 这类）
+    "\\resources\\app",            # 应用安装目录内的 resources
+    "\\program files",             # 系统安装位置
+    "\\windows\\",
+    "\\python\\lib\\",             # 解释器标准库
+    "\\lib\\site-packages\\",      # 第三方包安装位置
+    "\\node_modules\\",            # 嵌套的（外层已覆盖，不必重复删）
+    "\\.dsh\\dsh-runtimes\\",      # DSH 自带的运行时
+    "\\appdata\\",                 # 应用数据（含自带依赖）
+)
+
+
+def _in_types_deny(path: str) -> bool:
+    """这个路径是不是属于「已安装的软件 / 运行环境」，不该当构建残留删。"""
+    low = "\\" + path.replace("/", "\\").lower().lstrip("\\")
+    return any(s in low for s in _TYPES_DENY_SUBSTR)
+
+
 # 全盘深扫的安全上限，防止在超大磁盘上跑到天荒地老
 _DEEP_MAX_VISIT = 400000
 _DEEP_MAX_HITS = 5000
@@ -1140,6 +1173,9 @@ def scan_types(rule: dict, cancel: threading.Event | None = None,
                             continue
                         low = e.name.lower()
                         if low in _SKIP_WALK_DIRS:
+                            continue
+                        # 属于已安装软件 / 运行环境的，名字再像也不碰
+                        if _in_types_deny(e.path):
                             continue
                         if _match_type(e.name, types, e.path):
                             size = dir_size(e.path, cancel)["size"]

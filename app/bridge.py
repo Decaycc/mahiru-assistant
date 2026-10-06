@@ -20,7 +20,7 @@ from .core import junk, mem
 
 APP_TITLE = "mahiru小助手"
 APP_AUTHOR = "decaycc"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 
 
 def _guard(fn):
