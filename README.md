@@ -5,6 +5,20 @@ Windows 上的游戏加速与清理工具。把「打游戏前腾一下内存、
 
 > 作者：**decaycc**
 
+## 下载
+
+**不用装、不用编译，直接下这个单文件 EXE 双击运行：**
+
+### ⬇️ [mahiru-assistant-v1.0.0.exe](https://github.com/Decaycc/mahiru-assistant/releases/latest/download/mahiru-assistant-v1.0.0.exe)
+
+13.26 MB · Windows 10/11 · 单文件绿色版
+
+想先看版本说明或校验哈希：[Releases 页面](https://github.com/Decaycc/mahiru-assistant/releases)
+
+> 文件叫 `mahiru-assistant-v1.0.0.exe` 而不是中文名，是因为 GitHub 的
+> Release 资产用非 ASCII 文件名会上传失败（踩过，报 422）。下载后随便改回
+> `mahiru小助手.exe` 都不影响运行。
+
 ## 它做什么
 
 | 功能 | 说明 |
