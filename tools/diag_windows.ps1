@@ -76,7 +76,7 @@ foreach ($row in [WEnum]::All()) {
 
 if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
 Get-Process -Name python -ErrorAction SilentlyContinue |
-  Where-Object { $_.Path -like "D:\GameBoostNext\venv\*" } |
+  Where-Object { $_.Path -like "D:\Envs\mahiru-assistant\Scripts\*" } |
   ForEach-Object { Stop-Process -Id $_.Id -Force }
 Write-Host ""
 Write-Host "done"

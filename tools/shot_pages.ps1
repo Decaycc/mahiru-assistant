@@ -107,7 +107,7 @@ Write-Host "pages=$($pages.Count) only='$Only' theme='$Theme'"
 
 function Kill-App {
   Get-Process -Name python -ErrorAction SilentlyContinue |
-    Where-Object { $_.Path -like "D:\GameBoostNext\venv\*" } |
+    Where-Object { $_.Path -like "D:\Envs\mahiru-assistant\Scripts\*" } |
     ForEach-Object { Stop-Process -Id $_.Id -Force }
 }
 
