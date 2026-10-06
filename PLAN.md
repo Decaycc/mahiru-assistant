@@ -227,7 +227,7 @@ M3 落地时若觉得不理想，可另做一版「头部特写」作为界面�
 ① 你要求装到 D 盘；② 自带 Python 里有 numpy/pandas 等，直接用它打包会把体积撑爆。
 
 ```
-D:\GameBoostNext\venv\Scripts\python.exe      开发与打包都用这个解释器
+<项目同级>\venv\Scripts\python.exe      开发与打包都用这个解释器
 ```
 
 | 包 | 版本 | 大小 |
@@ -375,8 +375,8 @@ JS:  const jobId = await api.start_scan();
 **每个里程碑结束后必跑**：
 
 ```bat
-D:\GameBoostNext\venv\Scripts\python.exe app\core\selftest.py
-D:\GameBoostNext\venv\Scripts\python.exe -m app.main --smoke 5
+<项目同级>\venv\Scripts\python.exe app\core\selftest.py
+<项目同级>\venv\Scripts\python.exe -m app.main --smoke 5
 ```
 
 ### 规则更新工具（tools/update_rules.py + 软件内按钮）
@@ -821,7 +821,7 @@ tools/diag_windows.ps1   窗口归属诊断
 | `webview.start` 的 func 不收窗口 | `TypeError: got multiple values for argument 'args'` | func 是 `func(*args)` 调用，窗口要显式放进 args |
 | pywebview 窗口坐标是**逻辑**单位 | 进程设了 DPI 感知后 `SystemParametersInfo` 返回物理像素，直接混用会让窗口底部压到任务栏 | 按 `dpi/96` 换算后再传给 create_window |
 | `Process.MainWindowHandle` 拿不到句柄 | 与旧版 tkinter 一样失败 | 改用 `EnumWindows` |
-| 只按标题匹配会抓错窗口 | 抓到一个标题为 `D:\GameBoostNext\venv\Scrip…` 的资源管理器窗口 | 按**窗口类名前缀** `WindowsForms10` 过滤 |
+| 只按标题匹配会抓错窗口 | 抓到一个标题为 `<项目同级>\venv\Scrip…` 的资源管理器窗口 | 按**窗口类名前缀** `WindowsForms10` 过滤 |
 | 启动的 PID ≠ 拥有窗口的 PID | venv 的 `python.exe` 会再拉起一个 python 进程持有窗口 | 不依赖 PID，按类名 + 标题匹配 |
 | 含中文的 `.ps1` 被按非 UTF-8 读取 | 路径里的中文变成乱码，解析报出莫名其妙的语法错误 | 脚本一律纯 ASCII，路径用 `$PSScriptRoot` 推导 |
 

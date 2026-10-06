@@ -74,7 +74,7 @@ public class WinCap {
 [void][WinCap]::SetProcessDPIAware()
 
 $next   = Split-Path $PSScriptRoot -Parent
-$venvpy = "D:\GameBoostNext\venv\Scripts\python.exe"
+$venvpy = Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) "venv\Scripts\python.exe"
 if (-not $OutDir) { $OutDir = Join-Path $next "design\shots" }
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 

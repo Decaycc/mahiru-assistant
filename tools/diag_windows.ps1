@@ -37,7 +37,7 @@ public class WEnum {
 [void][WEnum]::SetProcessDPIAware()
 
 $next   = Split-Path $PSScriptRoot -Parent
-$venvpy = "D:\GameBoostNext\venv\Scripts\python.exe"
+$venvpy = Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) "venv\Scripts\python.exe"
 
 $p = Start-Process -FilePath $venvpy -ArgumentList "-m","app.main" `
                    -WorkingDirectory $next -PassThru

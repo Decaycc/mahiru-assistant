@@ -64,7 +64,7 @@ public class WinCap {
 [void][WinCap]::SetProcessDPIAware()
 
 $next   = Split-Path $PSScriptRoot -Parent
-$venvpy = "D:\GameBoostNext\venv\Scripts\python.exe"
+$venvpy = Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) "venv\Scripts\python.exe"
 $out    = Join-Path $next "design\shots\10-M2-window.png"
 $applog = Join-Path $next "config\_shot_app.log"
 
