@@ -29,8 +29,13 @@ import urllib.error
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 API = "https://api.github.com"
 REPO = "Decaycc/mahiru-assistant"
-REMOTE_HEAD = "37120d4b381152cacab9b3727a7d94b46a32cd06"
 TOKEN = os.environ.get("GH_TOKEN", "")
+
+
+def get_remote_head():
+    """动态读取远程 main 的 HEAD，避免硬编码过期。"""
+    ref = api_req("GET", "%s/repos/%s/git/ref/heads/main" % (API, REPO))
+    return ref["object"]["sha"]
 
 IGNORED_DIRS = {"__pycache__", "build", "dist", "config", ".vscode", ".idea",
                 ".git", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
@@ -105,9 +110,9 @@ def api_req(method, url, body=None):
         raise RuntimeError("%s %s -> %s %s" % (method, url, e.code, raw[:500]))
 
 
-def get_remote_tree():
+def get_remote_tree(head):
     tree = api_req("GET", "%s/repos/%s/git/trees/%s?recursive=1"
-                   % (API, REPO, REMOTE_HEAD))
+                   % (API, REPO, head))
     manifest = {}
     for e in tree["tree"]:
         if e["type"] == "blob":
@@ -117,8 +122,9 @@ def get_remote_tree():
 
 def main():
     dry = "--execute" not in sys.argv
+    remote_head = get_remote_head()
     local = walk_local()
-    remote = get_remote_tree()
+    remote = get_remote_tree(remote_head)
 
     add = {}       # path -> abs
     changed = {}   # path -> abs (content sha differs)
@@ -185,7 +191,7 @@ def main():
     commit = api_req("POST", "%s/repos/%s/git/commits" % (API, REPO), {
         "message": "Mahiru 全面升级：Zapier 设计皮肤 + WinHance 游戏与性能模块 + LightC 清理规则 + 设置页重塑与改名",
         "tree": tree["sha"],
-        "parents": [REMOTE_HEAD],
+        "parents": [remote_head],
         "author": {"name": "decaycc", "email": "decaycc@users.noreply.github.com", "date": now},
         "committer": {"name": "decaycc", "email": "decaycc@users.noreply.github.com", "date": now},
     })
