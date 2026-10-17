@@ -75,9 +75,113 @@ def _install_crash_handler() -> None:
                 f.write(text)
         except Exception:                                   # noqa: BLE001
             pass
+
+        # 有控制台时（源码运行、--console 打包）堆栈已经看得见了，别弹窗打断；
+        # --windowed 打包后 sys.stderr 是 None，什么都不弹就真的毫无反馈。
+        if sys.stderr is None:
+            last = ""
+            for line in reversed(text.strip().splitlines()):
+                if line.strip():
+                    last = line.strip()
+                    break
+            try:
+                import ctypes                               # noqa: PLC0415
+                ctypes.windll.user32.MessageBoxW(
+                    None,
+                    f"{APP_TITLE} 遇到错误，已经停止。\n\n"
+                    f"{last}\n\n"
+                    f"详细信息已写入：\n{LOG_PATH}",
+                    f"{APP_TITLE} 出错",
+                    0x10,                                   # MB_ICONERROR
+                )
+            except Exception:                               # noqa: BLE001
+                pass
+
         sys.__excepthook__(exc_type, exc, tb)
 
     sys.excepthook = hook
+
+
+def _fatal(title: str, message: str) -> None:
+    """弹一个错误框，并把同样的话写进日志。
+
+    没有控制台的打包版里，对话框是唯一能让人看见出了什么事的路；
+    但截图 / 冒烟脚本会把对话框当成「卡住」，所以只用在真的开不了窗的时候。
+    """
+    try:
+        os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+        with open(LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(f"\n[{time.strftime('%Y-%m-%d %H:%M:%S')}] "
+                    f"{APP_TITLE} v{APP_VERSION}\n{title}\n{message}\n")
+    except Exception:                                       # noqa: BLE001
+        pass
+    try:
+        import ctypes                                       # noqa: PLC0415
+        ctypes.windll.user32.MessageBoxW(None, message, title, 0x10)
+    except Exception:                                       # noqa: BLE001
+        pass
+
+
+# ---- WebView2 运行环境 -------------------------------------------------
+#
+# 界面靠 Edge WebView2 渲染。Win11 自带，Win10 要靠 Windows Update 推 ——
+# 没装的机器上 pywebview 会**静默降级到 MSHTML（IE 内核）**，而前端用的是
+# ES6，在 IE 内核里直接白屏。用户看到的是「窗口一片白」，没有任何提示。
+# 更糟的是它降级路上的 mshtml 后端自己也会炸（读 IE 注册表那步没被保护）。
+# 所以在这里先查一遍，查不到就明确告诉用户去装运行时，不要开那个窗。
+
+_WEBVIEW2_GUID = "{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+# pywebview 自己的门槛（webview/platforms/winforms.py 的 _is_chromium）
+_WEBVIEW2_MIN = (86, 0, 622, 0)
+
+
+def _webview2_version() -> str | None:
+    """查已安装的 WebView2 运行时版本，没装返回 None。
+
+    三个位置都要看：64 位系统上 32 位安装写在 WOW6432Node 下；
+    非管理员做的用户级安装写在 HKCU 下。只看一处会漏。
+    """
+    try:
+        import winreg                                       # noqa: PLC0415
+    except ImportError:
+        return None
+    places = (
+        (winreg.HKEY_LOCAL_MACHINE,
+         r"SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\\" + _WEBVIEW2_GUID),
+        (winreg.HKEY_LOCAL_MACHINE,
+         r"SOFTWARE\Microsoft\EdgeUpdate\Clients\\" + _WEBVIEW2_GUID),
+        (winreg.HKEY_CURRENT_USER,
+         r"SOFTWARE\Microsoft\EdgeUpdate\Clients\\" + _WEBVIEW2_GUID),
+    )
+    for hive, key in places:
+        try:
+            with winreg.OpenKey(hive, key) as k:
+                pv, _ = winreg.QueryValueEx(k, "pv")
+        except OSError:
+            continue
+        pv = str(pv).strip()
+        # 见过 0.0.0.0 这种「占位」值，不能当有装
+        if pv and not pv.startswith("0.0.0.0"):
+            return pv
+    return None
+
+
+def _ver_tuple(s: str) -> tuple[int, ...]:
+    out = []
+    for part in s.split("."):
+        digits = "".join(ch for ch in part if ch.isdigit())
+        out.append(int(digits) if digits else 0)
+    return tuple(out)
+
+
+def webview2_status() -> tuple[bool, str]:
+    """返回 (够不够用, 说明)。够用那一路的说明里带版本号，方便写日志。"""
+    pv = _webview2_version()
+    if pv is None:
+        return False, "没有检测到 Edge WebView2 运行时"
+    if _ver_tuple(pv) < _WEBVIEW2_MIN:
+        return False, f"Edge WebView2 运行时版本过低（{pv}）"
+    return True, f"Edge WebView2 {pv}"
 
 
 def _on_start(window, page: str | None = None, theme: str | None = None,
@@ -161,9 +265,9 @@ _PAGE_PROBES = [
     ("概览",     "overview", "#page-overview.active",       None),
     ("内存优化", "memory",   "#page-memory.active",         "#mem-list .prow"),
     ("垃圾清理", "junk",     "#page-junk.active",           "#junk-list .jrow"),
-    # 小功能默认停在「启动项管理」，用它里面的条目数当加载完成的信号
-    ("小功能",   "tools",    "#page-tools.active",          "#startup-list .entry"),
-    ("设置",     "settings", "#page-settings.active",       "#set-env dd"),
+    # 游戏与性能默认停在处理器组，用调校行数当加载完成的信号
+    ("游戏与性能", "gaming",   "#page-gaming.active",         "#tune-list .tune-row"),
+    ("设置",     "settings", "#page-settings.active",       "#page-settings .settings-shell"),
 ]
 
 
@@ -464,12 +568,13 @@ def _smoke(window, seconds: float) -> None:
             window, "document.querySelectorAll('#mem-deep-opts .badge-warn,"
                     " #mem-deep-opts .badge-mute').length")
 
-        # 顺带验证「游戏优先级」面板：这是用户反馈「功能不见了」的那一项
+        # 顺带验证「游戏优先级」面板：这是用户反馈「功能不见了」的那一项，
+        # 现已迁到「内存优化」页（与电源计划同页）
         prio = {}
         try:
             window.evaluate_js("Router.go('memory', {force:true})")
             time.sleep(2.0)
-            prio["面板存在"] = _js(window, "!!document.getElementById('mem-prio')")
+            prio["面板存在"] = _js(window, "!!document.getElementById('prio-card')")
             prio["有窗口程序数"] = _js(
                 window, "document.querySelectorAll('#prio-target option').length")
             prio["下拉可用"] = _js(
@@ -487,87 +592,39 @@ def _smoke(window, seconds: float) -> None:
             prio["异常"] = f"{type(e).__name__}: {e}"
         deepres["游戏优先级"] = prio
 
-        # 规则库卡片：只验证渲染与信息读取，不触发真实联网更新
+        # 设置页已重构为「关于/更新」结构：验证外壳、版本回填、检查更新按钮
         rules = {}
         try:
             window.evaluate_js("Router.go('settings', {force:true})")
             time.sleep(1.6)
-            rules["卡片存在"] = _js(window, "!!document.getElementById('rules-src')")
-            rules["来源行数"] = _js(
-                window, "document.querySelectorAll('#rules-src .src-row').length")
-            rules["状态文案"] = _js(
-                window, "document.getElementById('rules-status').textContent.trim()")
-            rules["按钮可点"] = _js(
-                window, "!document.getElementById('rules-update').disabled")
-            info = _await("'rules_info'", "__rules")
-            rules["命中总数"] = (info or {}).get("matched_total")
-            rules["用的是更新版"] = (info or {}).get("using_override")
+            rules["外壳存在"] = _js(
+                window, "!!document.querySelector('#page-settings .settings-shell')")
+            rules["版本回填"] = _js(
+                window, "document.getElementById('settings-version').textContent.trim()")
+            rules["检查更新按钮"] = _js(
+                window, "!!document.getElementById('settings-check')")
+            rules["GitHub按钮"] = _js(
+                window, "!!document.getElementById('settings-github')")
         except Exception as e:                              # noqa: BLE001
             rules["异常"] = f"{type(e).__name__}: {e}"
-        deepres["规则库"] = rules
+        deepres["设置页"] = rules
 
-        # 小功能四项：只验证「能读出来 + 界面渲染」，不触发全盘扫描
-        # （全盘找重复文件要几分钟，冒烟里不能干这个）
-        tls = {}
+        # 游戏与性能调校：验证 116 项元数据能读出并渲染，不触发真实写注册表
+        tunes_res = {}
         try:
-            window.evaluate_js("Router.go('tools', {force:true})")
+            window.evaluate_js("Router.go('gaming', {force:true})")
             time.sleep(2.0)
-            tls["选项卡数"] = _js(
-                window, "document.querySelectorAll('#tools-tabs .tab').length")
-            # 这两个标记用来分辨「页面是新的」还是「WebView2 供了旧缓存」
-            tls["有新标记"] = _js(
-                window, "!!document.getElementById('tools-tabs')")
-            tls["有旧标记"] = _js(
-                window, "!!document.getElementById('tools-grid')")
-            tls["页面HTML长度"] = _js(
-                window, "document.getElementById('page-tools').innerHTML.length")
-            tls["HTML片段"] = _js(
-                window,
-                "document.getElementById('page-tools').innerHTML"
-                ".replace(/\\s+/g,' ').slice(0,220)")
-            tls["所有id"] = _js(
-                window,
-                "Array.from(document.getElementById('page-tools')"
-                ".querySelectorAll('[id]')).map(e=>e.id).join(',')")
-            tls["location"] = _js(window, "location.href")
-            tls["文档长度"] = _js(
-                window, "document.documentElement.outerHTML.length")
-            tls["启动项条数"] = _js(
-                window, "document.querySelectorAll('#startup-list .entry').length")
-
-            # 启动项：列表非空，且每条都有可用的 id 和启用状态
-            st = _await("'startup_items'", "__startup")
-            items = (st or {}).get("items") or []
-            tls["启动项接口"] = len(items)
-            tls["启动项字段齐全"] = all(
-                i.get("id") and "enabled" in i and i.get("name") for i in items)
-
-            # 硬件：CPU 必须读得出来，否则说明 WMI 通路断了
-            hw = _await("'hardware'", "__hw")
-            tls["CPU"] = bool((hw or {}).get("cpu", {}).get("Name"))
-
-            # 磁盘：至少一块物理盘 + 一个分区
-            dk = _await("'disk_health'", "__dk")
-            tls["物理盘数"] = len((dk or {}).get("physical") or [])
-            tls["分区数"] = len((dk or {}).get("volumes") or [])
-
-            # 扫描根白名单：非法路径必须被剔除
-            bad = _await("'start_large_files', ['Z:\\\\\\\\', '..\\\\\\\\..\\\\\\\\Windows']",
-                         "__badroots")
-            tls["非法根应被拒"] = (bad or {}).get("ok") is not False
-
-            # 切到另外三个选项卡，确认面板能切且不报错
-            for name in ("hardware", "large", "dup"):
-                window.evaluate_js(f"Pages.tools && document.querySelector"
-                                   f"('#tools-tabs [data-tool=\"{name}\"]').click()")
-                time.sleep(0.8)
-            tls["切换后无异常"] = _js(
-                window, "(window.__errs||[]).length")
-            tls["扫描根芯片数"] = _js(
-                window, "document.querySelectorAll('#dup-roots .root-chip').length")
+            tunes_res["分组数"] = _js(
+                window, "document.querySelectorAll('#tune-groups .tab').length")
+            tunes_res["分组存在"] = _js(
+                window, "!!document.getElementById('tune-groups')")
+            tunes_res["列表存在"] = _js(
+                window, "!!document.getElementById('tune-list')")
+            info = _await("'gaming_list'", "__tunes")
+            tunes_res["调校项数"] = len((info or {}).get("tunes") or [])
         except Exception as e:                              # noqa: BLE001
-            tls["异常"] = f"{type(e).__name__}: {e}"
-        deepres["小功能"] = tls
+            tunes_res["异常"] = f"{type(e).__name__}: {e}"
+        deepres["游戏调校"] = tunes_res
     except Exception as e:                                  # noqa: BLE001
         deepres["异常"] = f"{type(e).__name__}: {e}"
 
@@ -632,8 +689,8 @@ def _smoke(window, seconds: float) -> None:
     try:
         with open(WEB_INDEX, "rb") as f:
             disk_html = f.read()
-        markers = [b'tools-tabs', b'tool-startup', b'startup-list',
-                   b'rules-update', b'mem-prio']
+        markers = [b'tune-groups', b'tune-list', b'prio-card',
+                   b'power-plan', b'mem-deep']
         stale = []
         for m in markers:
             want = m in disk_html
@@ -709,8 +766,30 @@ def _smoke(window, seconds: float) -> None:
     window.destroy()
 
 
+def _web_asset_stamp() -> str:
+    """把 web/ 目录的「当前状态」压成一个字符串。
+
+    只比版本号是不够的：开发时版本号不动，改了 css/js 之后 WebView2
+    照样命中旧缓存，界面继续跑**上一份代码**，而且没有任何报错。
+    所以把「最新修改时间 + 文件数」也编进去 —— 任何一次改动都会让
+    这个戳变掉。文件数是为了覆盖「删掉一个文件」这种情况（删文件不会
+    让 mtime 变大）。
+    """
+    root = os.path.join(resource_root(), "web")
+    newest = 0.0
+    count = 0
+    for dirpath, _dirnames, filenames in os.walk(root):
+        for name in filenames:
+            try:
+                newest = max(newest, os.path.getmtime(os.path.join(dirpath, name)))
+                count += 1
+            except OSError:
+                pass
+    return f"{APP_VERSION}:{int(newest)}:{count}"
+
+
 def _prepare_webview_storage(storage: str, force: bool = False) -> str:
-    """按版本号让 WebView2 的资源缓存失效。
+    """按资源戳让 WebView2 的资源缓存失效。
 
     为什么必须做：WebView2 会把 js/css 一并缓存。程序更新后如果命中旧缓存，
     界面会继续跑**旧代码** —— 表现就是「文件明明改了却不生效」，
@@ -726,7 +805,8 @@ def _prepare_webview_storage(storage: str, force: bool = False) -> str:
     except Exception:                                       # noqa: BLE001
         seen = ""
 
-    if not force and seen == APP_VERSION:
+    stamp = _web_asset_stamp()
+    if not force and seen == stamp:
         return "命中"
 
     base = os.path.join(storage, "EBWebView", "Default")
@@ -740,7 +820,7 @@ def _prepare_webview_storage(storage: str, force: bool = False) -> str:
     try:
         os.makedirs(os.path.dirname(marker), exist_ok=True)
         with open(marker, "w", encoding="utf-8") as f:
-            f.write(APP_VERSION)
+            f.write(stamp)
     except Exception:                                       # noqa: BLE001
         pass
     return ("清空 " + "、".join(cleared)) if cleared else "无缓存可清"
@@ -779,7 +859,7 @@ def _acquire_single_instance() -> str:
             return ""                       # 拿不到锁就算了，不要拦住用户
         if ctypes.get_last_error() == ERROR_ALREADY_EXISTS:
             k32.CloseHandle(ctypes.c_void_p(handle))
-            return "已有另一个 mahiru小助手 在运行"
+            return "已有另一个 Mahiru 在运行"
         _SINGLE_INSTANCE_HANDLE = handle    # 必须留着，否则锁会被释放
         return ""
     except Exception:                                       # noqa: BLE001
@@ -874,6 +954,29 @@ def main() -> int:
     except Exception:                                       # noqa: BLE001
         pass
 
+    # 开窗之前先确认渲染内核在。查不到就别开那个必定白屏的窗 ——
+    # 白屏对用户来说等于「程序坏了」，而真正的原因只是一句「装个运行时」。
+    ok, note = webview2_status()
+    if ok:
+        print(f"[webview] {note}", file=sys.stderr)
+    elif "--ignore-webview2" in sys.argv:
+        print(f"[webview] !! {note}，但命令行要求继续（--ignore-webview2）",
+              file=sys.stderr)
+    else:
+        _fatal(
+            f"{APP_TITLE} 缺少运行组件",
+            f"{APP_TITLE} 的界面需要「Microsoft Edge WebView2 运行时」。\n"
+            f"检测结果：{note}。\n\n"
+            "怎么办：\n"
+            "  · Windows 11 自带，不用管。\n"
+            "  · Windows 10 一般由系统更新自动装上；没装的话，到微软官网\n"
+            "    下载「WebView2 Runtime」的 Evergreen 版安装即可。\n\n"
+            "装好之后重新打开本程序。\n\n"
+            "（如果确认这台机器上已经装了，可以用 --ignore-webview2 "
+            "跳过这项检查。）",
+        )
+        return 4
+
     jobs = JobManager()
     api = Api(jobs)
     w, h, x, y = _geometry()
@@ -887,7 +990,7 @@ def main() -> int:
         x=x,
         y=y,
         min_size=(MIN_W, MIN_H),
-        background_color="#F6F7F9",
+        background_color="#F0F0F0",
         text_select=False,
     )
 

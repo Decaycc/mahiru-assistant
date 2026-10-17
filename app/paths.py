@@ -13,7 +13,7 @@
     app_root()       可写：配置、日志。永远指向一个持久位置
     config_dir()     上面两者之下的 config/
 
-可写目录的选择顺序：EXE 同级目录（便携） → %APPDATA%\\GameBoostNext（不可写时）
+可写目录的选择顺序：EXE 同级目录（便携） → %APPDATA%\\mahiru（不可写时）
 """
 import os
 import sys

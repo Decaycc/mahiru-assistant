@@ -7,14 +7,6 @@
    =========================================================================== */
 
 async function boot() {
-  Store.initTheme();
-
-  /* 全局按钮 */
-  UI.$('#theme-btn').addEventListener('click', () => {
-    Store.toggleTheme();
-    if (Pages.settings) Pages.settings.syncThemeButton();
-  });
-
   /* 提权（顶栏）。提权会重启进程，所以先把配置落盘。 */
   UI.$('#relaunch-btn').addEventListener('click', () => Pages.settings.relaunch());
 
@@ -22,13 +14,13 @@ async function boot() {
   Pages.overview.init();
   Pages.memory.init();
   Pages.junk.init();
-  Pages.tools.init();
+  Pages.gaming.init();
   Pages.settings.init();
 
   Router.register('overview', Pages.overview.enter);
   Router.register('memory', Pages.memory.enter);
   Router.register('junk', Pages.junk.enter);
-  Router.register('tools', Pages.tools.enter);
+  Router.register('gaming', Pages.gaming.enter);
   Router.register('settings', Pages.settings.enter);
 
   try {

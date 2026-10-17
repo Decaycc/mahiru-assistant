@@ -60,6 +60,47 @@ const UI = (() => {
     toastTimer = setTimeout(() => { el.className = 'toast'; }, 2800);
   }
 
+  /* ------------------------------------------------------------ 确认对话框
+     取代 window.confirm（pywebview 里弹的是浏览器原生框，无法定制样式，
+     标题还是「127.0.0.1:42001 显示」）。居中弹出、亚麻底、简洁文案。 */
+  function confirm(msg, opts) {
+    opts = opts || {};
+    return new Promise((resolve) => {
+      // 遮罩层：半透明墨色，点击不关闭（必须明确选择）
+      const mask = document.createElement('div');
+      mask.className = 'dlg-mask';
+      const box = h(`
+        <div class="dlg">
+          <div class="dlg-title">${esc(opts.title || '确认')}</div>
+          <div class="dlg-text"></div>
+          <div class="dlg-acts">
+            <button class="btn dlg-ok">${esc(opts.ok || '确定')}</button>
+            <button class="btn dlg-no">取消</button>
+          </div>
+        </div>`);
+      box.querySelector('.dlg-text').textContent = msg;
+      mask.appendChild(box);
+      document.body.appendChild(mask);
+      const done = (v) => {
+        mask.classList.add('out');
+        setTimeout(() => mask.remove(), 160);
+        resolve(v);
+      };
+      box.querySelector('.dlg-ok').addEventListener('click', () => done(true));
+      box.querySelector('.dlg-no').addEventListener('click', () => done(false));
+      // Enter=确定，Esc=取消
+      const onkey = (e) => {
+        if (e.key === 'Enter') { done(true); }
+        else if (e.key === 'Escape') { done(false); }
+      };
+      document.addEventListener('keydown', onkey);
+      mask.addEventListener('transitionend', () => {
+        if (!mask.isConnected) document.removeEventListener('keydown', onkey);
+      });
+      box.querySelector('.dlg-ok').focus();
+    });
+  }
+
   /* ------------------------------------------------------------ 日志面板 */
   function logAppend(sel, text, isErr) {
     const box = $(sel);
@@ -89,6 +130,6 @@ const UI = (() => {
     return p.slice(0, keep) + '...' + p.slice(-keep);
   }
 
-  return { bytes, pct, barClass, hhmm, esc, $, $$, h, toast,
+  return { bytes, pct, barClass, hhmm, esc, $, $$, h, toast, confirm,
            logAppend, logClear, duration, shortPath };
 })();

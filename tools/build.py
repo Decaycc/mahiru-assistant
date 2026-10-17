@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""把 mahiru小助手 打成**单文件 EXE**。
+"""把 Mahiru 打成**单文件 EXE**。
 
 用法（建议用干净的 venv，别用装了 numpy/pandas 那种大环境，
 否则即使排除了这些包，扫描阶段也会明显变慢）：
@@ -35,7 +35,7 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 
-APP_NAME = "mahiru小助手"
+APP_NAME = "Mahiru"
 # 入口必须是**包外**的脚本：PyInstaller 把入口当顶层模块执行，
 # 包内的 app/__main__.py 含相对导入，会直接报
 # "attempted relative import with no known parent package"。
@@ -73,6 +73,9 @@ def main() -> int:
     ap.add_argument("--name", default=APP_NAME,
                     help="产物名（默认 GameBoostNext）。"
                          "旧版本正在运行时 EXE 会被锁住，换个名字就能先出一版")
+    ap.add_argument("--skip-checks", action="store_true",
+                    help="跳过出包前的验证脚本。默认一定会跑，失败就不出包 —— "
+                         "只有明知有问题还要出个临时包时才该用它")
     args = ap.parse_args()
 
     app_name = args.name
@@ -80,6 +83,20 @@ def main() -> int:
     if not os.path.exists(ICON):
         print(f"!! 找不到图标 {ICON}，请先跑 design/make_icon.py")
         return 2
+
+    # 出包前必须先过验证。这些脚本守的是「删错东西」这件事 —— 打出去的包
+    # 一旦有删除逻辑上的漏洞，用户的数据就没了，所以这道门默认关不起来。
+    if args.skip_checks:
+        print("!! 已跳过出包前验证（--skip-checks）")
+        print()
+    else:
+        rc = run([sys.executable, os.path.join(ROOT, "tools", "run_checks.py")])
+        if rc != 0:
+            print()
+            print("!! 验证没过，停止出包。")
+            print("   修完再来；确实要出临时包就加 --skip-checks。")
+            return 3
+        print()
 
     dist = os.path.join(ROOT, "dist")
     build = os.path.join(ROOT, "build")

@@ -10,15 +10,16 @@
   * 任何异常都就地转成 {"ok": False, "error": ...}，不让它穿到 JS 变成白屏
 """
 import os
+import re
 import shutil
 import sys
 import threading
 import time
 
 from . import elevation
-from .core import junk, mem
+from .core import junk, mem, winhance
 
-APP_TITLE = "mahiru小助手"
+APP_TITLE = "Mahiru"
 APP_AUTHOR = "decaycc"
 APP_VERSION = "1.0.1"
 
@@ -83,6 +84,19 @@ class Api:
         return {"ok": True}
 
     # ==================================================== 应用信息 / 权限
+    @_guard
+    def ping(self) -> dict:
+        """什么都不做，只证明「这一次往返真的通了」。
+
+        前端 `Bridge.waitReady()` 用它做就绪判定。为什么不能只看
+        `window.pywebview.api` 存不存在：冷启动（WebView2 缓存为空）时
+        这个对象可能先出现、而底层消息通道还没接好，此时**第一次调用会
+        被丢掉** —— 既不 resolve 也不 reject。旧实现只看对象存在就放行，
+        于是 boot() 里第一个 await 就永远挂住，表现为「界面停在占位符、
+        没有任何报错」。用一次真实往返来判定，才能挡住这种情况。
+        """
+        return {"ok": True, "pong": True}
+
     @_guard
     def get_app_info(self) -> dict:
         """标题、版本、作者、是否打包运行、Python 版本。"""
@@ -228,6 +242,8 @@ class Api:
                 "default": bool(r.get("default", r.get("level") == "safe")),
                 "desc": r.get("desc", ""),
                 "patterns": list(r.get("patterns") or []),
+                "locked": bool(r.get("locked")),
+                "system_managed": bool(r.get("system_managed")),
                 "targets": len(targets),
                 "sample": targets[:4],
             })
@@ -327,6 +343,12 @@ class Api:
         cur_guid, cur_name = mem.active_power_plan()
         return {"ok": True, "current": {"guid": cur_guid, "name": cur_name},
                 "plans": mem.available_plans()}
+
+    @_guard
+    def set_power_plan(self, guid: str) -> dict:
+        """切换当前电源计划。"""
+        ok, msg = mem.set_power_plan(str(guid))
+        return {"ok": bool(ok), "message": msg}
 
     @_guard
     def relaunch_closed(self) -> dict:
@@ -437,6 +459,35 @@ class Api:
         return {"ok": True, "applied": done, "failed": failed,
                 "not_running": missed, "total": len(m)}
 
+    # ==================================================== WinHance 游戏与性能
+    @_guard
+    def gaming_list(self) -> dict:
+        """所有游戏/性能调校项（116 条）的元数据，按组返回。"""
+        return {"ok": True, "tunes": winhance.list_tunes()}
+
+    @_guard
+    def gaming_states(self) -> dict:
+        """读 116 条调校项在注册表里的真实开/关状态。"""
+        return {"ok": True, "states": winhance.read_states()}
+
+    @_guard
+    def gaming_apply(self, tune_id: str, value) -> dict:
+        """应用一条调校：toggle 传 bool，selection 传选项序号 int。"""
+        ok, msg = winhance.apply_tune(str(tune_id), value)
+        return {"ok": ok, "message": msg}
+
+    @_guard
+    def gaming_recommended(self, tune_id: str) -> dict:
+        """把一条调校设为 Winhance 的「推荐值」。"""
+        ok, msg = winhance.apply_recommended(str(tune_id))
+        return {"ok": ok, "message": msg}
+
+    @_guard
+    def gaming_default(self, tune_id: str) -> dict:
+        """把一条调校恢复为 Windows 默认。"""
+        ok, msg = winhance.apply_default(str(tune_id))
+        return {"ok": ok, "message": msg}
+
     # ==================================================== 深度内存优化
     @_guard
     def deep_ops_info(self) -> dict:
@@ -504,6 +555,8 @@ class Api:
             "level": rule["level"], "kind": rule["kind"],
             "desc": rule.get("desc", ""),
             "patterns": list(rule.get("patterns") or []),
+            "locked": bool(rule.get("locked")),
+            "system_managed": bool(rule.get("system_managed")),
             "paths": paths,
             "exists": [p for p in paths if os.path.exists(p)],
         }
@@ -546,10 +599,11 @@ class Api:
         from .paths import config_dir, is_frozen, resource_root
 
         override = os.path.join(config_dir(), "third_party_rules.py")
-        counts = {"safe": 0, "caution": 0, "files": 0}
+        counts = {"safe": 0, "caution": 0, "files": 0, "caution_files": 0}
         for key, bucket in (("third_party_apps", "safe"),
                             ("third_party_caution", "caution"),
-                            ("third_party_logs", "files")):
+                            ("third_party_logs", "files"),
+                            ("third_party_caution_logs", "caution_files")):
             r = next((x for x in junk.RULES if x.get("key") == key), None)
             if r is not None:
                 try:
@@ -557,30 +611,35 @@ class Api:
                 except Exception:                           # noqa: BLE001
                     pass
 
-        # 生成文件头部写了来源与版本，读出来展示
-        versions = []
+        # 生成文件头部写了来源与版本，读出来展示。
+        # 用哪份文件就用哪份文件的头部 —— 内置版和更新版的来源可能不同
+        # （比如更新时没拿到 MultronWcleaner），不能想当然。
+        using_override = os.path.isfile(override)
+        src = (override if using_override
+               else os.path.join(resource_root(), "app", "core",
+                                 "third_party_rules.py"))
+        sources, generated_at = _parse_rules_header(src)
+
+        info = {"path": src, "exists": os.path.isfile(src),
+                "size": 0, "mtime": "", "generated_at": generated_at}
         try:
-            src = (override if os.path.isfile(override)
-                   else os.path.join(resource_root(), "app", "core",
-                                     "third_party_rules.py"))
-            with open(src, encoding="utf-8") as f:
-                for line in f:
-                    if line.startswith("  * ") or line.startswith("      "):
-                        versions.append(line.strip())
-                    elif versions:
-                        break
-        except Exception:                                   # noqa: BLE001
+            st = os.stat(src)
+            info["size"] = st.st_size
+            info["mtime"] = time.strftime("%Y-%m-%d %H:%M:%S",
+                                          time.localtime(st.st_mtime))
+        except OSError:
             pass
 
         return {
             "ok": True,
             "frozen": is_frozen(),
-            "using_override": os.path.isfile(override),
-            "override_path": override if os.path.isfile(override) else "",
+            "using_override": using_override,
+            "override_path": override if using_override else "",
             "cache_dir": rule_update.cache_dir(),
             "matched": counts,
             "matched_total": sum(counts.values()),
-            "versions": versions,
+            "sources": sources,
+            "file": info,
         }
 
     @_guard
@@ -593,13 +652,44 @@ class Api:
                 "error": "GitHub 限额用完了，过一小时再试" if limited else ""}
 
     @_guard
-    def start_rule_update(self, offline: bool = False) -> dict:
-        """下载并应用新规则。走后台任务（要联网，可能几十秒）。"""
+    def start_rule_update(self, offline: bool = False,
+                          refresh: bool = False) -> dict:
+        """下载并应用新规则。走后台任务（要联网，可能几十秒）。
+
+        refresh=True 时**无视下载缓存强制重下**。默认（False）会用
+        CACHE_TTL_DAYS 天内的缓存 —— 也就是说刚更新过又点一次「更新」，
+        很可能什么都没联网。想确保拿到上游最新版就得显式用 refresh。
+        """
         jid = self.jobs.start(
             "rules",
-            "更新清理规则" + ("（离线缓存）" if offline else ""),
-            lambda job: _rule_update_worker(job, bool(offline)))
+            "更新清理规则" + ("（离线缓存）" if offline
+                              else "（强制重下）" if refresh else ""),
+            lambda job: _rule_update_worker(job, bool(offline), bool(refresh)))
         return {"ok": True, "job_id": jid}
+
+    @_guard
+    def reset_rules(self) -> dict:
+        """退回程序内置的规则：把可写目录里那份更新过的规则挪走。
+
+        **不是删除**：改名成 `.removed` 留着，万一用户想切回更新版还在。
+        改名后立刻重新注册，不用重启。
+        """
+        from .paths import config_dir
+
+        target = os.path.join(config_dir(), "third_party_rules.py")
+        if not os.path.isfile(target):
+            return {"ok": False, "error": "当前用的就是内置规则，不需要恢复"}
+
+        kept = target + ".removed"
+        try:
+            if os.path.exists(kept):
+                os.remove(kept)
+            os.replace(target, kept)
+        except OSError as e:
+            return {"ok": False, "error": f"无法移走更新版规则：{e}"}
+
+        total = _reload_third_party_rules()
+        return {"ok": True, "matched_total": total, "kept_at": kept}
 
     # ==================================================== 小功能
     @_guard
@@ -711,12 +801,87 @@ class Api:
     # ==================================================== 杂项
     @_guard
     def open_in_explorer(self, path: str) -> dict:
-        """在资源管理器里定位一个路径。只读操作，不删任何东西。"""
-        path = os.path.abspath(path)
+        """在资源管理器里打开一个目录。只读操作，不删任何东西。
+
+        前端可以传**代号**（"config"）也可以传绝对路径。
+        代号必须先在这里翻译成真实目录 —— 以前直接把代号丢给
+        os.path.abspath，那是相对**进程当前目录**解析的，必然找不到，
+        于是「打开配置目录」这个按钮点了永远报「路径不存在」。
+        """
+        from .paths import config_dir
+        tokens = {
+            "config": config_dir,
+        }
+        key = (path or "").strip().lower()
+        if key in tokens:
+            path = tokens[key]()
+        else:
+            path = os.path.abspath(path)
         if not os.path.exists(path):
-            return {"ok": False, "error": "路径不存在"}
+            return {"ok": False, "error": f"路径不存在：{path}"}
         os.startfile(path)                                  # noqa: S606
-        return {"ok": True}
+        return {"ok": True, "path": path}
+
+    @_guard
+    def open_url(self, url: str) -> dict:
+        """在默认浏览器打开一个外部链接。
+
+        只放行 https + 白名单域名 —— 设置页的「GitHub / 下载更新」是外部
+        链接，而 WebView2 里不能直接跳走（会离开应用页面），所以统一走
+        这里用系统默认浏览器打开。域名白名单防的是：以后前端若有别的
+        外部链接需求，也不会被误用来打开任意 URL。
+        """
+        from urllib.parse import urlparse
+        allowed_hosts = {"github.com", "api.github.com"}
+        target = (url or "").strip()
+        parsed = urlparse(target)
+        host = (parsed.hostname or "").lower()
+        if parsed.scheme != "https" or host not in allowed_hosts:
+            return {"ok": False, "error": "链接被拦截：仅允许打开 GitHub 相关页面。"}
+        os.startfile(target)                                 # noqa: S606
+        return {"ok": True, "url": target}
+
+    @_guard
+    def check_update(self) -> dict:
+        """查询 GitHub 最新 Release，和当前版本比较，返回是否有更新。
+
+        这是设置页「检查更新」按钮的真实后端：读 GitHub Releases 的最新
+        tag，与 APP_VERSION 做数字比较。网络失败不抛异常，转成
+        {"ok": False} 让前端显示「检查失败」。
+        """
+        import json
+        from urllib import request
+
+        def _ver_tuple(v: str):
+            # v1.0.1 → (1, 0, 1)；非数字段当 0，避免 "rc"/"beta" 之类报错
+            parts = re.split(r"[.\-+]", (v or "").strip().lstrip("vV"))
+            out = []
+            for p in parts:
+                m = re.match(r"\d+", p)
+                out.append(int(m.group(0)) if m else 0)
+            return tuple(out) or (0,)
+
+        url = "https://api.github.com/repos/Decaycc/mahiru-assistant/releases/latest"
+        req = request.Request(url, headers={
+            "User-Agent": "Mahiru",
+            "Accept": "application/vnd.github+json",
+        })
+        try:
+            with request.urlopen(req, timeout=10) as resp:      # noqa: S310
+                data = json.loads(resp.read().decode("utf-8"))
+        except Exception as e:                                  # noqa: BLE001
+            return {"ok": False, "error": f"检查更新失败：{e}"}
+
+        latest = (data.get("tag_name") or "").strip()
+        current = APP_VERSION.strip()
+        return {
+            "ok": True,
+            "has_update": _ver_tuple(latest) > _ver_tuple(current),
+            "latest": latest.lstrip("vV"),
+            "current": current.lstrip("vV"),
+            "name": data.get("name") or "",
+            "url": data.get("html_url") or "",
+        }
 
 
 # ------------------------------------------------------------------ 动作辅助
@@ -834,13 +999,64 @@ def _reload_third_party_rules() -> int:
     再调一次注册。`_load_rules_module()` 每次都会重新执行
     config/ 下那份文件，所以拿到的就是新规则。
     """
-    keys = {"third_party_apps", "third_party_caution", "third_party_logs"}
+    keys = {"third_party_apps", "third_party_caution", "third_party_logs",
+            "third_party_caution_logs"}
     junk.RULES[:] = [r for r in junk.RULES if r.get("key") not in keys]
     junk._THIRD_PARTY_LOADED = False
     return junk.register_third_party_rule()
 
 
-def _rule_update_worker(job, offline: bool) -> dict:
+def _parse_rules_header(path: str) -> tuple[list[dict], str]:
+    """从生成文件头部读出「来源与版本」和生成时间。
+
+    头部由 rule_update.build_text() 写成固定形状，每个来源两行：
+
+        "  * winapp2    https://github.com/MoscaDotTo/Winapp2"
+        "              版本 260915 / 4,068 条 / CC-BY-SA-4.0"
+
+    以前是把这两行原样丢给前端，让 JS 按下标配对再正则拆 —— 名字里
+    带空格、或者上游少写一行，整块就错位了。这里在**有结构**的一侧解析。
+
+    返回 (sources, generated_at)；解析不到时是 ([], "")。
+    """
+    head_name = re.compile(r"^\s*\*\s+(\S+)\s+(\S+)\s*$")
+    head_meta = re.compile(
+        r"^\s+版本\s+(\S+)\s*/\s*([\d,]+)\s*条\s*/\s*(\S+)\s*$")
+    head_time = re.compile(r"^\s*生成时间：\s*(\S+\s+\S+)")
+
+    sources: list[dict] = []
+    generated_at = ""
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                m = head_time.match(line)
+                if m:
+                    generated_at = m.group(1)
+                    continue
+                m = head_name.match(line)
+                if m:
+                    sources.append({"name": m.group(1), "url": m.group(2),
+                                    "version": "", "entries": "",
+                                    "license": ""})
+                    continue
+                m = head_meta.match(line)
+                if m and sources:
+                    sources[-1].update({"version": m.group(1),
+                                        "entries": m.group(2),
+                                        "license": m.group(3)})
+                    continue
+                # 头部结束（第一条规则模板）就停，别把整个 400 KB 文件读完。
+                # 空行要放过 —— 「来源与许可」和「生成时间」之间就隔着一个空行，
+                # 在那里 break 会把生成时间整个丢掉。
+                if (sources and line.strip()
+                        and not line.startswith((" ", "\t"))):
+                    break
+    except Exception:                                       # noqa: BLE001
+        pass
+    return sources, generated_at
+
+
+def _rule_update_worker(job, offline: bool, refresh: bool = False) -> dict:
     """后台任务：下载 → 生成 → 写到可写目录 → 立即生效。"""
     from .core import rule_update
     from .paths import config_dir
@@ -851,13 +1067,15 @@ def _rule_update_worker(job, offline: bool) -> dict:
     job.log("      加载时优先用这份，删掉它就退回内置版本。")
     if offline:
         job.log("离线模式：只用本地缓存")
+    elif refresh:
+        job.log("强制重新下载：忽略下载缓存，全部从上游重拉")
     else:
         job.log("联网获取中，首次可能要几十秒…")
 
     job.set_progress("正在获取规则…")
     try:
         stats = rule_update.update(
-            target, offline=offline,
+            target, offline=offline, refresh=refresh,
             log=lambda m: job.log("  " + m))
     except rule_update.RateLimited as e:
         job.log(f"!! {e}")
@@ -870,21 +1088,26 @@ def _rule_update_worker(job, offline: bool) -> dict:
     total = _reload_third_party_rules()
     job.log(f"已生效：本机命中 {total} 个目录")
 
-    counts = {"safe": 0, "caution": 0, "files": 0}
+    counts = {"safe": 0, "caution": 0, "files": 0, "caution_files": 0}
     for key, bucket in (("third_party_apps", "safe"),
                         ("third_party_caution", "caution"),
-                        ("third_party_logs", "files")):
+                        ("third_party_logs", "files"),
+                        ("third_party_caution_logs", "caution_files")):
         r = next((x for x in junk.RULES if x.get("key") == key), None)
         if r is not None:
             counts[bucket] = len(junk.expand_paths(r))
     job.log(f"分档：缓存 {counts['safe']} / 谨慎 {counts['caution']}"
-            f" / 按模式 {counts['files']}")
+            f" / 按模式 {counts['files']}"
+            f" / 归档按模式 {counts['caution_files']}")
 
     return {
+        # 成功也带 ok —— 失败分支返回的是 {"ok": False, ...}，
+        # 成功那边不给的话前端只能靠「ok 不等于 false」判断，很容易写错。
+        "ok": True,
         "safe": stats["safe"], "caution": stats["caution"],
         "files": stats["files"], "size": stats["size"],
         "matched": counts, "matched_total": total,
-        "versions": stats.get("provenance", {}),
+        "provenance": stats.get("provenance", {}),
     }
 
 
@@ -1092,26 +1315,59 @@ def _scan_worker(job, keys: list[str]) -> dict:
 
 def _clean_worker(job, keys: list[str]) -> dict:
     rules = _rules_by_keys(keys)
+    # 系统托管规则（locked）由系统磁盘清理负责，本工具不直接删除。
+    # 前端虽已禁用其勾选，这里再拦一道作为纵深防御，绝不静默绕过。
+    locked = [r for r in rules if r.get("locked")]
+    rules = [r for r in rules if not r.get("locked")]
+    for r in locked:
+        job.log(f"已跳过「{r.get('name', '')}」：该规则由系统磁盘清理负责，"
+                f"本工具不直接删除。")
     if not rules:
-        job.log("没有匹配的规则")
-        return {"freed": 0, "deleted": 0, "failed": []}
+        job.log("没有可清理的规则")
+        return {"freed": 0, "deleted": 0, "failed": [],
+                "recycled": 0, "recycled_bytes": 0}
+
+    # 删除方式由界面上的开关决定，存在配置文件里。默认**直接删除**。
+    recycle = bool((junk.load_config() or {}).get("recycle_bin"))
+    if recycle:
+        job.log("删除方式：移入回收站（可还原）。注意 —— 这**不会**释放磁盘"
+                "空间，要真正腾出空间需要清空回收站。")
+        # 该卷回收站要是被系统设置关掉了，Windows 会**静默永久删除**。
+        # junk 那边会拒绝执行，但与其等用户看到几十条失败，不如一开始就说清。
+        bad_vols = {}
+        for rule in rules:
+            for path in (rule.get("paths") or []):
+                why = junk.recycle_bin_check(path, 0)
+                if why:
+                    bad_vols.setdefault(why, 0)
+                    bad_vols[why] += 1
+        for why, n in bad_vols.items():
+            job.log(f"!! {why}（涉及 {n} 条路径）——这些项目会被跳过，"
+                    f"程序**不会**改成永久删除。")
 
     before = junk.disk_free(junk.SYSTEM_ROOT_DIR) if junk.SYSTEM_ROOT_DIR else 0
     job.log(f"开始清理 {len(rules)} 条规则…")
     job.log("说明：占用中的文件会被跳过（不做强制删除）；"
             "符号链接与目录联接一律不跟随。")
 
-    rep = junk.clean_rules(rules, job.cancel, log=job.log)
+    rep = junk.clean_rules(rules, job.cancel, log=job.log, recycle=recycle)
     after = junk.disk_free(junk.SYSTEM_ROOT_DIR) if junk.SYSTEM_ROOT_DIR else 0
 
     failed = rep.get("failed") or []
+    recycled = rep.get("recycled", 0)
+    recycled_bytes = rep.get("recycled_bytes", 0)
     job.log(f"清理完成：释放 {rep.get('freed', 0) / 1048576:.1f} MB，"
             f"删除 {rep.get('deleted', 0)} 项，跳过 {len(failed)} 项")
+    if recycled:
+        job.log(f"其中 {recycled} 项（{recycled_bytes / 1048576:.1f} MB）"
+                f"进了回收站，占用的空间还没有释放。")
     return {
         "freed": rep.get("freed", 0),
         "deleted": rep.get("deleted", 0),
         "failed": [[p, why] for p, why in failed[:50]],
         "failed_count": len(failed),
+        "recycled": recycled,
+        "recycled_bytes": recycled_bytes,
         "disk_free_delta": max(0, (after or 0) - (before or 0)),
         "rules": [{"key": r.get("key"), "freed": r.get("freed", 0),
                    "deleted": r.get("deleted", 0),
@@ -1148,7 +1404,8 @@ def _third_party_count() -> dict:
     out = {"safe": 0, "caution": 0, "files": 0}
     for key, bucket in (("third_party_apps", "safe"),
                         ("third_party_caution", "caution"),
-                        ("third_party_logs", "files")):
+                        ("third_party_logs", "files"),
+                        ("third_party_caution_logs", "caution_files")):
         rule = next((r for r in junk.RULES if r["key"] == key), None)
         if rule is not None:
             try:

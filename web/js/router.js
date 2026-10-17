@@ -13,7 +13,7 @@ const Router = (() => {
     overview: { title: '概览',     bar: false },
     memory:   { title: '内存优化', bar: true,  label: '一键加速' },
     junk:     { title: '垃圾清理', bar: true,  label: null },
-    tools:    { title: '小功能',   bar: false },
+    gaming:   { title: '游戏与性能', bar: false },
     settings: { title: '设置',     bar: false },
   };
 
@@ -21,6 +21,13 @@ const Router = (() => {
   let onEnter = {};       // page -> async fn
 
   function register(page, fn) { onEnter[page] = fn; }
+
+  /** 滑动导航指示器：胶囊块 translateY 到激活项位置（预览 v2 确认） */
+  const indicator = () => UI.$('#nav-indicator');
+  function moveIndicator(item) {
+    if (!item || !indicator()) return;
+    indicator().style.transform = `translateY(${item.offsetTop - 8}px)`;
+  }
 
   /** 交错浮现：给容器的直接子元素依次加延迟 */
   function stagger(container) {
@@ -45,6 +52,7 @@ const Router = (() => {
     UI.$$('.nav-item[data-page]').forEach((b) => {
       b.classList.toggle('active', b.dataset.page === page);
     });
+    moveIndicator(UI.$(`.nav-item[data-page="${page}"]`));
 
     // 顶栏
     UI.$('#crumb').textContent = PAGES[page].title;
@@ -100,6 +108,9 @@ const Router = (() => {
       btn.addEventListener('click', () => go(btn.dataset.page));
     });
     go('overview');
+    // 首次进入后把指示器贴到激活项（此时布局已就绪）
+    requestAnimationFrame(() =>
+      moveIndicator(UI.$('.nav-item[data-page="overview"]')));
   }
 
   return { PAGES, register, go, init, stagger, get current() { return current; } };

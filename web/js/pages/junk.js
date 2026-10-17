@@ -21,7 +21,10 @@ Pages.junk = (() => {
   /* ------------------------------------------------------------ 列表 */
   function rowHtml(r) {
     const lv = LEVEL[r.level] || LEVEL.safe;
-    const checked = S().selected.has(r.key) ? 'checked' : '';
+    // 系统托管规则（locked）整行禁用勾选，只引导走系统磁盘清理。
+    const locked = !!r.locked;
+    const checked = (!locked && S().selected.has(r.key)) ? 'checked' : '';
+    const disabled = locked ? 'disabled' : '';
     const hit = S().results[r.key];
     const pat = r.patterns.length
       ? `<span class="pat" title="${UI.esc(r.patterns.join('  '))}">按模式</span>` : '';
@@ -37,15 +40,20 @@ Pages.junk = (() => {
       right = `<span class="jfiles">${r.targets} 个目标</span>`;
     }
 
+    const badge = locked
+      ? '<span class="badge badge-mute">系统托管</span>'
+      : `<span class="badge ${lv.cls}">${lv.text}</span>`;
+
     return `
-      <label class="jrow lv-${r.level}" data-key="${UI.esc(r.key)}">
+      <label class="jrow lv-${r.level}${locked ? ' is-locked' : ''}"
+             data-key="${UI.esc(r.key)}">
         <span class="jcell-tick"><input type="checkbox" class="jtick"
-              data-key="${UI.esc(r.key)}" ${checked}></span>
+              data-key="${UI.esc(r.key)}" ${checked} ${disabled}></span>
         <span class="jcell-name">
           <span class="jname">${UI.esc(r.name)}</span>
           <span class="jmeta">${UI.esc(r.category)}${pat}</span>
         </span>
-        <span class="jcell-lv"><span class="badge ${lv.cls}">${lv.text}</span></span>
+        <span class="jcell-lv">${badge}</span>
         <span class="jcell-right">${right}
           <button class="linkbtn" data-detail="${UI.esc(r.key)}"
                   title="查看具体路径">详情</button></span>
@@ -61,7 +69,7 @@ Pages.junk = (() => {
 
     UI.$('#junk-list').innerHTML = list.length
       ? list.map(rowHtml).join('')
-      : '<div class="empty">没有匹配的规则</div>';
+      : '<div class="empty"><div class="sticker stk-120 enter" style="margin:0 auto 16px"><img src="assets/mahiru/waiting.png" alt="" onerror="this.classList.add(\'missing\')">真昼</div>没有匹配的规则</div>';
 
     const lv = j.byLevel || {};
     UI.$('#junk-stat').textContent =
@@ -101,11 +109,18 @@ Pages.junk = (() => {
 
     const card = UI.$('#junk-result');
     card.classList.remove('hide');
+    // 表情包：扫描完成且确实有可清理空间时，右侧放开心表情
+    const happy = result.total > 0
+      ? '<div class="sticker stk-96 enter"><img src="assets/mahiru/happy.png" alt="" onerror="this.classList.add(\'missing\')">真昼</div>'
+      : '';
     card.innerHTML = `
       <div class="row-between" style="margin-bottom:12px">
         <h2 class="section-h">扫描结果</h2>
-        <span class="muted" style="font-size:var(--fs-small)">
-          共 ${rows.length} 条规则命中，合计 ${UI.bytes(result.total)}</span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="muted" style="font-size:var(--fs-small)">
+            共 ${rows.length} 条规则命中，合计 ${UI.bytes(result.total)}</span>
+          ${happy}
+        </div>
       </div>
       <div class="result-grid">
         <div class="result-item"><div class="k">安全项</div>
@@ -133,11 +148,19 @@ Pages.junk = (() => {
   function showCleanResult(result) {
     const card = UI.$('#junk-result');
     card.classList.remove('hide');
+    // 移入回收站时**必须把账分开算**：东西只是换了个位置，盘上空间
+    // 一个字节都没少。只显示「释放 2 GB」会让用户以为白清了一场。
+    const rec = result.recycled || 0;
+    const recBytes = result.recycled_bytes || 0;
     card.innerHTML = `
       <div class="row-between" style="margin-bottom:12px">
         <h2 class="section-h">清理结果</h2>
-        <span class="muted" style="font-size:var(--fs-small)">
-          操作已完成</span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="muted" style="font-size:var(--fs-small)">
+            操作已完成</span>
+          <div class="sticker stk-96 enter"><img src="assets/mahiru/success.png"
+               alt="" onerror="this.classList.add('missing')">真昼</div>
+        </div>
       </div>
       <div class="result-grid">
         <div class="result-item"><div class="k">删除项</div>
@@ -147,6 +170,17 @@ Pages.junk = (() => {
         <div class="result-item"><div class="k">跳过</div>
           <div class="v">${result.failed_count || 0} <small>项</small></div></div>
       </div>
+      ${rec ? `
+      <div class="recycle-note">
+        <div class="recycle-line">
+          已移入回收站 <b>${rec}</b> 项（${UI.bytes(recBytes)}）
+        </div>
+        <div class="recycle-line muted">
+          实际释放 <b>0 B</b> —— 这些文件还在磁盘上，只是挪进了回收站，
+          要真正腾出空间得清空回收站。
+        </div>
+        <button class="btn btn-sm" id="junk-empty-bin">清空回收站</button>
+      </div>` : ''}
       ${(result.failed || []).length ? `
       <div class="stat-foot" style="margin-top:12px">
         被跳过的（占用中 / 受保护 / 是链接）：</div>
@@ -159,6 +193,23 @@ Pages.junk = (() => {
         ${result.failed_count > 8
           ? `<div class="fail-row"><span>…另有 ${result.failed_count - 8} 项</span></div>` : ''}
       </div>` : ''}`;
+
+    const emptyBtn = UI.$('#junk-empty-bin');
+    if (emptyBtn) {
+      emptyBtn.onclick = async () => {
+        if (!await UI.confirm('清空回收站？文件删除后无法恢复。')) return;
+        emptyBtn.disabled = true;
+        emptyBtn.textContent = '正在清空…';
+        runJob(() => Bridge.call('empty_recycle_bin'), '清空回收站', (res) => {
+          emptyBtn.disabled = false;
+          emptyBtn.textContent = '清空回收站';
+          UI.toast(res && res.ok !== false && res.emptied
+            ? `已清空回收站，释放 ${UI.bytes(res.freed || 0)}`
+            : ((res && res.message) || '回收站是空的'));
+          refreshRecycleBin();
+        });
+      };
+    }
   }
 
   /* ------------------------------------------------------------ 详情 */
@@ -260,19 +311,21 @@ Pages.junk = (() => {
     });
   }
 
-  function clean() {
+  async function clean() {
     const keys = Array.from(S().selected);
     const size = selectedSize();
-    // 谨慎项要二次确认 —— 它们能重建但有可见副作用
+    const recycle = UI.$('#junk-recycle').checked;
+    // 谨慎项要二次确认 —— 只提醒条数，不展开技术细节（用户要求文案简洁）
     const caution = S().rules.filter((r) => keys.includes(r.key)
       && r.level !== 'safe');
-    let msg = `将清理 ${keys.length} 条规则，预计释放 ${UI.bytes(size)}。`;
-    if (caution.length) {
-      msg += `\n\n其中 ${caution.length} 条是「谨慎」级，清理后会有可见副作用`
-        + `（例如离线应用需重新注册、受保护视频需重新下载组件）。`;
-    }
-    msg += '\n\n继续吗？';
-    if (!window.confirm(msg)) return;
+    // 确认文案按删除方式分支：直接删除必须明说「无法恢复」，
+    // 确认按钮也承担重量（「直接删除」而非泛泛的「确定」）。
+    let msg = recycle
+      ? `将清理 ${keys.length} 条规则（移入回收站，可还原，不释放空间）。`
+      : `将直接删除 ${keys.length} 条规则，预计释放 ${UI.bytes(size)}。\n直接删除后无法恢复。`;
+    if (caution.length) msg += `\n其中 ${caution.length} 条清理后有可见副作用。`;
+    if (!await UI.confirm(msg, { title: '确认清理',
+        ok: recycle ? '移入回收站' : '直接删除' })) return;
 
     runJob(() => Bridge.call('start_clean', keys), '清理中…', (res) => {
       showCleanResult(res);
@@ -293,8 +346,8 @@ Pages.junk = (() => {
     UI.$('#junk-rb-empty').disabled = !rb.items || busy();
   }
 
-  function emptyRecycleBin() {
-    if (!window.confirm('清空回收站？里面的文件将无法恢复。')) return;
+  async function emptyRecycleBin() {
+    if (!await UI.confirm('清空回收站？文件删除后无法恢复。')) return;
     runJob(() => Bridge.call('empty_recycle_bin'), '清空回收站', (res) => {
       UI.toast(res.emptied
         ? `已清空回收站，释放 ${UI.bytes(res.freed || 0)}`
@@ -303,15 +356,36 @@ Pages.junk = (() => {
     });
   }
 
-  function runDism() {
-    const msg = 'DISM 组件清理会移除 WinSxS 中被取代的旧组件。\n\n'
-      + '· 耗时可能十几分钟，期间可以取消\n'
-      + '· 清理后无法卸载已安装的更新\n'
-      + '· 这是微软官方工具，不是本程序自己删文件\n\n继续吗？';
-    if (!window.confirm(msg)) return;
+  async function runDism() {
+    const msg = 'DISM 组件清理：移除被取代的旧系统组件。\n'
+      + '耗时可能十几分钟，清理后无法卸载已安装的更新。';
+    if (!await UI.confirm(msg)) return;
     runJob(() => Bridge.call('start_dism', false), 'DISM 组件清理', () => {
       UI.toast('DISM 完成，详见下方日志');
     });
+  }
+
+  /* ------------------------------------------------------------ 删除方式 */
+  // 默认「直接删除」。移入回收站更安全（可还原），但**不释放空间** ——
+  // 两个选项的取舍差得很远，所以不能只留一个复选框，得有文字说清差异。
+  function applyDelMode(on) {
+    const hint = UI.$('#junk-delmode-hint');
+    if (!hint) return;
+    hint.textContent = on
+      ? '可以还原，但不会释放磁盘空间，要真正腾出空间还得清空回收站'
+      : '立即释放磁盘空间，删掉就找不回来了';
+    hint.classList.toggle('warn', !!on);
+    // 整行一起染色：复选框和它的解释是一体的，只染文字会显得两截。
+    const row = UI.$('#junk-delmode-row');
+    if (row) row.classList.toggle('warn', !!on);
+  }
+
+  async function loadDelMode() {
+    const d = await Bridge.call('load_config');
+    const on = !!(d && d.ok !== false && (d.config || {}).recycle_bin);
+    const cb = UI.$('#junk-recycle');
+    if (cb) cb.checked = on;
+    applyDelMode(on);
   }
 
   /* ------------------------------------------------------------ 事件 */
@@ -338,6 +412,7 @@ Pages.junk = (() => {
         const mode = btn.dataset.pick;
         S().selected.clear();
         S().rules.forEach((r) => {
+          if (r.locked) return;                       // 系统托管，不参与勾选
           if (mode === 'safe' && r.level === 'safe') S().selected.add(r.key);
           if (mode === 'default' && r.default) S().selected.add(r.key);
         });
@@ -363,6 +438,15 @@ Pages.junk = (() => {
 
     UI.$('#junk-rb-empty').addEventListener('click', emptyRecycleBin);
     UI.$('#junk-dism').addEventListener('click', runDism);
+
+    UI.$('#junk-recycle').addEventListener('change', async (e) => {
+      const on = e.target.checked;
+      applyDelMode(on);
+      await Bridge.call('save_config', { recycle_bin: on });
+      UI.toast(on
+        ? '删除时会移入回收站：可还原，但不释放空间'
+        : '删除时直接删除：立即释放空间，无法还原');
+    });
   }
 
   async function load(force) {
@@ -379,7 +463,9 @@ Pages.junk = (() => {
     j.byLevel = d.by_level || {};
     j.loaded = true;
     if (!j.selected.size) {
-      j.rules.forEach((r) => { if (r.default) j.selected.add(r.key); });
+      j.rules.forEach((r) => {
+        if (!r.locked && r.default) j.selected.add(r.key);
+      });
     }
     render();
   }
@@ -387,6 +473,7 @@ Pages.junk = (() => {
   async function enter() {
     await load(false);
     await refreshRecycleBin();
+    await loadDelMode();
   }
 
   function init() { bind(); }

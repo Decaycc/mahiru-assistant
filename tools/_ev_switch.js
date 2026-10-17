@@ -1,0 +1,1 @@
+try{var ss=[...document.styleSheets];var out={};for(var s of ss){try{var rs=s.cssRules;for(var i=0;i<rs.length;i++){var t=rs[i].cssText||"";if(t.indexOf("input.switch::after")>=0){out.after=t.substring(0,300);}if(t.indexOf("--toggle-thumb:")>=0){out.thumb=t.substring(0,120);}}}catch(e){}}document.title="EV|"+JSON.stringify(out);}catch(e){document.title="ERR|"+e.message}

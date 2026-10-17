@@ -24,9 +24,27 @@ param(
   [string]$Click = "",
   [string]$Page = "",
   [string]$Scroll = "",
-  [string]$Eval = ""
+  [string]$Eval = "",
+  [string]$EvalFile = ""
 )
 
+# -EvalFile reads a JS payload from a file. Newlines are collapsed because a
+# multi-line argv payload does not survive Start-Process quoting, and the app
+# wraps --eval in `setTimeout(function () { ... }, 2200)`.
+#
+# Consequence: the JS must use /* block comments */ only. A // line comment
+# swallows the wrapper tail and the whole payload silently becomes a no-op.
+#
+# To photograph a genuine mid-transition frame, do NOT try to pause the
+# animation: rAF is throttled for an occluded window, so the pause never
+# happens. Instead slow the token down, e.g.
+#   document.documentElement.style.setProperty("--dur-base", "8000ms")
+# and click. The shot then lands part-way through for real.
+if ($EvalFile) {
+  if (-not (Test-Path $EvalFile)) { Write-Host "FAIL: no eval file $EvalFile"; exit 1 }
+  $Eval = Get-Content -Raw $EvalFile
+}
+if ($Eval) { $Eval = ($Eval -replace "\r?\n", " ") }
 Add-Type -AssemblyName System.Drawing
 Add-Type @"
 using System;
@@ -72,9 +90,31 @@ public class WinCap {
 }
 "@
 [void][WinCap]::SetProcessDPIAware()
+Add-Type -MemberDefinition '[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);' -Name Unmin -Namespace Cap
+Add-Type -MemberDefinition '[DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr hWnd, IntPtr hdcBlt, uint nFlags);' -Name Pw -Namespace Cap
 
 $next   = Split-Path $PSScriptRoot -Parent
-$venvpy = Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) "venv\Scripts\python.exe"
+# The venv does not necessarily live next to the repo: this machine keeps it in
+# D:\Envs\<project>. Probe the known spots instead of guessing one, so a stale
+# hardcoded path fails loudly with the list it tried rather than as an opaque
+# "cannot find the file specified" from Start-Process.
+$venvCandidates = @(
+  (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) "venv\Scripts\python.exe"),
+  (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) ".venv\Scripts\python.exe"),
+  (Join-Path $next ".venv\Scripts\python.exe"),
+  (Join-Path $next "venv\Scripts\python.exe"),
+  "D:\Envs\mahiru-assistant\Scripts\python.exe"
+)
+$venvpy = $null
+foreach ($cand in $venvCandidates) {
+  if (Test-Path $cand) { $venvpy = $cand; break }
+}
+if (-not $venvpy) {
+  Write-Host "FAIL: no venv python found. Tried:"
+  foreach ($cand in $venvCandidates) { Write-Host "   $cand" }
+  exit 1
+}
+Write-Host "python=$venvpy"
 if (-not $OutDir) { $OutDir = Join-Path $next "design\shots" }
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
@@ -82,7 +122,7 @@ $pages = @(
   @{ key = 'overview'; file = "$Prefix-01-overview.png" },
   @{ key = 'memory';   file = "$Prefix-02-memory.png"   },
   @{ key = 'junk';     file = "$Prefix-03-junk.png"     },
-  @{ key = 'tools';    file = "$Prefix-04-tools.png"    },
+  @{ key = 'gaming';   file = "$Prefix-04-gaming.png"   },
   @{ key = 'settings'; file = "$Prefix-05-settings.png" }
 )
 
@@ -143,13 +183,30 @@ foreach ($pg in $pages) {
   }
   if ($h -eq [IntPtr]::Zero) { Write-Host "   FAIL: no window"; continue }
 
+  # A minimized window reports -32000,-32000 with a 0x0 client rect, and
+  # SetForegroundWindow alone does not bring it back. Restore it first.
+  [void][Cap.Unmin]::ShowWindow($h, 9)
+  Start-Sleep -Milliseconds 600
   [void][WinCap]::SetForegroundWindow($h)
   Start-Sleep -Seconds $Wait
 
   $c = [WinCap]::ClientOrigin($h)
+  if ($c[2] -le 0 -or $c[3] -le 0) {
+    Write-Host ("   FAIL: rect not usable ({0})" -f ($c -join ","))
+    continue
+  }
   $bmp = New-Object System.Drawing.Bitmap($c[2], $c[3])
   $g = [System.Drawing.Graphics]::FromImage($bmp)
-  $g.CopyFromScreen($c[0], $c[1], 0, 0, $bmp.Size)
+  # PW_RENDERFULLCONTENT (2) asks the window to paint itself. CopyFromScreen
+  # grabs whatever is physically on top at those coordinates, so it silently
+  # captures someone else's window whenever ours is occluded.
+  $hdc = $g.GetHdc()
+  $pw = [Cap.Pw]::PrintWindow($h, $hdc, 2)
+  $g.ReleaseHdc($hdc)
+  if (-not $pw) {
+    Write-Host "   PrintWindow refused; falling back to screen grab"
+    $g.CopyFromScreen($c[0], $c[1], 0, 0, $bmp.Size)
+  }
   $out = Join-Path $OutDir $pg['file']
   $bmp.Save($out, [System.Drawing.Imaging.ImageFormat]::Png)
   $g.Dispose(); $bmp.Dispose()

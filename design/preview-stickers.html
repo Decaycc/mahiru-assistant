@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mahiru小助手 · 表情包点缀预览</title>
+<style>
+  :root {
+    --bg: #f5f5f4;
+    --card: #ffffff;
+    --card-soft: #f0f0ef;
+    --ink: #201515;
+    --ink-soft: #2f2a26;
+    --body: #605d52;
+    --body-mid: #939084;
+    --mute: #c5c0b1;
+    --border: #e9e9e6;
+    --border-strong: #d6d6d2;
+    --primary: #ff4f00;
+    --primary-ink: #e14600;
+    --on-primary: #fffefb;
+    --sidebar: #26201b;
+    --r-md: 8px;
+    --r-pill: 9999px;
+    --ease: cubic-bezier(.4, 0, .2, 1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    font-size: 14px;
+  }
+  /* 顶部 3px 橙状态线（签名元素） */
+  body::before {
+    content: ''; position: fixed; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--primary); z-index: 99;
+  }
+
+  /* ============ 布局 ============ */
+  .shell { display: flex; height: 100vh; }
+  .sidebar {
+    width: 232px; flex: none; background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 18px 18px 16px; }
+  .brand-mark {
+    width: 38px; height: 38px; border-radius: 10px; overflow: hidden; flex: none;
+    background: #3a322b;
+    box-shadow: 0 1px 2px rgba(0,0,0,.08);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .brand-mark img { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .brand-name { font-size: 15px; font-weight: 600; color: var(--on-primary); }
+  .brand-sub { font-size: 11px; color: rgba(255,254,251,.55); margin-top: 1px; }
+
+  .nav { position: relative; flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .nav-indicator {
+    position: absolute; left: 8px; right: 8px; top: 8px; height: 42px;
+    border-radius: var(--r-md); background: var(--primary);
+    transition: transform 260ms var(--ease); pointer-events: none;
+  }
+  .nav-item {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; gap: 11px; height: 42px; padding: 0 14px;
+    border-radius: var(--r-md); border: 0; cursor: pointer;
+    font-family: inherit; font-size: 15px; color: rgba(255,254,251,.72); font-weight: 500;
+    background: transparent; text-align: left; width: 100%;
+    transition: color 150ms var(--ease), background 150ms var(--ease);
+  }
+  .nav-item:hover:not(.active) { background: rgba(255,254,251,.06); color: var(--on-primary); }
+  .nav-item.active { color: #fff; font-weight: 600; }
+
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    height: 52px; flex: none; border-bottom: 1px solid var(--border);
+    background: var(--card); display: flex; align-items: center; padding: 0 22px; gap: 12px;
+  }
+  .crumb { font-size: 14px; color: var(--body-mid); }
+  .crumb b { color: var(--ink); font-weight: 600; }
+  .topbar .spacer { flex: 1; }
+  .relaunch {
+    border: 1px solid var(--border-strong); background: transparent; color: var(--ink);
+    border-radius: var(--r-md); padding: 6px 14px; font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+  }
+
+  .viewport { flex: 1; overflow-y: auto; padding: 22px 24px 28px; }
+  .page { display: none; }
+  .page.active { display: block; animation: pageIn 260ms var(--ease) both; }
+  @keyframes pageIn { from { opacity: 0; transform: translateY(6px); } }
+
+  .page-title { font-size: 32px; font-weight: 500; letter-spacing: 1px; margin: 0 0 6px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--r-md); padding: 20px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+  .stat-label { font-size: 14px; font-weight: 500; letter-spacing: 1px; color: var(--body); }
+  .stat-value { font-size: 24px; font-weight: 600; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .bar { height: 7px; background: var(--card-soft); border-radius: var(--r-pill); margin-top: 12px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--ink); border-radius: var(--r-pill); transition: width 300ms var(--ease); }
+  .stat-foot { font-size: 13px; color: var(--body-mid); margin-top: 8px; }
+
+  .row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .section-h { font-size: 16px; font-weight: 600; color: var(--ink); }
+  .hint { font-size: 13px; color: var(--body-mid); }
+
+  /* 开关（iOS 风） */
+  .switch {
+    appearance: none; -webkit-appearance: none; width: 46px; height: 26px;
+    border-radius: var(--r-pill); position: relative; cursor: pointer; flex: none;
+    background: rgba(32,21,21,.15); border: 1px solid rgba(197,192,177,.4);
+    transition: background 200ms var(--ease), border-color 200ms var(--ease);
+  }
+  .switch::after {
+    content: ''; position: absolute; left: 3px; top: 50%; transform: translate(0,-50%);
+    width: 20px; height: 20px; border-radius: 50%; background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,6,.2);
+    transition: transform 320ms cubic-bezier(.2,.8,.4,1), box-shadow 200ms var(--ease);
+  }
+  .switch:checked { background: var(--primary); border-color: rgba(255,79,0,.3); }
+  .switch:checked::after { transform: translate(20px,-50%); box-shadow: 0 2px 6px rgba(255,79,0,.3); }
+
+  .opt { display: flex; align-items: center; gap: 12px; padding: 11px 0; }
+  .opt b { font-size: 14px; font-weight: 600; }
+  .opt i { font-style: normal; color: var(--body-mid); font-size: 13px; }
+  .opt .grow { flex: 1; }
+
+  /* 空状态 */
+  .empty { text-align: center; padding: 30px 20px; color: var(--body-mid); font-size: 14px; }
+  .empty .big { font-size: 15px; color: var(--body); margin-bottom: 4px; }
+
+  /* 扫描结果横幅 */
+  .result {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md);
+    padding: 12px 16px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .result .grow { flex: 1; }
+  .result .v { font-size: 15px; font-weight: 600; }
+  .result .sub { font-size: 13px; color: var(--body-mid); }
+
+  /* 调校列表行 */
+  .tune-row {
+    display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 12px; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .tune-row:last-child { border-bottom: 0; }
+  .tune-name { font-size: 14px; font-weight: 600; }
+  .tune-desc { font-size: 13px; color: var(--body-mid); margin-top: 2px; }
+  .btn {
+    border: 1px solid var(--border-strong); background: transparent; color: var(--ink);
+    border-radius: var(--r-md); padding: 5px 12px; font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer; white-space: nowrap;
+  }
+  .btn:hover { background: var(--card-soft); }
+
+  /* ============ 表情包（核心） ============ */
+  /* 中性占位块：img 未加载/失败时显示；img 加载成功盖住占位 */
+  .sticker {
+    position: relative; flex: none; display: inline-flex;
+    align-items: center; justify-content: center;
+    border-radius: 10px; overflow: hidden;
+    background: rgba(32,21,21,.05);
+    color: rgba(32,21,21,.26);
+    font-size: 10px; font-weight: 700; letter-spacing: .5px;
+    transition: transform 200ms var(--ease), opacity 200ms var(--ease);
+  }
+  .sticker img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: contain; border: 0; pointer-events: none;
+  }
+  .sticker img.missing { display: none; }   /* 加载失败 → 露出占位块，绝不裂图 */
+  .sticker:hover { transform: scale(1.05); }
+  .sticker:active { transform: scale(.95); transition-duration: 120ms; }
+  .sticker.enter { animation: sticker-in 200ms ease-out both; }
+  @keyframes sticker-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .s36 { width: 36px; height: 36px; }
+  .s80 { width: 80px; height: 80px; }
+  .s88 { width: 88px; height: 88px; }
+  .s96 { width: 96px; height: 96px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sticker { transition: none; }
+    .sticker.enter { animation: none; }
+    .sticker:hover, .sticker:active { transform: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"><img src="assets/brand-mark.png" alt=""></div>
+        <div>
+          <div class="brand-name">mahiru小助手</div>
+          <div class="brand-sub">v1.0.1</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav">
+        <div class="nav-indicator" id="nav-indicator"></div>
+        <button class="nav-item active" data-page="overview">概览</button>
+        <button class="nav-item" data-page="memory">内存优化</button>
+        <button class="nav-item" data-page="junk">垃圾清理</button>
+        <button class="nav-item" data-page="gaming">游戏与性能</button>
+        <button class="nav-item" data-page="settings">设置</button>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="crumb">mahiru小助手 / <b id="crumb">概览</b></div>
+        <div class="spacer"></div>
+        <button class="relaunch">以管理员重启</button>
+      </div>
+      <div class="viewport">
+
+        <!-- 概览 -->
+        <section class="page active" id="page-overview">
+          <h1 class="page-title">概览</h1>
+          <div class="grid-2">
+            <div class="card" id="ov-mem" style="position: relative;">
+              <div class="stat-label">物理内存</div>
+              <div class="stat-value">7.10 <small style="font-size:14px;font-weight:400;color:var(--body-mid)">/ 15.41 GB</small></div>
+              <div class="bar"><i style="width: 46%"></i></div>
+              <div class="stat-foot">已用 46%</div>
+              <!-- 位置1：概览·物理内存卡右下角，正常态常驻 -->
+              <div class="sticker s36 enter" data-name="success" style="position:absolute; right:18px; bottom:18px;">
+                <img src="assets/mahiru/success.png" alt="" onerror="this.classList.add('missing')">成功
+              </div>
+            </div>
+            <div class="card">
+              <div class="stat-label">磁盘</div>
+              <div class="stat-value" style="font-size:16px;margin-top:16px;line-height:1.8;">C: 126 / 476 GB<br>D: 812 / 931 GB</div>
+            </div>
+            <div class="card">
+              <div class="stat-label">清理规则</div>
+              <div class="stat-value">49</div>
+              <div class="stat-foot">覆盖应用缓存与系统残留</div>
+            </div>
+            <div class="card">
+              <div class="stat-label">社区规则库</div>
+              <div class="stat-value">386</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 内存优化 -->
+        <section class="page" id="page-memory">
+          <h1 class="page-title">内存优化</h1>
+          <div class="card">
+            <div class="row-between">
+              <div>
+                <div class="section-h">一键加速</div>
+                <div class="hint" style="margin-top:4px;">释放可回收内存，减少游戏卡顿</div>
+              </div>
+              <button class="btn" style="background:var(--ink);border-color:var(--ink);color:var(--on-primary);">一键加速</button>
+            </div>
+            <div class="opt" style="margin-top:6px;"><div class="grow"><b>清理进程工作集</b></div><input type="checkbox" class="switch" checked></div>
+            <div class="opt"><div class="grow"><b>清空待机内存列表</b></div><input type="checkbox" class="switch" checked></div>
+            <div class="opt"><div class="grow"><b>切换到高性能电源计划</b></div><input type="checkbox" class="switch"></div>
+          </div>
+        </section>
+
+        <!-- 垃圾清理 -->
+        <section class="page" id="page-junk">
+          <h1 class="page-title">垃圾清理</h1>
+
+          <!-- 位置2：扫描结果横幅右侧，扫描完成且>0 时出现 -->
+          <div class="result" id="junk-result" style="display:none;">
+            <div class="grow">
+              <div class="v">扫描完成，预计释放 <b style="color:var(--ink);">480 MB</b></div>
+              <div class="sub">49 条规则 · 123 项可清理</div>
+            </div>
+            <div class="sticker s80 enter" data-name="happy">
+              <img src="assets/mahiru/happy.png" alt="" onerror="this.classList.add('missing')">开心
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="row-between" style="margin-bottom:12px;">
+              <div class="section-h">清理规则</div>
+              <button class="btn" id="btn-scan">开始扫描</button>
+            </div>
+            <!-- 位置2b：空状态，列表为空/搜索无匹配 -->
+            <div id="junk-list">
+              <div class="tune-row"><div class="grow"><div class="tune-name">Windows 临时文件</div><div class="tune-desc">应用运行产生的临时文件</div></div><input type="checkbox" class="switch" checked></div>
+              <div class="tune-row"><div class="grow"><div class="tune-name">浏览器缓存</div><div class="tune-desc">网页缓存与离线数据</div></div><input type="checkbox" class="switch" checked></div>
+              <div class="tune-row"><div class="grow"><div class="tune-name">缩略图缓存</div><div class="tune-desc">文件资源管理器生成的缩略图</div></div><input type="checkbox" class="switch" checked></div>
+            </div>
+            <div class="empty" id="junk-empty" style="display:none;">
+              <div class="sticker s96 enter" data-name="waiting" style="margin:0 auto 12px;">
+                <img src="assets/mahiru/waiting.png" alt="" onerror="this.classList.add('missing')">等待
+              </div>
+              <div class="big">没有找到可清理的项目</div>
+              换个关键词，或稍后再来
+            </div>
+          </div>
+        </section>
+
+        <!-- 游戏与性能 -->
+        <section class="page" id="page-gaming">
+          <h1 class="page-title">游戏与性能</h1>
+          <div class="card">
+            <div class="row-between" style="margin-bottom:12px;">
+              <div>
+                <div class="section-h">游戏调校</div>
+                <div class="hint" style="margin-top:4px;">116 项设置 · 按 Winhance 参数</div>
+              </div>
+              <!-- 位置3：调校卡标题行右侧，游戏模式开时出现 -->
+              <div class="sticker s36 enter" data-name="excited" id="gaming-sticker">
+                <img src="assets/mahiru/excited.png" alt="" onerror="this.classList.add('missing')">兴奋
+              </div>
+            </div>
+            <div class="tune-row"><div class="grow"><div class="tune-name">游戏 CPU 优先级</div><div class="tune-desc">提高游戏进程调度优先级</div></div><input type="checkbox" class="switch" id="game-mode" checked></div>
+            <div class="tune-row"><div class="grow"><div class="tune-name">游戏高调度类别</div><div class="tune-desc">降低游戏进程的延迟</div></div><input type="checkbox" class="switch" checked></div>
+            <div class="tune-row"><div class="grow"><div class="tune-name">游戏系统响应能力</div><div class="tune-desc">为前台游戏保留更多系统资源</div></div><input type="checkbox" class="switch"></div>
+          </div>
+        </section>
+
+        <!-- 设置 -->
+        <section class="page" id="page-settings">
+          <h1 class="page-title">设置</h1>
+          <div class="empty" style="padding:60px 20px;">
+            <!-- 位置4：设置空壳页，常驻小装饰 -->
+            <div class="sticker s88 enter" data-name="sleepy" style="margin:0 auto 16px;">
+              <img src="assets/mahiru/sleepy.png" alt="" onerror="this.classList.add('missing')">困倦
+            </div>
+            <div class="big">设置页面正在改版</div>
+            以前的选项之后会回到这里
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+  var PAGES = {
+    overview: '概览', memory: '内存优化', junk: '垃圾清理',
+    gaming: '游戏与性能', settings: '设置'
+  };
+  var nav = document.getElementById('nav');
+  var indicator = document.getElementById('nav-indicator');
+  var crumb = document.getElementById('crumb');
+
+  function go(page) {
+    nav.querySelectorAll('.nav-item').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.page === page);
+    });
+    var item = nav.querySelector('.nav-item[data-page="' + page + '"]');
+    indicator.style.transform = 'translateY(' + (item.offsetTop - 8) + 'px)';
+    crumb.textContent = PAGES[page];
+    document.querySelectorAll('.page').forEach(function (s) {
+      s.classList.toggle('active', s.id === 'page-' + page);
+    });
+  }
+  nav.querySelectorAll('.nav-item').forEach(function (b) {
+    b.addEventListener('click', function () { go(b.dataset.page); });
+  });
+
+  /* 首次导航指示器就位 */
+  go('overview');
+</script>
+</body>
+</html>

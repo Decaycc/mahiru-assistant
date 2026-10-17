@@ -1,4 +1,5 @@
-/* 内存优化页：进程列表 + 真实动作（整理 / 关闭 / 一键加速 / 优先级）。
+/* 内存优化页：进程列表 + 真实动作（整理 / 关闭 / 一键加速 / 优先级），
+ * 以及游戏优先级与电源计划两块卡。
  *
  * 安全前提：界面不做任何"这个进程能不能关"的判断，一律以后端为准。
  * 后端在 Optimizer 内部会对每个进程重新跑一遍保护判定，
@@ -20,6 +21,101 @@ Pages.memory = (() => {
     idle: '低', below: '低于正常', normal: '正常',
     above: '高于正常', high: '高', realtime: '实时',
   };
+
+  /* ------------------------------------------------------------ 游戏优先级 */
+  let games = [];
+
+  async function loadGames() {
+    const d = await Bridge.call('list_games');
+    if (!d || d.ok === false) return;
+    games = d.games || [];
+    const sel = UI.$('#prio-target');
+    const keep = sel.value;
+
+    sel.innerHTML = games.length
+      ? games.map((g) => {
+        const saved = g.saved ? ` · 记住:${g.saved}` : '';
+        return `<option value="${g.pid}">${UI.esc(g.name)} — `
+             + `${UI.esc(g.title)}（当前 ${UI.esc(g.priority)}${saved}）</option>`;
+      }).join('')
+      : '<option value="">（没有检测到有窗口的程序）</option>';
+    if (keep && games.some((g) => String(g.pid) === keep)) sel.value = keep;
+
+    UI.$('#prio-count').textContent = `${games.length} 个有窗口的程序`;
+    UI.$('#prio-apply').disabled = games.length === 0;
+    renderSaved(d.saved || {});
+  }
+
+  function renderSaved(saved) {
+    const keys = Object.keys(saved);
+    const box = UI.$('#prio-saved-box');
+    box.classList.toggle('hide', keys.length === 0);
+    UI.$('#prio-saved-list').innerHTML = keys.map((k) => `
+      <span class="saved-chip">${UI.esc(k)} → ${UI.esc(saved[k])}
+        <button class="chip-x" data-forget="${UI.esc(k)}" title="取消记忆">×</button>
+      </span>`).join('');
+  }
+
+  async function applyPriority() {
+    const sel = UI.$('#prio-target');
+    const pid = Number(sel.value);
+    if (!pid) { UI.toast('请先选一个程序', 'warn'); return; }
+    const level = UI.$('#prio-level').value;
+    const g = games.find((x) => x.pid === pid);
+
+    const r = await Bridge.call('set_priority', pid, level);
+    if (!r || r.ok === false) {
+      UI.toast((r && (r.error || r.message)) || '设置失败', 'err');
+      return;
+    }
+    UI.toast(`${g ? g.name : 'PID ' + pid} 优先级已设为「${r.level}」`);
+
+    if (UI.$('#prio-remember').checked && g) {
+      await Bridge.call('remember_priority', g.exe, level);
+      UI.toast(`已记住：${g.name} → ${r.level}`);
+    }
+    await loadGames();
+  }
+
+  async function applySaved() {
+    const r = await Bridge.call('apply_saved_priorities_quick');
+    if (!r || r.ok === false) {
+      UI.toast((r && r.error) || '没有可应用的', 'warn');
+      return;
+    }
+    const parts = [];
+    if (r.applied.length) parts.push(`成功 ${r.applied.length}`);
+    if (r.failed.length) parts.push(`失败 ${r.failed.length}`);
+    if (r.not_running.length) parts.push(`未运行 ${r.not_running.length}`);
+    UI.toast(`已应用记住的优先级：${parts.join(' · ') || '无匹配'}`,
+      r.failed.length ? 'warn' : 'ok');
+    await loadGames();
+  }
+
+  /* ------------------------------------------------------------ 电源计划 */
+  async function loadPowerPlans() {
+    const d = await Bridge.call('list_power_plans');
+    if (!d || d.ok === false) return;
+    const sel = UI.$('#power-plan');
+    const plans = d.plans || {};
+    const cur = d.current && d.current.guid;
+
+    sel.innerHTML = Object.entries(plans).map(([guid, name]) =>
+      `<option value="${guid}"${guid === cur ? ' selected' : ''}>${UI.esc(name)}</option>`
+    ).join('') || '<option value="">（无可用计划）</option>';
+  }
+
+  async function applyPowerPlan() {
+    const guid = UI.$('#power-plan').value;
+    if (!guid) { UI.toast('没有可切换的计划', 'warn'); return; }
+    const r = await Bridge.call('set_power_plan', guid);
+    if (!r || r.ok === false) {
+      UI.toast((r && r.message) || '切换失败', 'err');
+      return;
+    }
+    UI.toast('电源计划已切换');
+    await loadPowerPlans();
+  }
 
   /* ------------------------------------------------------------ 列表 */
   function rowHtml(p) {
@@ -258,77 +354,6 @@ Pages.memory = (() => {
       </div>`;
   }
 
-  /* ------------------------------------------------------------ 游戏优先级 */
-  let games = [];
-
-  async function loadGames() {
-    const d = await Bridge.call('list_games');
-    if (!d || d.ok === false) return;
-    games = d.games || [];
-    const sel = UI.$('#prio-target');
-    const keep = sel.value;
-
-    sel.innerHTML = games.length
-      ? games.map((g) => {
-        const saved = g.saved ? ` · 记住:${g.saved}` : '';
-        return `<option value="${g.pid}">${UI.esc(g.name)} — `
-             + `${UI.esc(g.title)}（当前 ${UI.esc(g.priority)}${saved}）</option>`;
-      }).join('')
-      : '<option value="">（没有检测到有窗口的程序）</option>';
-    if (keep && games.some((g) => String(g.pid) === keep)) sel.value = keep;
-
-    UI.$('#prio-count').textContent =
-      `${games.length} 个有窗口的程序`;
-    UI.$('#prio-apply').disabled = games.length === 0;
-    renderSaved(d.saved || {});
-  }
-
-  function renderSaved(saved) {
-    const keys = Object.keys(saved);
-    const box = UI.$('#prio-saved-box');
-    box.classList.toggle('hide', keys.length === 0);
-    UI.$('#prio-saved-list').innerHTML = keys.map((k) => `
-      <span class="saved-chip">${UI.esc(k)} → ${UI.esc(saved[k])}
-        <button class="chip-x" data-forget="${UI.esc(k)}" title="取消记忆">×</button>
-      </span>`).join('');
-  }
-
-  async function applyPriority() {
-    const sel = UI.$('#prio-target');
-    const pid = Number(sel.value);
-    if (!pid) { UI.toast('请先选一个程序', 'warn'); return; }
-    const level = UI.$('#prio-level').value;
-    const g = games.find((x) => x.pid === pid);
-
-    const r = await Bridge.call('set_priority', pid, level);
-    if (!r || r.ok === false) {
-      UI.toast((r && (r.error || r.message)) || '设置失败', 'err');
-      return;
-    }
-    UI.toast(`${g ? g.name : 'PID ' + pid} 优先级已设为「${r.level}」`);
-
-    if (UI.$('#prio-remember').checked && g) {
-      await Bridge.call('remember_priority', g.exe, level);
-      UI.toast(`已记住：${g.name} → ${r.level}`);
-    }
-    await loadGames();
-  }
-
-  async function applySaved() {
-    const r = await Bridge.call('apply_saved_priorities_quick');
-    if (!r || r.ok === false) {
-      UI.toast((r && r.error) || '没有可应用的', 'warn');
-      return;
-    }
-    const parts = [];
-    if (r.applied.length) parts.push(`成功 ${r.applied.length}`);
-    if (r.failed.length) parts.push(`失败 ${r.failed.length}`);
-    if (r.not_running.length) parts.push(`未运行 ${r.not_running.length}`);
-    UI.toast(`已应用记住的优先级：${parts.join(' · ') || '无匹配'}`,
-      r.failed.length ? 'warn' : 'ok');
-    await loadGames();
-  }
-
   /* ------------------------------------------------------------ 深度优化 */
   let deepOps = [];
 
@@ -419,6 +444,9 @@ Pages.memory = (() => {
       await loadGames();
     });
 
+    /* --- 电源计划 --- */
+    UI.$('#power-apply').addEventListener('click', applyPowerPlan);
+
     UI.$('#mem-apply').addEventListener('click', () => runJob(
       () => Bridge.call('start_trim', Array.from(S().selected)),
       '整理工作集'));
@@ -448,18 +476,17 @@ Pages.memory = (() => {
     });
 
     /* --- 深度优化 --- */
-    UI.$('#mem-deep-run').addEventListener('click', () => {
+    UI.$('#mem-deep-run').addEventListener('click', async () => {
       const opts = readDeepOpts();
       const picked = Object.values(opts).filter(Boolean).length;
       if (!picked) { UI.toast('一项都没勾选', 'warn'); return; }
 
-      // 有风险的项要二次确认，并把风险原样念一遍
+      // 有风险的项要二次确认 —— 只念关键风险，不展开（用户要求文案简洁）
       const risky = deepOps.filter((o) => opts[o.key] && o.warning);
       if (risky.length) {
         const msg = `将执行 ${picked} 项深度优化。\n\n`
-          + risky.map((o) => `【${o.name}】\n${o.warning}`).join('\n\n')
-          + '\n\n继续吗？';
-        if (!window.confirm(msg)) return;
+          + risky.map((o) => `【${o.name}】${o.warning}`).join('\n');
+        if (!await UI.confirm(msg)) return;
       }
       runJob(() => Bridge.call('start_deep_optimize', opts), '深度内存优化');
     });
@@ -476,11 +503,12 @@ Pages.memory = (() => {
   async function enter() {
     await load(false);
     await loadGames();
+    await loadPowerPlans();
     if (!deepOps.length) await loadDeepOps();
   }
 
   function init() { bind(); }
 
-  return { init, enter, load,
+  return { init, enter, load, loadGames,
            get running() { return busy(); } };
 })();

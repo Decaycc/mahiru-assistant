@@ -17,7 +17,7 @@ import shutil
 import struct
 import sys
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 # 路径按本文件位置推导，不写死机器路径。
 # 源图（插画原图）不入库 —— 它是第三方作品，仓库里只放裁好的成品图标。
@@ -36,6 +36,24 @@ FACE_X, FACE_Y, SIDE = 0.42, 0.215, 0.53
 BRAND_Y, BRAND_SIDE = 0.225, 0.36
 
 ICO_SIZES = [256, 128, 64, 48, 32, 24, 16]
+
+# 圆角遮罩：主流桌面软件图标的圆角样式（squircle 感由缩放天然带出）。
+# 半径按 Windows 11 应用图标的观感取约 22.5%（256px 时 ≈ 58px）。
+CORNER_RATIO = 0.30
+
+
+def rounded(frame: "Image.Image") -> "Image.Image":
+    """给一帧图标加透明圆角：四角清空，圆角外全部透明。
+
+    用最高分辨率帧先画一次遮罩再随帧缩放，避免小尺寸下抗锯齿半径失真。
+    """
+    mask = Image.new("L", (256, 256), 0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (0, 0, 255, 255), radius=int(256 * CORNER_RATIO), fill=255)
+    mask = mask.resize(frame.size, Image.LANCZOS)
+    out = frame.convert("RGBA")
+    out.putalpha(mask)
+    return out
 
 
 def main():
@@ -83,11 +101,11 @@ def main():
         os.path.join(OUT, "brand-mark.png"))
     print(f"品牌标裁切 {brand.size} @ ({bl},{bt})")
 
-    # 打包多尺寸 ICO
+    # 打包多尺寸 ICO（每帧带透明圆角 —— 主流桌面软件图标的样式）
     blobs = []
     for s in ICO_SIZES:
         buf = io.BytesIO()
-        head.resize((s, s), Image.LANCZOS).save(buf, format="PNG")
+        rounded(head.resize((s, s), Image.LANCZOS)).save(buf, format="PNG")
         blobs.append((s, buf.getvalue()))
     header = struct.pack("<HHH", 0, 1, len(blobs))
     offset = 6 + 16 * len(blobs)
@@ -102,13 +120,15 @@ def main():
         f.write(header + dirent + body)
     print(f"icon.ico  {os.path.getsize(ico)} bytes / {len(blobs)} 帧")
 
-    # 预览
-    head.resize((256, 256), Image.LANCZOS).save(os.path.join(OUT, "icon-256.png"))
+    # 预览（带圆角，白底上能看清四角透出）
+    rounded(head.resize((256, 256), Image.LANCZOS)).convert("RGB").save(
+        os.path.join(OUT, "icon-256.png"))
     row = Image.new("RGB", (256 + 24 + 96 + 24 + 64 + 24 + 32 + 24 + 16 + 40, 300),
                     (255, 255, 255))
     x = 12
     for s in (256, 96, 64, 32, 16):
-        row.paste(head.resize((s, s), Image.LANCZOS), (x, 20))
+        frm = rounded(head.resize((s, s), Image.LANCZOS))
+        row.paste(frm, (x, 20), frm)
         x += s + 24
     row.save(os.path.join(OUT, "icon-sizes.png"))
 

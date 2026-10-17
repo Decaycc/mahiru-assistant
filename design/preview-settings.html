@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设置页预览 — 关于 / 功能 / 更新</title>
+<style>
+  :root {
+    /* 与真实 app 的 tokens.css 一致，保证预览忠实 */
+    --primary: #ff4f00;
+    --ink: #201515;
+    --body: #605d52;
+    --body-mid: #75716a;
+    --mute: #c5c0b1;
+    --canvas: #f5f5f4;
+    --surface: #ffffff;
+    --surface-hover: #ececea;
+    --border: #e9e9e6;
+    --border-strong: #d6d6d2;
+    --go: #2e7d3e;
+    --shadow-1: 0 1px 3px rgba(32, 21, 21, .05), 0 6px 18px rgba(32, 21, 21, .04);
+    --ease-out: cubic-bezier(.16, 1, .3, 1);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; padding: 44px 24px 72px;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: "Inter", "Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif;
+    line-height: 1.6;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .wrap { width: 100%; max-width: 640px; }
+
+  /* 页头 */
+  .head { margin-bottom: 20px; }
+  .head h1 { font-size: 27px; font-weight: 600; margin: 0 0 4px; letter-spacing: 0; }
+  .head p { margin: 0; color: var(--body); font-size: 16px; }
+
+  /* 卡片：白底 + 发丝边 + 内高光 + 极浅投影（细腻质感） */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .85), var(--shadow-1);
+    border-radius: 8px;
+    padding: 22px 24px;
+  }
+  .card + .card { margin-top: 16px; }
+
+  .card-h {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600; color: var(--body-mid);
+    letter-spacing: 1px; margin: 0 0 14px;
+  }
+  .card-h::before {
+    content: ''; width: 3px; height: 13px; border-radius: 2px;
+    background: var(--primary); flex: none;
+  }
+
+  /* 软件功能说明 */
+  .feat { display: flex; flex-direction: column; gap: 0; }
+  .feat-item {
+    display: flex; align-items: flex-start; gap: 13px;
+    padding: 11px 0;
+  }
+  .feat-item + .feat-item { border-top: 1px solid var(--border); }
+  .feat-ico {
+    width: 34px; height: 34px; flex: none; border-radius: 8px;
+    background: var(--surface-hover);
+    display: grid; place-items: center;
+  }
+  .feat-ico svg { width: 17px; height: 17px; color: var(--ink); }
+  .feat-body { min-width: 0; }
+  .feat-body b { display: block; font-size: 15px; font-weight: 600; color: var(--ink); }
+  .feat-body span { font-size: 13.5px; color: var(--body-mid); }
+
+  /* 关于 */
+  .about-head { display: flex; align-items: baseline; gap: 10px; }
+  .about-name { font-size: 16px; font-weight: 650; }
+  .about-ver { font-size: 13px; color: var(--body-mid); font-variant-numeric: tabular-nums; }
+  .about-meta { margin-top: 6px; font-size: 13px; color: var(--body-mid); }
+  .about-meta b { color: var(--body); font-weight: 600; }
+
+  /* 幽灵按钮 */
+  .ghost {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 16px; border-radius: 6px;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--ink);
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    text-decoration: none; cursor: pointer;
+    transition:
+      transform 160ms cubic-bezier(.4, 0, .2, 1),
+      background 160ms cubic-bezier(.4, 0, .2, 1),
+      border-color 160ms cubic-bezier(.4, 0, .2, 1),
+      box-shadow 160ms cubic-bezier(.4, 0, .2, 1);
+  }
+  .ghost:hover {
+    transform: translateY(-1px);
+    background: var(--surface-hover);
+    border-color: var(--body-mid);
+    box-shadow: 0 1px 2px rgba(32, 21, 21, .06);
+  }
+  .ghost:active {
+    transform: scale(.98);
+    background: var(--surface-hover);
+    box-shadow: inset 0 1px 2px rgba(32, 21, 21, .08);
+    transition-duration: 80ms;
+  }
+  .ghost:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+  .ghost svg { width: 15px; height: 15px; }
+
+  /* 更新状态区 */
+  .update-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .status { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--body); }
+  .status .muted { color: var(--body-mid); }
+  .status .check { color: var(--go); display: inline-flex; }
+  .status .check svg { width: 16px; height: 16px; }
+  .status .new { color: var(--primary); font-weight: 600; }
+  .status a.dl { color: var(--primary); font-weight: 600; text-decoration: none; }
+  .status a.dl:hover { text-decoration: underline; }
+
+  .spin {
+    width: 15px; height: 15px; flex: none;
+    border: 2px solid rgba(32, 21, 21, .15);
+    border-top-color: var(--body);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 演示控制条（仅预览） */
+  .demo {
+    margin-top: 24px; padding: 12px 16px;
+    background: transparent; border: 1px dashed var(--border-strong);
+    border-radius: 8px; font-size: 13px; color: var(--body-mid);
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .demo b { color: var(--body); font-weight: 600; }
+  .demo .seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; }
+  .demo .seg button {
+    border: 0; background: transparent; padding: 4px 12px; font: inherit;
+    color: var(--body); cursor: pointer; font-size: 12.5px;
+  }
+  .demo .seg button + button { border-left: 1px solid var(--border-strong); }
+  .demo .seg button.on { background: var(--surface-hover); color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <h1>设置</h1>
+      <p>关于、功能说明与软件更新</p>
+    </div>
+
+    <!-- 软件功能说明 -->
+    <section class="card">
+      <h2 class="card-h">软件功能</h2>
+      <div class="feat">
+        <div class="feat-item">
+          <div class="feat-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>
+              <circle cx="12" cy="12" r="3.4"/>
+            </svg>
+          </div>
+          <div class="feat-body">
+            <b>内存优化</b>
+            <span>一键关闭后台程序、清理进程工作集、释放待机内存</span>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 7h16M9.5 7V5h5v2M6 7l1 13h10l1-13"/>
+            </svg>
+          </div>
+          <div class="feat-body">
+            <b>垃圾清理</b>
+            <span>清系统 / 浏览器 / 软件缓存，安全分级，可移入回收站</span>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 11h4M8 9v4"/>
+              <path d="M15 10h.01M17.5 12.5h.01"/>
+              <path d="M6.5 6h11a4.5 4.5 0 0 1 4.5 4.5v3a4.5 4.5 0 0 1-4.5 4.5h-11A4.5 4.5 0 0 1 2 13.5v-3A4.5 4.5 0 0 1 6.5 6z"/>
+            </svg>
+          </div>
+          <div class="feat-body">
+            <b>游戏与性能</b>
+            <span>游戏进程优先级 + 116 项系统调校，每项可还原默认</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 关于 -->
+    <section class="card">
+      <h2 class="card-h">关于 Mahiru</h2>
+      <div class="about-head">
+        <span class="about-name">Mahiru 助手</span>
+        <span class="about-ver">v1.0.1</span>
+      </div>
+      <div class="about-meta">作者：<b>decaycc</b></div>
+      <div style="margin-top:16px">
+        <a class="ghost" href="https://github.com/Decaycc/mahiru-assistant" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+              0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01
+              1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+              0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09
+              2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87
+              3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          在 GitHub 上查看项目
+        </a>
+      </div>
+    </section>
+
+    <!-- 软件更新 -->
+    <section class="card">
+      <h2 class="card-h">软件更新</h2>
+      <div class="update-row">
+        <button class="ghost" id="check-btn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 1.5v3h-3"/>
+          </svg>
+          检查更新
+        </button>
+        <span class="status" id="status">
+          <span class="muted">当前版本 v1.0.1</span>
+        </span>
+      </div>
+    </section>
+
+    <!-- 演示控制条（仅预览，不落真实代码） -->
+    <div class="demo">
+      <b>预览状态切换：</b>
+      <span class="seg" id="seg">
+        <button data-mode="random" class="on">随机</button>
+        <button data-mode="latest">已是最新</button>
+        <button data-mode="new">发现新版本</button>
+      </span>
+      <span>点「检查更新」体验（1.5s 模拟）</span>
+    </div>
+  </div>
+
+<script>
+  // check_update 接口形状：接入 Tauri updater 时只需替换内部实现。
+  let MODE = 'random';
+  function check_update() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const isNew = MODE === 'new' || (MODE !== 'latest' && Math.random() < 0.5);
+        resolve(isNew ? { latest: '1.0.1', remote: '1.1.0' }
+                      : { latest: '1.0.1', remote: null });
+      }, 1500);
+    });
+  }
+
+  const btn = document.getElementById('check-btn');
+  const status = document.getElementById('status');
+  const SPIN = '<span class="spin"></span>正在检查更新…';
+  const CHECK = '<span class="check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8.5l3.5 3.5 7.5-8"/></svg></span>';
+
+  function renderChecking() { status.innerHTML = SPIN; }
+  function renderLatest() { status.innerHTML = CHECK + '已是最新版本'; }
+  function renderNew(v) {
+    status.innerHTML = '<span class="new">发现新版本 v' + v + '</span>' +
+      '<a class="dl" href="https://github.com/Decaycc/mahiru-assistant/releases" target="_blank" rel="noopener">去下载 →</a>';
+  }
+  async function runCheck() {
+    btn.disabled = true; renderChecking();
+    const r = await check_update();
+    btn.disabled = false;
+    if (r.remote) renderNew(r.remote); else renderLatest();
+  }
+
+  btn.addEventListener('click', runCheck);
+  document.getElementById('seg').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    MODE = b.dataset.mode;
+    document.querySelectorAll('#seg button').forEach((x) => x.classList.toggle('on', x === b));
+    runCheck();
+  });
+</script>
+</body>
+</html>

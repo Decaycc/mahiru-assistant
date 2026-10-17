@@ -302,7 +302,7 @@ def assess_startup(item: dict) -> dict:
         from app.paths import app_root
         if low.startswith(str(app_root()).lower()):
             out.update(level="keep", verdict="本程序，别关",
-                       reason="这是 mahiru小助手 自己")
+                       reason="这是 Mahiru 自己")
             return out
     except Exception:                                       # noqa: BLE001
         pass

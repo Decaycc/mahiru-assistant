@@ -13,6 +13,10 @@ Pages.overview = (() => {
       `可用 ${UI.bytes(m.avail)} · 占用 ${UI.pct(m.percent)}`
       + (m.cache ? ` · 系统缓存 ${UI.bytes(m.cache)}` : '');
 
+    // 表情包：内存占用偏高（>=75%）时收起，保持克制，不渲染"紧张"情绪。
+    const memSticker = document.querySelector('[data-sticker="mem"]');
+    if (memSticker) memSticker.classList.toggle('hide', (m.percent || 0) >= 75);
+
     // 磁盘
     const box = UI.$('#ov-disks');
     box.innerHTML = '';
@@ -28,15 +32,15 @@ Pages.overview = (() => {
     });
     if (!(d.disks || []).length) box.innerHTML = '<div class="muted">未检测到固定磁盘</div>';
 
-    // 规则规模
+    // 规则规模（并入内存主卡右侧的小统计）
     const r = d.rules || {};
     const lv = r.by_level || {};
     const tp = d.third_party_rules || {};
-    UI.$('#ov-rules').innerHTML = `${r.total || 0} <small>条规则</small>`;
+    UI.$('#ov-rules').innerHTML = `${r.total || 0} <small>条</small>`;
     UI.$('#ov-rules-foot').textContent =
       `安全 ${lv.safe || 0} · 谨慎 ${lv.caution || 0} · 风险 ${lv.risky || 0}`;
     UI.$('#ov-tp').innerHTML =
-      `${(tp.safe || 0) + (tp.caution || 0) + (tp.files || 0)} <small>个目录</small>`;
+      `${(tp.safe || 0) + (tp.caution || 0) + (tp.files || 0)} <small>个</small>`;
     UI.$('#ov-tp-foot').textContent =
       `缓存 ${tp.safe || 0} · 谨慎 ${tp.caution || 0} · 按模式 ${tp.files || 0}`;
 

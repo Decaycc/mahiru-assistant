@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Toggle Switch Reference — Mahiru</title>
+<style>
+  :root {
+    /* 轨道 */
+    --toggle-track-off: rgba(32, 21, 21, 0.15);
+    --toggle-track-off-hover: rgba(32, 21, 21, 0.20);
+    --toggle-track-on: #ff4f00;
+    --toggle-track-on-hover: #ff5a1a;
+    --toggle-track-border-off: rgba(197, 192, 177, 0.4);
+    --toggle-track-border-on: rgba(255, 79, 0, 0.3);
+
+    /* 滑块 */
+    --toggle-thumb: #ffffff;
+    --toggle-thumb-shadow: 0 2px 4px rgba(0, 0, 6, 0.2);
+    --toggle-thumb-shadow-hover: 0 2px 6px rgba(0, 0, 6, 0.25);
+    --toggle-thumb-shadow-on: 0 2px 6px rgba(255, 79, 0, 0.3);
+
+    /* 晕圈 */
+    --toggle-halo-off: 0 0 0 4px rgba(32, 21, 21, 0.06);
+    --toggle-halo-on: 0 0 0 4px rgba(255, 79, 0, 0.08);
+
+    /* 焦点 */
+    --toggle-focus: 0 0 0 3px rgba(255, 79, 0, 0.15);
+
+    /* 缓动 */
+    --ease-state: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-slide: cubic-bezier(0.2, 0.8, 0.4, 1);
+
+    /* 尺寸 */
+    --toggle-w: 46px;
+    --toggle-h: 26px;
+    --toggle-pad: 3px;
+    --toggle-thumb-size: 20px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 48px;
+    background: #fffefb;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: #201515;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .sub {
+    font-size: 13px;
+    color: #939084;
+    margin: 0 0 40px;
+  }
+
+  .section {
+    margin-bottom: 40px;
+  }
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #939084;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 16px;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 16px;
+    background: linear-gradient(180deg, #fffefb, #faf8f3);
+    border: 1px solid rgba(197, 192, 177, 0.5);
+    border-radius: 6px;
+    margin-bottom: 10px;
+  }
+  .row-label {
+    font-size: 13px;
+    color: #5c554c;
+    min-width: 140px;
+  }
+
+  /* ===== 开关核心 ===== */
+  .toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: var(--toggle-w);
+    height: var(--toggle-h);
+    border-radius: 999px;
+    background: var(--toggle-track-off);
+    border: 1px solid var(--toggle-track-border-off);
+    cursor: pointer;
+    padding: 0;
+    outline: none;
+    transition:
+      background 200ms var(--ease-state),
+      border-color 200ms var(--ease-state),
+      box-shadow 200ms var(--ease-state);
+  }
+
+  .toggle .thumb {
+    position: absolute;
+    top: 50%;
+    left: var(--toggle-pad);
+    width: var(--toggle-thumb-size);
+    height: var(--toggle-thumb-size);
+    border-radius: 50%;
+    background: var(--toggle-thumb);
+    box-shadow: var(--toggle-thumb-shadow);
+    transform: translate(0, -50%);
+    will-change: transform;
+    transition:
+      transform 320ms var(--ease-slide),
+      box-shadow 200ms var(--ease-state);
+  }
+
+  /* 开启态 */
+  .toggle[aria-checked="true"] {
+    background: var(--toggle-track-on);
+    border-color: var(--toggle-track-border-on);
+  }
+  .toggle[aria-checked="true"] .thumb {
+    transform: translate(20px, -50%);
+    box-shadow: var(--toggle-thumb-shadow-on);
+  }
+
+  /* 悬停呼吸感 */
+  .toggle:hover {
+    background: var(--toggle-track-off-hover);
+    box-shadow: var(--toggle-halo-off);
+  }
+  .toggle[aria-checked="true"]:hover {
+    background: var(--toggle-track-on-hover);
+    box-shadow: var(--toggle-halo-on);
+  }
+  .toggle:hover .thumb {
+    box-shadow: var(--toggle-thumb-shadow-hover);
+  }
+  .toggle[aria-checked="true"]:hover .thumb {
+    box-shadow: var(--toggle-thumb-shadow-on);
+  }
+
+  /* 按压反馈 */
+  .toggle:active .thumb {
+    transform: translate(0, -50%) scale(0.96);
+    transition: transform 80ms var(--ease-state);
+  }
+  .toggle[aria-checked="true"]:active .thumb {
+    transform: translate(20px, -50%) scale(0.96);
+    transition: transform 80ms var(--ease-state);
+  }
+
+  /* 焦点 */
+  .toggle:focus-visible {
+    box-shadow: var(--toggle-focus);
+  }
+
+  /* ===== 加载状态 ===== */
+  .toggle.loading {
+    pointer-events: none;
+    background: rgba(32, 21, 21, 0.08);
+  }
+  .toggle.loading .thumb {
+    opacity: 0;
+  }
+  .toggle.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border-radius: 50%;
+    border: 2px solid #939084;
+    border-top-color: transparent;
+    animation: spin 800ms linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* 无障碍：减少动效 */
+  @media (prefers-reduced-motion: reduce) {
+    .toggle, .toggle .thumb { transition: none; }
+    .toggle.loading::after { animation: none; }
+  }
+
+  /* 提示 */
+  .hint {
+    font-size: 12px;
+    color: #939084;
+    margin-top: 8px;
+    line-height: 1.7;
+  }
+  .hint code {
+    background: #f5f3ec;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11px;
+    color: #5c554c;
+  }
+</style>
+</head>
+<body>
+
+  <h1>Toggle Switch Reference</h1>
+  <p class="sub">Mahiru · Zapier 暖色设计系统 · 悬停呼吸感 + 物理按压 + 平滑切换</p>
+
+  <div class="section">
+    <p class="section-title">状态展示</p>
+
+    <div class="row">
+      <span class="row-label">关闭态</span>
+      <button class="toggle" role="switch" aria-checked="false" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked')==='true'?'false':'true')">
+        <span class="thumb"></span>
+      </button>
+      <span class="hint" style="margin:0">轨道底色 <code>rgba(32,21,21,0.15)</code>，与背景清晰区分</span>
+    </div>
+
+    <div class="row">
+      <span class="row-label">开启态</span>
+      <button class="toggle" role="switch" aria-checked="true" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked')==='true'?'false':'true')">
+        <span class="thumb"></span>
+      </button>
+      <span class="hint" style="margin:0">轨道 <code>#ff4f00</code>，滑块白色带橙色投影</span>
+    </div>
+
+    <div class="row">
+      <span class="row-label">加载状态</span>
+      <button class="toggle loading" role="switch" aria-checked="false">
+        <span class="thumb"></span>
+      </button>
+      <span class="hint" style="margin:0">读取设备配置耗时超 200ms 时显示旋转圆环</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">交互测试（鼠标悬停 / 点击 / Tab 聚焦）</p>
+
+    <div class="row">
+      <span class="row-label">游戏模式</span>
+      <button class="toggle" role="switch" aria-checked="false" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked')==='true'?'false':'true')">
+        <span class="thumb"></span>
+      </button>
+    </div>
+
+    <div class="row">
+      <span class="row-label">增强指针精度</span>
+      <button class="toggle" role="switch" aria-checked="false" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked')==='true'?'false':'true')">
+        <span class="thumb"></span>
+      </button>
+    </div>
+
+    <div class="row">
+      <span class="row-label">存储感知</span>
+      <button class="toggle" role="switch" aria-checked="true" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked')==='true'?'false':'true')">
+        <span class="thumb"></span>
+      </button>
+    </div>
+
+    <div class="row">
+      <span class="row-label">后台应用运行</span>
+      <button class="toggle" role="switch" aria-checked="true" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked')==='true'?'false':'true')">
+        <span class="thumb"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">设计要点</p>
+    <p class="hint">
+      · <strong>悬停呼吸感</strong>：轨道背景加深 + 外围晕圈扩散，200ms 缓动<br>
+      · <strong>切换动画</strong>：滑块 <code>translateX</code> 320ms，带轻微过冲回弹<br>
+      · <strong>按压反馈</strong>：滑块 <code>scale(0.96)</code>，80ms 快速响应<br>
+      · <strong>缓动曲线</strong>：状态 <code>cubic-bezier(0.4,0,0.2,1)</code>，位移 <code>cubic-bezier(0.2,0.8,0.4,1)</code><br>
+      · <strong>无障碍</strong>：支持 <code>prefers-reduced-motion</code>，禁用动画
+    </p>
+  </div>
+
+</body>
+</html>

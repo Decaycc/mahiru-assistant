@@ -351,8 +351,9 @@ RULES: list[dict] = [
            _join(WINDIR, "ServiceProfiles\\NetworkService\\AppData\\Local\\Microsoft\\Windows\\DeliveryOptimization")],
           "用于在局域网/互联网上共享更新片段的缓存。"),
     _rule("winre_agent", "更新回滚残留", "更新残留", "caution", "contents",
-          [SYSTEM_ROOT_DIR + "$WinREAgent", SYSTEM_ROOT_DIR + "$Windows.~BT"],
-          "系统更新过程中的回滚数据。更新稳定运行一段时间后可删。"),
+          [SYSTEM_ROOT_DIR + "$WinREAgent"],
+          "系统更新过程中的回滚数据。更新稳定运行一段时间后可删。\n"
+          "（$Windows.~BT / $Windows.~WS 已由 LightC 的「旧版 Windows 安装」规则接管。）"),
 
     # ---------------- 开发工具缓存 ----------------
     _rule("pip_cache", "pip 缓存", "开发缓存", "safe", "contents",
@@ -820,7 +821,8 @@ def _load_rules_module():
 
 def _load_third_party() -> dict:
     """载入第三方规则库中「本机真实存在」的目录，分三档返回。"""
-    empty = {"safe": [], "caution": [], "file_dirs": []}
+    empty = {"safe": [], "caution": [], "file_dirs": [],
+             "caution_file_dirs": []}
     try:
         tpr = _load_rules_module()
         if tpr is None:
@@ -876,6 +878,11 @@ def _load_third_party() -> dict:
         "file_dirs": resolve([t for t, _ in
                               getattr(tpr, "THIRD_PARTY_FILE_RULES", ())],
                              allow_glob=False),
+        # 同上，但来源是上游归档过的条目（Archived entries.ini）→ 进谨慎档
+        "caution_file_dirs": resolve(
+            [t for t, _ in
+             getattr(tpr, "THIRD_PARTY_CAUTION_FILE_RULES", ())],
+            allow_glob=False),
     }
 
 
@@ -892,7 +899,8 @@ def register_third_party_rule() -> int:
         RULES.append(_rule(
             "third_party_apps", "其他应用缓存（社区规则库）", "应用缓存",
             "safe", "contents", got["safe"],
-            f"来自 BleachBit 与 Winapp2 两个开源规则库，覆盖 {len(got['safe'])} 个"
+            f"来自 BleachBit、Winapp2、Winapp3 与 winapp2 归档条目几个开源"
+            f"规则库，覆盖 {len(got['safe'])} 个"
             f"**本机真实存在**的应用缓存目录。\n"
             f"本机没装的软件不会出现；换台电脑会自动换成那台机器上装了的。\n"
             f"已按路径段严格过滤：Cookie / 历史 / 密码 / 书签 / IndexedDB / "
@@ -921,6 +929,20 @@ def register_third_party_rule() -> int:
             f"这些目录里可能有该应用的重要数据，所以只按文件名精确匹配删除。",
             patterns=list(_UNIVERSAL_LOG_PATTERNS)))
         total += len(got["file_dirs"])
+
+    if got["caution_file_dirs"]:
+        RULES.append(_rule(
+            "third_party_caution_logs",
+            "其他应用日志与临时文件（上游已归档，默认不勾选）",
+            "日志与转储", "caution", "files", got["caution_file_dirs"],
+            f"在 {len(got['caution_file_dirs'])} 个应用目录里只删除日志与"
+            f"临时性质的文件，**不动目录内容**：\n"
+            f"  " + "、".join(_UNIVERSAL_LOG_PATTERNS) + "\n"
+            f"这批目录来自上游的 Archived entries.ini —— 规则作者把条目从主规则库"
+            f"移出，理由是目标软件已过时、厂商已下架，或对应的在线服务已关闭。\n"
+            f"条目本身仍然可用，但既然上游给了降级信号，这里也照做：默认不勾选。",
+            patterns=list(_UNIVERSAL_LOG_PATTERNS), default=False))
+        total += len(got["caution_file_dirs"])
 
     return total
 
@@ -1185,6 +1207,13 @@ def scan_types(rule: dict, cancel: threading.Event | None = None,
                             continue            # 命中后不再往里钻
                         stack.append(e.path)
                     elif e.is_file(follow_symlinks=False):
+                        # 与目录分支同样的判断（这里曾经漏了，见 _in_types_deny
+                        # 的说明）：已安装软件 / 运行环境里的文件，
+                        # 名字再像备份也不碰。editor_backup 的 glob:*~ / *.BAK /
+                        # *.swp 正是会命中 node_modules、site-packages、
+                        # app.asar 内部的那些文件。
+                        if _in_types_deny(e.path):
+                            continue
                         if _match_type(e.name, types, e.path):
                             try:
                                 out["size"] += e.stat(
@@ -1319,6 +1348,198 @@ def empty_recycle_bin() -> tuple[bool, str]:
         return False, f"清空回收站失败：{e}"
 
 
+# --- 移入回收站（可撤销删除）------------------------------------------------
+# SHFileOperationW + FOF_ALLOWUNDO 就是资源管理器里「删除」走的那条路：
+# 文件进回收站，用户可以还原。比直接删安全得多，代价是**不释放磁盘空间**
+# （东西还在盘上，只是换了个位置），所以界面必须把账分开算。
+FO_DELETE = 3
+FOF_SILENT = 0x0004
+FOF_NOCONFIRMATION = 0x0010
+FOF_ALLOWUNDO = 0x0040
+FOF_NOERRORUI = 0x0400
+
+
+class SHFILEOPSTRUCTW(ctypes.Structure):
+    # pFrom / pTo 用 c_void_p 而不是 LPCWSTR：我们要自己控制
+    # **双 NUL 结尾**（SHFileOperation 要求路径列表以两个 NUL 结束），
+    # 而 c_wchar_p 的字符串转换会在第一个 NUL 处截断。
+    _fields_ = [("hwnd", wintypes.HWND),
+                ("wFunc", wintypes.UINT),
+                ("pFrom", ctypes.c_void_p),
+                ("pTo", ctypes.c_void_p),
+                ("fFlags", ctypes.c_uint16),
+                ("fAnyOperationsAborted", wintypes.BOOL),
+                ("hNameMappings", ctypes.c_void_p),
+                ("lpszProgressTitle", ctypes.c_void_p)]
+
+
+shell32.SHFileOperationW.argtypes = [ctypes.POINTER(SHFILEOPSTRUCTW)]
+shell32.SHFileOperationW.restype = ctypes.c_int
+
+k32.GetVolumeNameForVolumeMountPointW.argtypes = [wintypes.LPCWSTR,
+                                                  wintypes.LPWSTR,
+                                                  wintypes.DWORD]
+k32.GetVolumeNameForVolumeMountPointW.restype = wintypes.BOOL
+
+# ---------------------------------------------------------------------------
+# 回收站可用性预检
+#
+# ⚠ 这一层不是锦上添花，是**必须**的：FOF_ALLOWUNDO 只是「如果可以就留撤销
+#   信息」。当该卷的回收站被关掉、容量被设成 0、或者单个条目超过容量上限时，
+#   Windows 会**直接永久删除**，而且不会报错 —— SHFileOperationW 照样返回 0。
+#   用户界面上写的是「已移入回收站，可以还原」，实际却灰飞烟灭，这是不能接受的。
+#   所以移入之前先把这些情况查出来，查出来就**拒绝**（宁可不删，也不静默永久删）。
+# ---------------------------------------------------------------------------
+_RECYCLE_VOL_CACHE: dict[str, tuple[bool, int, str]] = {}
+
+
+def _volume_mount_point(path: str) -> str:
+    """把路径归到它所在的卷根（`C:\\` / `D:\\`）。"""
+    try:
+        drive, _ = os.path.splitdrive(os.path.abspath(path))
+    except Exception:
+        return ""
+    return (drive + "\\") if drive else ""
+
+
+def _volume_guid(mount: str) -> str:
+    """取卷的 `{GUID}`（注册表 BitBucket\\Volume 用它做键）。取不到返回空串。"""
+    buf = ctypes.create_unicode_buffer(64)
+    try:
+        if not k32.GetVolumeNameForVolumeMountPointW(mount, buf, 64):
+            return ""
+    except Exception:
+        return ""
+    # 形如 \\?\Volume{1ba8aa4d-...}\
+    txt = buf.value
+    i, j = txt.find("{"), txt.find("}")
+    return txt[i:j + 1] if 0 <= i < j else ""
+
+
+def _winreg():
+    """延迟拿 `winreg` 模块。单独包一层是为了让测试能整体换掉注册表读取，
+    从而模拟「回收站被关掉」「容量设成 0」这些本机不一定有的策略。"""
+    import winreg
+    return winreg
+
+
+def _volume_recycle_status(mount: str) -> tuple[bool, int, str]:
+    """返回 (该卷回收站可用?, 容量上限 MB, 不可用原因)。结果按卷缓存。"""
+    got = _RECYCLE_VOL_CACHE.get(mount)
+    if got is not None:
+        return got
+
+    def remember(v):
+        _RECYCLE_VOL_CACHE[mount] = v
+        return v
+
+    if not mount:
+        return remember((False, 0, "无法确定所在磁盘"))
+    if not os.path.isdir(mount + "$Recycle.Bin"):
+        return remember((False, 0, f"{mount} 上没有回收站目录"))
+
+    wr = _winreg()
+    hkcu = wr.HKEY_CURRENT_USER
+    base = r"Software\Microsoft\Windows\CurrentVersion\Explorer\BitBucket"
+    nuke = None
+    cap = None
+    guid = _volume_guid(mount)
+    if guid:
+        vol = f"{base}\\Volume\\{guid}"
+        try:
+            with wr.OpenKey(hkcu, vol) as k:
+                nuke = int(wr.QueryValueEx(k, "NukeOnDelete")[0])
+        except OSError:
+            pass
+        try:
+            with wr.OpenKey(hkcu, vol) as k:
+                cap = int(wr.QueryValueEx(k, "MaxCapacity")[0])
+        except OSError:
+            pass
+    if nuke is None:
+        # 该卷没单独设过 → 跟随全局设置；全局也没设就是默认（启用）
+        try:
+            with wr.OpenKey(hkcu, base) as k:
+                nuke = int(wr.QueryValueEx(k, "NukeOnDelete")[0])
+        except OSError:
+            nuke = 0
+    if nuke:
+        return remember((False, 0, "系统设置里关掉了回收站（删除即永久删除）"))
+    if cap is None:
+        # 没写 MaxCapacity 时 Windows 用「卷容量的 5%」当默认上限。
+        # 这里是估算，宁可估小一点：估小了最多是多跳过几项，估大了会静默永久删。
+        try:
+            total = shutil.disk_usage(mount).total
+        except OSError:
+            total = 0
+        cap = int(total * 0.05 / 1048576) if total else 0
+    if cap <= 0:
+        return remember((False, 0, f"{mount} 的回收站容量是 0（已禁用）"))
+    return remember((True, cap, ""))
+
+
+def recycle_bin_check(path: str, size: int = 0) -> str:
+    """能安全移入回收站就返回空串，否则返回**拒绝原因**。
+
+    拒绝的原因分两类：该卷压根不启用回收站（关掉了/容量 0/没有目录），
+    以及这一项体积超过回收站上限（Windows 遇到超限项也是永久删除）。
+    """
+    mount = _volume_mount_point(path)
+    usable, cap, why = _volume_recycle_status(mount)
+    if not usable:
+        return why
+    if size and size > cap * 1048576:
+        return (f"体积超过 {mount} 回收站上限（约 {cap} MB），"
+                f"放不进去会被永久删除")
+    return ""
+
+
+def move_to_recycle_bin(path: str, size: int | None = None) -> tuple[bool, str]:
+    """把文件或目录移进回收站（可还原）。返回 (成功, 错误消息)。
+
+    与 delete_path 的区别：**不释放空间**。用户可以在回收站里还原。
+
+    移入之前会先过 recycle_bin_check —— 该卷回收站不可用时**直接拒绝**，
+    绝不退化成永久删除。
+
+    size 传 None 时自己算（目录要完整遍历一遍）。调用方已经算过了就传进来，
+    免得把大目录走两遍。
+    """
+    if size is None:
+        try:
+            size = (dir_size(path)["size"] if os.path.isdir(path)
+                    else os.path.getsize(path))
+        except OSError:
+            size = 0
+    bad = recycle_bin_check(path, size)
+    if bad:
+        return False, f"没有移入回收站：{bad}。已跳过（不会改成永久删除）"
+
+    try:
+        ole32.CoInitialize(None)
+    except Exception:
+        pass
+    raw = os.path.abspath(path)
+    # size = 路径长度 + 2，多出来的两个 wchar 就是要求的双 NUL 结尾
+    buf = ctypes.create_unicode_buffer(raw, len(raw) + 2)
+    op = SHFILEOPSTRUCTW()
+    op.hwnd = None
+    op.wFunc = FO_DELETE
+    op.pFrom = ctypes.cast(buf, ctypes.c_void_p)
+    op.pTo = None
+    op.fFlags = (FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_SILENT
+                 | FOF_NOERRORUI)
+    try:
+        rc = shell32.SHFileOperationW(ctypes.byref(op))
+    except Exception as e:                                  # noqa: BLE001
+        return False, f"移入回收站失败：{e}"
+    if rc != 0:
+        return False, f"移入回收站失败（code {rc}）"
+    if op.fAnyOperationsAborted:
+        return False, "操作被中止"
+    return True, ""
+
+
 # ---------------------------------------------------------------------------
 # 清理执行
 # ---------------------------------------------------------------------------
@@ -1384,8 +1605,24 @@ def dism_component_cleanup(reset_base: bool = False,
 
 
 def _safe_target(path: str) -> bool:
-    """删除前的最后一道校验：拒绝明显的危险目标。"""
-    p = os.path.abspath(path)
+    """删除前的最后一道校验：拒绝明显的危险目标。
+
+    两个容易写错的点，这里都按 Windows 的实际语义来：
+
+    · **比较必须忽略大小写**。`WINDIR` 环境变量给的是全大写的
+      `C:\\WINDOWS`，而规则里写的是 `C:\\Windows`；直接用 `==` 比，
+      `C:\\Windows` 会被当成「不在禁止名单里」放过去。统一先过
+      `os.path.normcase`（Windows 上就是转小写 + 正斜杠归一化成反斜杠）。
+
+    · **受保护的目录要按前缀判，不能只判相等**。`C:\\Windows\\System32`
+      本身固然不能删，它底下的 `kernel32.dll` 更不能。原来的写法只比相等，
+      等于只锁了门却没锁门里的东西。
+    """
+    try:
+        p = os.path.normcase(os.path.abspath(path))
+    except (OSError, ValueError):
+        return False                       # 连规范路径都算不出来 → 拒绝
+
     if len(p) <= 4 and p.endswith(":\\"):        # 盘根
         return False
     # 隐私数据（Cookie / 历史 / 密码 / 书签 …）绝不删除
@@ -1396,59 +1633,103 @@ def _safe_target(path: str) -> bool:
         return False
     # Win10 上 Documents and Settings 是指向 Users 的目录联接，
     # 顺着它会把删除动作带到我并不打算碰的地方
-    if "documents and settings" in p.lower():
+    if "documents and settings" in p:
         return False
-    if p.count(os.sep) <= 1 and not p.endswith(":"):
-        # 形如 C:\Windows 这种一级目录，只有显式允许的才放行
-        pass
-    banned = {
-        os.path.abspath(WINDIR),
-        os.path.abspath(PROGRAMDATA),
-        os.path.abspath(PROFILE),
-        os.path.abspath(LOCAL),
-        os.path.abspath(ROAMING),
-    }
-    if p in banned:
-        return False
-    # 保护清单里的路径一律不删
-    for prot, _ in PROTECTED_PATHS:
+
+    # 这几个整棵都不碰（注意 Local 只在这里禁止删「它本身」，
+    # 它下面才是主要的清理目标，所以不做前缀判定）
+    for bad in (WINDIR, PROGRAMDATA, PROFILE, LOCAL, ROAMING):
         try:
-            if os.path.abspath(prot) == p:
+            if p == os.path.normcase(os.path.abspath(bad)):
                 return False
-        except Exception:
+        except (OSError, ValueError):
             pass
+
+    # LightC 的 is_rebuildable_system_cache_path 语义：System32 里只有
+    # d3d_cache（DirectX 着色器缓存）能安全重建，允许清理它本身及子项。
+    # 必须在下面的 PROTECTED_PATHS 之前判断，否则 System32 前缀会把它
+    # 整棵拦住，LightC 的 ShaderCache 规则就成了摆设。
+    try:
+        d3d_cache = os.path.normcase(os.path.abspath(
+            _join(WINDIR, "System32", "d3d_cache")))
+    except (OSError, ValueError):
+        d3d_cache = ""
+    if d3d_cache and (p == d3d_cache or p.startswith(d3d_cache + os.sep)):
+        return True
+
+    # 保护清单：自身和它底下的一切都不删
+    for prot, _why in PROTECTED_PATHS:
+        try:
+            base = os.path.normcase(os.path.abspath(prot))
+        except (OSError, ValueError):
+            continue
+        if p == base or p.startswith(base + os.sep):
+            return False
     return True
 
 
-def delete_path(path: str, errors: list) -> int:
-    """删除文件或目录，返回释放的字节数。失败记录到 errors，不抛异常。"""
+def delete_path(path: str, errors: list, recycle: bool = False,
+                recycled: list | None = None) -> tuple[bool, int]:
+    """删除文件或目录，返回 **(是否成功, 释放的字节数)**。失败记进 errors，不抛异常。
+
+    recycle=True 时改为**移入回收站**：目录会从原处消失、可以还原，
+    但盘子上的空间一点没少，所以这种情况释放量报 0，
+    真实体积记进 recycled（界面要把这两笔账分开显示）。
+
+    这里会再过一次 `_safe_target`：它是紧挨着破坏性调用的唯一入口，
+    保护校验放在这一层才算真的兜住了。`clean_rule` 之前也会验一遍，
+    但那是纵深防御的另一层 —— 万一将来有人绕过它直接调这里，
+    也不能让 `C:\\Windows` 或 `~/.ssh` 进回收站。
+    """
+    if not _safe_target(path):
+        errors.append((path, "受保护路径，已跳过（不会删除）"))
+        return False, 0
+
+    size = 0
     try:
         if os.path.islink(path) or os.path.isfile(path):
-            size = 0
             try:
                 size = os.path.getsize(path)
             except OSError:
                 pass
+        elif os.path.isdir(path):
+            size = dir_size(path)["size"]
+    except Exception:
+        size = 0
+
+    if recycle:
+        ok, msg = move_to_recycle_bin(path, size)
+        if ok:
+            if recycled is not None:
+                recycled.append((path, size))
+            return True, 0              # 成功，但没有释放空间
+        # 回收站失败就**不要**偷偷退化成永久删除 —— 用户选的是可还原，
+        # 那就宁可这次不删，把原因报出来。
+        errors.append((path, msg or "移入回收站失败"))
+        return False, 0
+
+    try:
+        if os.path.islink(path) or os.path.isfile(path):
             try:
                 os.remove(path)
-                return size
+                return True, size
             except PermissionError:
                 errors.append((path, "文件正在被其他程序使用"))
-                return 0
+                return False, 0
             except OSError as e:
                 errors.append((path, f"删除失败：{e.strerror or e}"))
-                return 0
+                return False, 0
         if os.path.isdir(path):
             total = dir_size(path)["size"]
             try:
                 shutil.rmtree(path, onerror=_rmtree_handler)
-                return total
+                return True, total
             except Exception as e:
                 errors.append((path, f"目录删除失败：{e}"))
-                return 0
+                return False, 0
     except Exception as e:
         errors.append((path, f"未知错误：{e}"))
-    return 0
+    return False, 0
 
 
 def _rmtree_handler(func, path, exc_info):
@@ -1457,10 +1738,17 @@ def _rmtree_handler(func, path, exc_info):
 
 
 def clean_rule(rule: dict, cancel: threading.Event | None = None,
-               progress=None) -> dict:
-    """执行一条规则的清理。返回统计。"""
+               progress=None, recycle: bool = False) -> dict:
+    """执行一条规则的清理。返回统计。
+
+    recycle=True 时删除动作改为**移入回收站**（可还原）。要注意这时
+    `freed` 会停在 0 —— 东西只是换了个位置，盘上空间没少 ——
+    真实体积记在 `recycled_bytes`，界面必须把这两笔分开显示，
+    否则用户会以为"清理了 2 GB"而实际一个字节都没释放。
+    """
     report = {"key": rule["key"], "name": rule["name"], "freed": 0,
-              "deleted": 0, "failed": [], "skipped": 0}
+              "deleted": 0, "failed": [], "skipped": 0,
+              "recycled": 0, "recycled_bytes": 0}
 
     if rule["kind"] == "recyclebin":
         ok, msg = empty_recycle_bin()
@@ -1469,6 +1757,14 @@ def clean_rule(rule: dict, cancel: threading.Event | None = None,
         return report
 
     errors: list[tuple[str, str]] = []
+    recycled: list[tuple[str, int]] = []
+
+    def _del(target: str) -> None:
+        ok, got = delete_path(target, errors, recycle=recycle,
+                              recycled=recycled)
+        if ok:
+            report["freed"] += got
+            report["deleted"] += 1
 
     # DISM 组件清理：不是删文件，而是调用系统工具
     if rule["kind"] == "dism":
@@ -1492,13 +1788,12 @@ def clean_rule(rule: dict, cancel: threading.Event | None = None,
                 report["skipped"] += 1
                 errors.append((path, "路径受保护，已跳过"))
                 continue
-            got = delete_path(path, errors)
-            if got:
-                report["freed"] += got
-                report["deleted"] += 1
+            _del(path)
             if progress is not None:
                 progress(path)
         report["failed"] = errors
+        report["recycled"] = len(recycled)
+        report["recycled_bytes"] = sum(s for _, s in recycled)
         return report
 
     for path in expand_paths(rule):
@@ -1518,10 +1813,7 @@ def clean_rule(rule: dict, cancel: threading.Event | None = None,
                         break
                     if not os.path.isfile(f):
                         continue
-                    got = delete_path(f, errors)
-                    if got:
-                        report["freed"] += got
-                        report["deleted"] += 1
+                    _del(f)
                     if progress is not None:
                         progress(f)
             continue
@@ -1550,27 +1842,24 @@ def clean_rule(rule: dict, cancel: threading.Event | None = None,
                 report["skipped"] += 1
                 continue
             if is_dir and rule["kind"] == "contents":
-                got = delete_path(entry.path, errors)
-                if got:
-                    report["freed"] += got
-                    report["deleted"] += 1
+                _del(entry.path)
             elif not is_dir:
-                got = delete_path(entry.path, errors)
-                if got:
-                    report["freed"] += got
-                    report["deleted"] += 1
+                _del(entry.path)
             if progress is not None:
                 progress(entry.path)
 
     # 只保留前若干条错误，避免界面刷屏
     report["failed"] = errors
+    report["recycled"] = len(recycled)
+    report["recycled_bytes"] = sum(s for _, s in recycled)
     return report
 
 
 def clean_rules(rules: list[dict], cancel: threading.Event | None = None,
-                log=None) -> dict:
+                log=None, recycle: bool = False) -> dict:
     """按顺序清理多条规则。"""
-    total = {"freed": 0, "deleted": 0, "rules": [], "failed": []}
+    total = {"freed": 0, "deleted": 0, "rules": [], "failed": [],
+             "recycled": 0, "recycled_bytes": 0}
     for rule in rules:
         if cancel is not None and cancel.is_set():
             if log:
@@ -1578,8 +1867,10 @@ def clean_rules(rules: list[dict], cancel: threading.Event | None = None,
             break
         if log:
             log(f"→ 正在清理：{rule['name']}")
-        rep = clean_rule(rule, cancel, progress=None)
+        rep = clean_rule(rule, cancel, progress=None, recycle=recycle)
         total["rules"].append(rep)
+        total["recycled"] += rep.get("recycled", 0)
+        total["recycled_bytes"] += rep.get("recycled_bytes", 0)
         if "message" in rep and log:
             log("  " + rep["message"])
         if rep["freed"] > 0:
@@ -1588,6 +1879,13 @@ def clean_rules(rules: list[dict], cancel: threading.Event | None = None,
             if log:
                 log(f"  释放 {rep['freed'] / 1048576:.1f} MB，"
                     f"删除 {rep['deleted']} 项")
+        elif rep.get("recycled"):
+            # 移入回收站没有释放任何空间，必须说清楚，别让用户以为白清了
+            total["deleted"] += rep["deleted"]
+            if log:
+                log(f"  已移入回收站 {rep['recycled']} 项"
+                    f"（{rep['recycled_bytes'] / 1048576:.1f} MB，"
+                    f"占用未释放，可在回收站还原）")
         if rep["failed"]:
             total["failed"].extend(rep["failed"])
             if log:
@@ -1651,10 +1949,17 @@ def load_config() -> dict:
 
 
 def save_config(cfg: dict) -> None:
+    """**合并**写入配置 —— 绝不能整份覆盖。
+
+    界面调用时只带自己关心的键（例如 `save_config({theme: 'dark'})`），
+    整份覆盖会把 `selected`（用户勾了哪些规则）和 `last_log` 一起抹掉。
+    """
     import json
     try:
+        cur = load_config()
+        cur.update(cfg)
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(cfg, f, ensure_ascii=False, indent=2)
+            json.dump(cur, f, ensure_ascii=False, indent=2)
     except Exception:
         pass
 
@@ -1885,6 +2190,28 @@ def cli_selftest() -> int:
 
 # 第三方规则库要等 expand_paths 定义好之后再注册（需要按真实路径去重）。
 register_third_party_rule()
+
+
+# LightC 规则库（用户授权整体照搬 18 类，参数与风险分级和 LightC 一致）。
+# 同样放在模块末尾、所有常量与函数定义好之后再导入，避免循环导入
+# （rules_lightc 构造规则时需要 junk 的 _rule / _join / 路径常量）。
+def _register_lightc_rules() -> int:
+    from app.core import rules_lightc
+    # 被 LightC 接管的内置规则：同一条路径若同时留在两条规则里，会重复
+    # 统计空间、也可能重复删除，这里按 key 精确移除。
+    replaced = {
+        "user_temp", "win_temp", "prefetch", "font_cache",
+        "edge_cache", "chrome_cache", "inetcache", "d3d_cache",
+        "thumb_cache", "crash_dumps", "wer_reports", "minidump",
+        "cbs_logs", "wu_download", "delivery_opt", "recyclebin",
+        "esd_files", "windows_old",
+    }
+    RULES[:] = [r for r in RULES if r.get("key") not in replaced]
+    RULES.extend(rules_lightc.LIGHTC_RULES)
+    return len(rules_lightc.LIGHTC_RULES)
+
+
+_register_lightc_rules()
 
 
 

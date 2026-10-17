@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>柔和化改版预览</title>
+<style>
+  :root {
+    /* 现行令牌 */
+    --ink: #201515; --body: #605d52; --body-mid: #939084;
+    --canvas: #f5f5f4; --card: #ffffff; --border: #e9e9e6; --border-strong: #d6d6d2;
+    --primary: #ff4f00; --on-primary: #fffefb;
+    --linen: #ecd9c0;
+    /* 提案令牌 */
+    --body-mid-2: #75716a;          /* 次要文字加深：白底 4.6:1 */
+    --shadow-soft: 0 1px 3px rgba(32,21,21,.05), 0 6px 18px rgba(32,21,21,.04);
+    --banner-tint: #fdf0e6;         /* 横幅衬底：橙的 8% 色度 */
+    --caution-tint: #f7ecd9;        /* 谨慎徽章衬底：亚麻同族 */
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Inter","Noto Sans SC","Microsoft YaHei UI",system-ui,sans-serif;
+    background: var(--canvas); color: var(--ink);
+    padding: 26px 30px 60px; font-size: 15px; line-height: 1.6;
+  }
+  h1 { font-size: 22px; font-weight: 600; margin: 34px 0 6px; }
+  h1:first-child { margin-top: 0; }
+  .lead { color: var(--body-mid-2); font-size: 14px; margin-bottom: 14px; }
+
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
+  .pane { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+          padding: 18px 20px; box-shadow: var(--shadow-soft); }
+  .pane .tag { font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 12px;
+               color: var(--body-mid-2); }
+  .pane.old .tag { color: #b03a2e; }
+  .pane.new .tag { color: #2e7d3e; }
+
+  /* ========== 1. 概览 ========== */
+  .demo-ov { background: var(--canvas); border-radius: 8px; padding: 14px; }
+  .grid { display: grid; gap: 10px; }
+  .card-d { background: var(--card); border: 1px solid var(--border);
+            border-radius: 10px; padding: 14px 16px; }
+  .old .card-d { box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .new .card-d { box-shadow: var(--shadow-soft); }
+  .lbl { font-size: 13px; color: var(--body-mid); font-weight: 500; letter-spacing: .5px; }
+  .new .lbl { color: var(--body-mid-2); }
+  .num { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .num small { font-size: 13px; font-weight: 450; color: var(--body-mid); }
+  .new .num small { color: var(--body-mid-2); }
+  .bar-d { height: 7px; background: #ececea; border-radius: 0; margin-top: 10px; overflow: hidden; }
+  .bar-d i { display: block; height: 100%; background: var(--ink); }
+  .new .bar-d { height: 8px; border-radius: 4px; }
+  .foot { font-size: 13px; color: var(--body-mid); margin-top: 8px; }
+  .new .foot { color: var(--body-mid-2); }
+  /* hero 布局 */
+  .hero { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto auto auto;
+          gap: 26px; align-items: center; }
+  .hero .num { font-size: 30px; }
+  .mini { border-left: 1px solid var(--border); padding-left: 26px; min-width: 96px; }
+  .mini .num { font-size: 21px; }
+  .stick { position: absolute; }
+  .card-d { position: relative; }
+
+  /* ========== 2. 横幅 ========== */
+  .banner-old { display: flex; align-items: center; gap: 11px; padding: 11px 15px;
+    border-radius: 8px; background: var(--primary); color: var(--on-primary); font-size: 14px; }
+  .banner-old .btn-go { background: #2e7d3e; color: #fff; border: 0; border-radius: 8px;
+    padding: 6px 14px; font-size: 14px; font-weight: 600; margin-left: auto; white-space: nowrap; }
+  .banner-new { display: flex; align-items: center; gap: 11px; padding: 11px 15px;
+    border-radius: 10px; background: var(--banner-tint); border: 1px solid #f6ddc8;
+    color: var(--ink); font-size: 14px; }
+  .banner-new .ico { color: var(--primary); flex: none; }
+  .banner-new b { font-weight: 600; }
+  .banner-new .btn-go { background: #2e7d3e; color: #fff; border: 0; border-radius: 8px;
+    padding: 6px 14px; font-size: 14px; font-weight: 600; margin-left: auto; white-space: nowrap; }
+  svg { display: block; }
+
+  /* ========== 3. 徽章 ========== */
+  .brow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+  .bdg { font-size: 13px; padding: 2px 10px; border-radius: 999px; font-weight: 600;
+         background: #f0f0ef; color: var(--body); border: 1px solid transparent; white-space: nowrap; }
+  .new .bdg.safe { background: #f0f0ef; color: var(--body-mid-2); font-weight: 500; }
+  .new .bdg.caution { background: var(--caution-tint); color: #6b5423; border-color: #ead9b8; font-weight: 600; }
+  .new .bdg.risk { background: var(--card); color: var(--ink); border: 1.5px solid var(--ink); font-weight: 700; }
+  .new .bdg.lock { background: #f0f0ef; color: var(--body-mid-2); font-weight: 400; }
+  .rowline { display: flex; align-items: center; gap: 12px; padding: 9px 0;
+             border-bottom: 1px solid var(--border); }
+  .rowline:last-child { border-bottom: 0; }
+  .tick { width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid var(--border-strong);
+          background: var(--ink); flex: none; position: relative; }
+  .tick::after { content:''; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px;
+    border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .rname { font-size: 14px; font-weight: 700; }
+  .new .rname { font-size: 15px; }
+  .rmeta { font-size: 13px; color: var(--body-mid); margin-top: 1px; }
+  .new .rmeta { color: var(--body-mid-2); }
+  .rnum { margin-left: auto; font-size: 13px; color: var(--body-mid); font-variant-numeric: tabular-nums; }
+  .new .rnum { color: var(--body-mid-2); }
+  .detail { font-size: 13px; color: var(--body-mid); border: 1px solid var(--border-strong);
+            border-radius: 6px; padding: 2px 8px; background: transparent; }
+  .new .detail { color: var(--body-mid-2); }
+
+  /* ========== 4. 控件 / 调校行 ========== */
+  .trow { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 14px;
+          align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .trow:last-child { border-bottom: 0; }
+  .tname { font-size: 14px; font-weight: 700; }
+  .new .tname { font-size: 15px; }
+  .tdesc { font-size: 13px; color: var(--body-mid); margin-top: 2px; }
+  .new .tdesc { color: var(--body-mid-2); }
+  .sw { width: 46px; height: 26px; border-radius: 999px; background: rgba(32,21,21,.15);
+        position: relative; flex: none; }
+  .sw::after { content:''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px;
+        border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,6,.2); }
+  .sw.on { background: var(--primary); }
+  .sw.on::after { transform: translateX(20px); box-shadow: 0 2px 6px rgba(255,79,0,.3); }
+  .acts { display: flex; gap: 8px; }
+  .btn-o { font-size: 13px; font-weight: 600; padding: 4px 13px; border-radius: 8px;
+           border: 1px solid var(--border-strong); background: transparent; color: var(--ink); }
+  .btn-n { font-size: 13px; font-weight: 600; padding: 4px 11px; border-radius: 8px;
+           border: 0; background: transparent; color: var(--body-mid-2); }
+  .btn-n:hover { background: #f0f0ef; color: var(--ink); }
+
+  /* ========== 5. 标题层级 ========== */
+  .t-old { font-size: 32px; font-weight: 500; letter-spacing: 1px; }
+  .t-new { font-size: 27px; font-weight: 600; letter-spacing: 0; }
+  .sec-old { font-size: 14px; font-weight: 600; color: var(--ink); margin-top: 14px; }
+  .sec-new { font-size: 15px; font-weight: 600; color: var(--ink); margin-top: 14px; }
+  .bodytxt { font-size: 14px; color: var(--body-mid); margin-top: 3px; }
+  .new .bodytxt { color: var(--body-mid-2); }
+</style>
+</head>
+<body>
+
+<h1>1 · 概览：从「六张同尺寸卡」到「一主 + 一状态条」</h1>
+<p class="lead">现在六张卡同尺寸同字重，视线没有落点；规则 49 / 社区 388 / 回收站 105KB 这类小数字各自占一大张卡，大量留白显空。改成：内存做横向主卡（数字放大、状态并入一行），三个小统计并进一张「系统状态」卡。</p>
+<div class="compare">
+  <div class="pane old demo-ov">
+    <div class="tag">现在</div>
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <div class="card-d"><div class="lbl">物理内存</div><div class="num">9.29 GB <small>/ 15.41 GB</small></div>
+        <div class="bar-d"><i style="width:60%"></i></div><div class="foot">可用 6.11 GB · 占用 60%</div></div>
+      <div class="card-d"><div class="lbl">磁盘空间</div><div class="foot">C:\ 66.25 GB 可用<br>D:\ 101.73 GB 可用</div></div>
+      <div class="card-d"><div class="lbl">清理规则</div><div class="num">49 <small>条</small></div><div class="foot">安全 24 · 谨慎 20 · 风险 5</div></div>
+      <div class="card-d"><div class="lbl">社区规则库</div><div class="num">388 <small>个目录</small></div><div class="foot">缓存 357 · 谨慎 15</div></div>
+      <div class="card-d"><div class="lbl">回收站</div><div class="num">105 KB <small>/ 84 项</small></div><div class="foot">可在垃圾清理页清空</div></div>
+      <div class="card-d"><div class="lbl">快捷操作</div><div class="foot">内存优化 → / 垃圾清理 →</div></div>
+    </div>
+  </div>
+  <div class="pane new demo-ov">
+    <div class="tag">提案</div>
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <div class="card-d hero">
+        <div>
+          <div class="lbl">物理内存</div>
+          <div class="num">9.29 GB <small>/ 15.41 GB</small></div>
+          <div class="bar-d" style="max-width:280px"><i style="width:60%"></i></div>
+        </div>
+        <div class="mini"><div class="lbl">清理规则</div><div class="num">49</div></div>
+        <div class="mini"><div class="lbl">社区规则库</div><div class="num">388</div></div>
+        <div class="mini"><div class="lbl">回收站</div><div class="num">105 KB</div></div>
+      </div>
+      <div class="card-d"><div class="lbl">磁盘空间</div><div class="foot" style="margin-top:6px">C:\ 66.25 GB 可用 / 138 GB<br>D:\ 101.73 GB 可用 / 337 GB</div></div>
+      <div class="card-d"><div class="lbl">快捷操作</div><div class="foot" style="margin-top:6px">内存优化 →　垃圾清理 →　刷新</div></div>
+    </div>
+  </div>
+</div>
+
+<h1>2 · 权限横幅：橙实心带 → 浅橙衬底</h1>
+<p class="lead">满饱和橙 + 白字 + 内嵌绿按钮，三个强色同框，是界面里最「AI 味」的一处。改成橙的浅衬底 + 墨色正文 + 橙色图标，保持提醒存在但不轰炸。</p>
+<div class="compare">
+  <div class="pane old">
+    <div class="tag">现在</div>
+    <div class="banner-old">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M12 3l8 3.5v5c0 4.6-3.2 8.4-8 9.5-4.8-1.1-8-4.9-8-9.5v-5z"/><path d="M12 9v4M12 16h.01"/></svg>
+      <div><b>当前是普通权限</b> —— 「清空待机内存列表」需要管理员。</div>
+      <button class="btn-go">以管理员重启</button>
+    </div>
+  </div>
+  <div class="pane new">
+    <div class="tag">提案</div>
+    <div class="banner-new">
+      <svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3l8 3.5v5c0 4.6-3.2 8.4-8 9.5-4.8-1.1-8-4.9-8-9.5v-5z"/><path d="M12 9v4M12 16h.01"/></svg>
+      <div><b>当前是普通权限</b>，「清空待机内存列表」需要管理员，其余功能正常。</div>
+      <button class="btn-go">以管理员重启</button>
+    </div>
+  </div>
+</div>
+
+<h1>3 · 风险徽章：三档灰 → 有梯度的三档</h1>
+<p class="lead">现在安全/谨慎/风险全是同一种灰药丸，扫一眼分不出档。仍不引入红绿黄：谨慎用亚麻暖衬底（和确认框同族），风险用墨色描边加重。</p>
+<div class="compare">
+  <div class="pane old">
+    <div class="tag">现在</div>
+    <div class="rowline"><span class="tick"></span><div><div class="rname">DirectX Shader 缓存</div><div class="rmeta">系统缓存</div></div><span class="rnum">1 个目标</span><span class="bdg">安全</span><button class="detail">详情</button></div>
+    <div class="rowline"><span class="tick"></span><div><div class="rname">Prefetch 预读</div><div class="rmeta">系统缓存</div></div><span class="rnum">3 个目标</span><span class="bdg">谨慎</span><button class="detail">详情</button></div>
+    <div class="rowline"><span class="tick"></span><div><div class="rname">旧版 Windows 安装</div><div class="rmeta">系统托管</div></div><span class="rnum">—</span><span class="bdg">系统托管</span><button class="detail">详情</button></div>
+  </div>
+  <div class="pane new">
+    <div class="tag">提案</div>
+    <div class="rowline"><span class="tick"></span><div><div class="rname">DirectX Shader 缓存</div><div class="rmeta">系统缓存</div></div><span class="rnum">1 个目标</span><span class="bdg safe">安全</span><button class="detail">详情</button></div>
+    <div class="rowline"><span class="tick"></span><div><div class="rname">Prefetch 预读</div><div class="rmeta">系统缓存</div></div><span class="rnum">3 个目标</span><span class="bdg caution">谨慎</span><button class="detail">详情</button></div>
+    <div class="rowline"><span class="tick"></span><div><div class="rname">旧版 Windows 安装</div><div class="rmeta">系统托管</div></div><span class="rnum">—</span><span class="bdg lock">系统托管</span><button class="detail">详情</button></div>
+  </div>
+</div>
+
+<h1>4 · 调校行：描边小按钮 → 轻文字钮</h1>
+<p class="lead">每行三个控件（开关 + 两个描边按钮）都抢注意力。开关是主角，推荐值/默认值降为轻文字钮，悬停才出现底色；次要文字加深一档，行的名字放大半号。</p>
+<div class="compare">
+  <div class="pane old">
+    <div class="tag">现在</div>
+    <div class="trow">
+      <div><div class="tname">游戏 CPU 优先级</div><div class="tdesc">为游戏提供更高的 CPU 调度优先级</div></div>
+      <span class="sw on"></span>
+      <div class="acts"><button class="btn-o">推荐值</button><button class="btn-o">默认值</button></div>
+    </div>
+    <div class="trow">
+      <div><div class="tname">Svhost 拆分阈值</div><div class="tdesc">确定 Windows 何时将服务拆分为单独进程</div></div>
+      <span class="sw"></span>
+      <div class="acts"><button class="btn-o">推荐值</button><button class="btn-o">默认值</button></div>
+    </div>
+  </div>
+  <div class="pane new">
+    <div class="tag">提案</div>
+    <div class="trow">
+      <div><div class="tname">游戏 CPU 优先级</div><div class="tdesc">为游戏提供更高的 CPU 调度优先级</div></div>
+      <span class="sw on"></span>
+      <div class="acts"><button class="btn-n">推荐值</button><button class="btn-n">默认值</button></div>
+    </div>
+    <div class="trow">
+      <div><div class="tname">Svhost 拆分阈值</div><div class="tdesc">确定 Windows 何时将服务拆分为单独进程</div></div>
+      <span class="sw"></span>
+      <div class="acts"><button class="btn-n">推荐值</button><button class="btn-n">默认值</button></div>
+    </div>
+  </div>
+</div>
+
+<h1>5 · 字号与灰阶</h1>
+<div class="compare">
+  <div class="pane old">
+    <div class="tag">现在</div>
+    <div class="t-old">页面标题 32px / 500 / 字距 +1px</div>
+    <div class="sec-old">分组标题 14px（与正文同字号，层级靠猜）</div>
+    <div class="bodytxt">次要文字 #939084 —— 白底上只有 3.2:1，发灰发虚，这是「粗糙感」的主要来源</div>
+  </div>
+  <div class="pane new">
+    <div class="tag">提案</div>
+    <div class="t-new">页面标题 27px / 600 / 字距 0（中文不吃拉丁正字距）</div>
+    <div class="sec-new">分组标题 15px / 600（明确的中层）</div>
+    <div class="bodytxt">次要文字 #75716a —— 白底 4.6:1，仍柔和但读得清</div>
+  </div>
+</div>
+
+</body>
+</html>
