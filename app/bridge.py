@@ -21,7 +21,7 @@ from .core import junk, mem, winhance
 
 APP_TITLE = "Mahiru"
 APP_AUTHOR = "decaycc"
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.0.2"
 
 
 def _guard(fn):
