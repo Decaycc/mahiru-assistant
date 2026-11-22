@@ -1820,8 +1820,18 @@ def delete_path(path: str, errors: list, recycle: bool = False,
             try:
                 os.remove(path)
                 return True, size
-            except PermissionError:
-                errors.append((path, "文件正在被其他程序使用"))
+            except PermissionError as e:
+                # 同样是「拒绝访问」，原因可能完全不同：
+                #   winerror 32  = 文件被别的进程占用
+                #   winerror 5   = 权限不足（需要管理员）
+                # 给用户的建议不一样，所以分开报。
+                we = getattr(e, "winerror", None)
+                if we == 32:
+                    errors.append((path, "文件正在被其他程序使用"))
+                elif we == 5:
+                    errors.append((path, "权限不足，需要管理员权限"))
+                else:
+                    errors.append((path, "拒绝访问（可能被占用或权限不足）"))
                 return False, 0
             except OSError as e:
                 errors.append((path, f"删除失败：{e.strerror or e}"))
@@ -1930,7 +1940,11 @@ def clean_rule(rule: dict, cancel: threading.Event | None = None,
             with os.scandir(path) as it:
                 entries = list(it)
         except OSError as e:
-            errors.append((path, f"无法读取目录：{e.strerror or e}"))
+            we = getattr(e, "winerror", None)
+            if we == 5:
+                errors.append((path, "无法读取目录：需要管理员权限"))
+            else:
+                errors.append((path, f"无法读取目录：{e.strerror or e}"))
             continue
 
         for entry in entries:
