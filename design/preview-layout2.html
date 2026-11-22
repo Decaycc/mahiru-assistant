@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mahiru小助手 · 界面预览 v2</title>
+<style>
+  /* ============ 设计令牌 ============ */
+  :root {
+    /* 背景色：中性浅灰，非暖白、非奶油 */
+    --bg: #f5f5f4;
+    --card: #ffffff;            /* 纯白卡片 */
+    --card-soft: #f0f0ef;       /* 中性灰，用于 hover/轨道 */
+    --ink: #201515;             /* 咖啡墨，保持 */
+    --body: #605d52;
+    --body-mid: #939084;
+    --mute: #c5c0b1;
+    --border: #e9e9e6;          /* 中性发丝线 */
+    --border-strong: #d6d6d2;
+    --primary: #ff4f00;         /* 强调橙，保持 */
+    --primary-ink: #e14600;
+    --on-primary: #fffefb;
+    --r: 8px;
+    --shadow: 0 1px 2px rgba(0,0,0,.04);
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --nav-item-h: 42px;
+    --nav-gap: 4px;
+    --nav-pad: 8px;
+    --sidebar-w: 232px;
+    --topbar-h: 56px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: "Inter", "Noto Sans SC", "Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  svg { display: block; }
+
+  /* ============ 顶部状态线（签名元素 1） ============ */
+  .status-line {
+    position: fixed; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--primary); z-index: 200;
+  }
+
+  /* ============ 布局骨架 ============ */
+  .app { display: flex; height: 100vh; padding-top: 3px; }
+
+  /* ---- 侧栏 ---- */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border-right: 1px solid var(--border);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 18px 16px;
+  }
+  /* 圆角图标（Windows 11 风格圆角矩形） */
+  .brand-mark {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,.08);
+  }
+  .brand-name { font-weight: 600; font-size: 15px; }
+  .brand-sub { font-size: 11px; color: var(--body-mid); }
+
+  .nav {
+    position: relative;
+    flex: 1;
+    padding: var(--nav-pad);
+    display: flex;
+    flex-direction: column;
+    gap: var(--nav-gap);
+  }
+  .nav-indicator {
+    position: absolute;
+    left: var(--nav-pad);
+    right: var(--nav-pad);
+    top: var(--nav-pad);
+    height: var(--nav-item-h);
+    border-radius: var(--r);
+    background: var(--ink);
+    transition: transform 260ms var(--ease);
+    will-change: transform;
+    pointer-events: none;
+  }
+  .nav-item {
+    position: relative;
+    z-index: 1;
+    height: var(--nav-item-h);
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 0 14px;
+    border-radius: var(--r);
+    color: var(--body);
+    font-weight: 500;
+    transition: color 160ms var(--ease), background 120ms var(--ease), transform 120ms var(--ease);
+  }
+  .nav-item svg { width: 18px; height: 18px; flex: none; }
+  .nav-item:hover:not(.active) { background: var(--card-soft); }
+  .nav-item.active { color: #fff; }
+  .nav-item:active { transform: scale(.98); }
+
+  .sidebar-foot {
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--body-mid);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #34D399; flex: none; }
+
+  /* ---- 主区 ---- */
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+  .topbar {
+    height: var(--topbar-h);
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+  .crumb { font-size: 15px; font-weight: 600; }
+  .crumb small { color: var(--body-mid); font-weight: 400; margin-left: 6px; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--card-soft);
+    color: var(--body);
+    font-size: 12px; font-weight: 500;
+  }
+
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* ---- 卡片内的操作行（垃圾页「扫描/清理」等） ---- */
+  .actionbar {
+    display: flex; align-items: center; gap: 12px;
+    margin-top: 16px; padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ---- 底部全局操作条（只在内存页出现） ---- */
+  .actionbar-global {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+  }
+  .actionbar-global .spacer { flex: 1; }
+  .actionbar-global .sel { font-size: 13px; color: var(--body); }
+  .actionbar-global button:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ---- 页面切换 ---- */
+  .page { display: none; }
+  .page.active { display: block; animation: pageIn 160ms var(--ease); }
+  .page.leaving { opacity: 0; transition: opacity 120ms var(--ease); animation: none; }
+  @keyframes pageIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============ 通用组件 ============ */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    box-shadow: var(--shadow);
+    padding: 20px;
+  }
+  .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .card-title { font-size: 15px; font-weight: 600; }
+  .card-sub { font-size: 12px; color: var(--body-mid); }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 600;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--body-mid);
+    margin-bottom: 8px;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 9px 16px;
+    border-radius: var(--r);
+    font-weight: 600; font-size: 14px;
+    border: 1px solid transparent;
+    transition: transform 120ms var(--ease), background 160ms var(--ease), color 160ms var(--ease), border-color 160ms var(--ease);
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--primary); color: var(--on-primary); }
+  .btn-primary:hover { background: var(--primary-ink); }
+  .btn-ghost { background: var(--card); color: var(--ink); border-color: var(--border-strong); }
+  .btn-ghost:hover { background: var(--card-soft); }
+  .btn-sm { padding: 5px 11px; font-size: 12px; font-weight: 500; border-radius: 6px; }
+
+  .bar { height: 8px; border-radius: 999px; background: var(--card-soft); overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--ink); border-radius: 999px; transition: width 600ms var(--ease); }
+
+  /* ---- 开关 ---- */
+  .switch { position: relative; display: inline-block; width: 46px; height: 26px; flex: none; vertical-align: middle; }
+  .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 2; }
+  .switch .track {
+    position: absolute; inset: 0;
+    border-radius: 999px;
+    background: rgba(26,26,26,.12);
+    transition: background 200ms var(--ease);
+  }
+  .switch .thumb {
+    position: absolute; top: 3px; left: 3px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.22);
+    transition: transform 280ms var(--ease);
+  }
+  .switch input:checked + .track { background: var(--ink); }
+  .switch input:checked + .track .thumb { transform: translateX(20px); }
+  .switch input:active + .track .thumb { transform: scale(.94); }
+
+  /* ---- 选择框 ---- */
+  .select {
+    appearance: none;
+    padding: 6px 30px 6px 11px;
+    border-radius: 6px;
+    border: 1px solid var(--border-strong);
+    background: var(--card);
+    font: inherit; font-size: 13px; color: var(--ink);
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23939084' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  /* ============ 概览页 ============ */
+  .ov-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+
+  .hero { padding: 26px; }
+  .hero-num {
+    font-size: 42px; font-weight: 700; letter-spacing: -1px; line-height: 1.1;
+    font-variant-numeric: tabular-nums;   /* 数字等宽（签名元素 2） */
+  }
+  .hero-num small { font-size: 18px; font-weight: 500; color: var(--body); }
+  .hero-meta { color: var(--body); font-size: 13px; margin: 6px 0 16px; }
+  .hero-actions { display: flex; gap: 10px; margin-top: 18px; }
+
+  .stat-stack { display: flex; flex-direction: column; gap: 16px; }
+  .stat {
+    display: flex; align-items: center; gap: 13px;
+    padding: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    box-shadow: var(--shadow);
+  }
+  .stat-ico {
+    width: 40px; height: 40px; border-radius: var(--r);
+    background: var(--card-soft);
+    display: grid; place-items: center; flex: none;
+    color: var(--ink);
+  }
+  .stat-ico svg { width: 20px; height: 20px; }
+  .stat-val { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat-lbl { font-size: 12px; color: var(--body-mid); }
+
+  .quick-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+  .quick {
+    display: flex; align-items: center; gap: 12px;
+    padding: 15px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    background: var(--card);
+    box-shadow: var(--shadow);
+    transition: transform 120ms var(--ease), border-color 160ms var(--ease);
+    text-align: left;
+  }
+  .quick:hover { border-color: var(--border-strong); }
+  .quick:active { transform: scale(.98); }
+  .quick svg { width: 20px; height: 20px; color: var(--body); flex: none; }
+  .quick-name { font-weight: 600; font-size: 14px; }
+  .quick-sub { font-size: 12px; color: var(--body-mid); }
+
+  /* ============ 内存页 ============ */
+  .mem-top { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .opt-list { display: flex; flex-direction: column; }
+  .opt {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 2px;
+    border-bottom: 1px solid var(--border);
+  }
+  .opt:last-child { border-bottom: none; }
+  .opt-main { flex: 1; min-width: 0; }
+  .opt-name { font-weight: 500; }
+  .opt-sub { font-size: 12px; color: var(--body-mid); }
+
+  .prio-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    background: var(--card-soft); font-size: 12px; color: var(--body);
+  }
+  .chip b { color: var(--ink); font-weight: 600; }
+  .chip-x { color: var(--body-mid); font-weight: 700; padding: 0 2px; }
+  .chip-x:hover { color: var(--ink); }
+
+  .table { width: 100%; border-collapse: collapse; }
+  .table th {
+    text-align: left; font-size: 12px; font-weight: 600; color: var(--body-mid);
+    padding: 8px 12px; border-bottom: 1px solid var(--border);
+  }
+  .table td { padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .table tr:last-child td { border-bottom: none; }
+  .proc-name { font-weight: 500; }
+  .proc-tag { font-size: 12px; color: var(--body-mid); margin-left: 8px; }
+
+  /* ============ 垃圾清理页 ============ */
+  .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .seg { display: inline-flex; background: var(--card-soft); border-radius: 8px; padding: 3px; }
+  .seg button {
+    padding: 5px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 500;
+    color: var(--body); transition: background 140ms var(--ease), color 140ms var(--ease), transform 120ms var(--ease);
+  }
+  .seg button:hover { color: var(--ink); }
+  .seg button:active { transform: scale(.97); }
+  .seg button.on { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
+
+  .jrow {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 12px; border-bottom: 1px solid var(--border);
+    transition: background 120ms var(--ease);
+  }
+  .jrow:last-child { border-bottom: none; }
+  .jrow:hover { background: var(--card-soft); }
+  .jrow-main { flex: 1; min-width: 0; }
+  .jrow-name { font-weight: 500; font-size: 13.5px; }
+  .jrow-meta { font-size: 12px; color: var(--body-mid); }
+  .lv { flex: none; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; }
+  .lv-safe { background: var(--card-soft); color: var(--body); }
+  .lv-caution { background: var(--card-soft); color: var(--body); border: 1px solid var(--border-strong); }
+  .lv-risky { background: var(--card); color: var(--ink); border: 1px solid var(--ink); }
+  .lv-locked { background: var(--card-soft); color: var(--body-mid); }
+
+  .checkbox {
+    appearance: none; width: 16px; height: 16px; flex: none;
+    border: 1.5px solid var(--border-strong); border-radius: 4px;
+    background: var(--card); cursor: pointer;
+    display: grid; place-items: center;
+    transition: background 140ms var(--ease), border-color 140ms var(--ease), transform 120ms var(--ease);
+  }
+  .checkbox:active { transform: scale(.92); }
+  .checkbox:checked { background: var(--ink); border-color: var(--ink); }
+  .checkbox:checked::after {
+    content: ""; width: 8px; height: 4px;
+    border: 2px solid #fff; border-top: none; border-right: none;
+    transform: rotate(-45deg) translateY(-1px);
+  }
+
+  /* ============ 游戏与性能页 ============ */
+  .tune-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .tune-tab {
+    padding: 6px 13px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 500; color: var(--body);
+    border: 1px solid var(--border-strong);
+    background: var(--card);
+    transition: background 140ms var(--ease), color 140ms var(--ease), border-color 140ms var(--ease), transform 120ms var(--ease);
+  }
+  .tune-tab:hover { border-color: var(--body-mid); }
+  .tune-tab:active { transform: scale(.96); }
+  .tune-tab.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+  .tune-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 4px; border-bottom: 1px solid var(--border);
+  }
+  .tune-row:last-child { border-bottom: none; }
+  .tune-main { flex: 1; min-width: 0; }
+  .tune-name { font-weight: 500; font-size: 13.5px; }
+  .tune-desc { font-size: 12px; color: var(--body-mid); margin-top: 1px; }
+  .tune-acts { display: flex; gap: 6px; flex: none; }
+
+  /* ============ 设置页 ============ */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 80px 20px;
+  }
+  .empty-state svg { width: 40px; height: 40px; color: var(--body-mid); margin-bottom: 14px; }
+  .empty-state .t1 { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+  .empty-state .t2 { color: var(--body-mid); font-size: 13px; }
+
+  /* ============ toast ============ */
+  .toast-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .toast {
+    background: var(--ink); color: #fff;
+    padding: 9px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,.12);
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 200ms var(--ease), transform 200ms var(--ease);
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ============ 减少动效 ============ */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="status-line"></div>
+
+<div class="app">
+
+  <!-- ============ 侧栏 ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <!-- 与桌面图标同源：应用立绘（design/icon-source.png） -->
+        <img src="../web/assets/brand-mark.png" alt="mahiru"
+             style="width:100%;height:100%;border-radius:9px;object-fit:cover">
+      </div>
+      <div>
+        <div class="brand-name">mahiru小助手</div>
+        <div class="brand-sub">v1.0.1</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <div class="nav-indicator" id="navIndicator"></div>
+      <button class="nav-item active" data-page="overview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>
+        <span>概览</span>
+      </button>
+      <button class="nav-item" data-page="memory">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></svg>
+        <span>内存优化</span>
+      </button>
+      <button class="nav-item" data-page="junk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6M6 6l1 14a1.5 1.5 0 0 0 1.5 1.3h7A1.5 1.5 0 0 0 17 20l1-14"/><path d="M10 10v7M14 10v7"/></svg>
+        <span>垃圾清理</span>
+      </button>
+      <button class="nav-item" data-page="gaming">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h4M8 9v4"/><circle cx="15.5" cy="10" r=".6" fill="currentColor"/><circle cx="17.5" cy="12" r=".6" fill="currentColor"/><path d="M6.5 6h11a4.5 4.5 0 0 1 4.5 4.5v0A4.5 4.5 0 0 1 17.5 15h-2.2a3 3 0 0 0-2.3 1.1l-1.2 1.5a2 2 0 0 1-3 0l-1.2-1.5A3 3 0 0 0 5.3 15H3.5A2.5 2.5 0 0 1 1 12.5v-2A4.5 4.5 0 0 1 5.5 6h1z"/></svg>
+        <span>游戏与性能</span>
+      </button>
+      <button class="nav-item" data-page="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.09a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+        <span>设置</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <span class="dot"></span> 后端已连接
+    </div>
+  </aside>
+
+  <!-- ============ 主区 ============ -->
+  <div class="main">
+    <header class="topbar">
+      <div class="crumb" id="crumb">概览<small id="crumbSub">系统状态一览</small></div>
+      <div class="topbar-right">
+        <span class="badge">普通权限</span>
+        <button class="btn btn-ghost btn-sm" id="relaunchBtn">以管理员重启</button>
+      </div>
+    </header>
+
+    <div class="content" id="content">
+
+      <!-- ============ 概览 ============ -->
+      <section class="page active" id="page-overview">
+        <div class="ov-grid">
+          <div class="card hero">
+            <div class="eyebrow">内存使用</div>
+            <div class="hero-num">7.10 <small>/ 15.41 GB</small></div>
+            <div class="hero-meta">已用 46% · 可释放约 1.8 GB</div>
+            <div class="bar"><i style="width:46%"></i></div>
+            <div class="hero-actions">
+              <button class="btn btn-primary" id="heroBoost">一键加速</button>
+              <button class="btn btn-ghost" data-goto="memory">查看进程详情</button>
+            </div>
+          </div>
+          <div class="stat-stack">
+            <div class="stat">
+              <div class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6M6 6l1 14a1.5 1.5 0 0 0 1.5 1.3h7A1.5 1.5 0 0 0 17 20l1-14"/></svg></div>
+              <div><div class="stat-val">49 条</div><div class="stat-lbl">清理规则</div></div>
+            </div>
+            <div class="stat">
+              <div class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6M6 6l1 14a1.5 1.5 0 0 0 1.5 1.3h7A1.5 1.5 0 0 0 17 20l1-14"/></svg></div>
+              <div><div class="stat-val">592.8 KB</div><div class="stat-lbl">回收站</div></div>
+            </div>
+            <div class="stat">
+              <div class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h4M8 9v4"/><path d="M6.5 6h11a4.5 4.5 0 0 1 4.5 4.5v0A4.5 4.5 0 0 1 17.5 15h-2.2a3 3 0 0 0-2.3 1.1l-1.2 1.5a2 2 0 0 1-3 0l-1.2-1.5A3 3 0 0 0 5.3 15H3.5A2.5 2.5 0 0 1 1 12.5v-2A4.5 4.5 0 0 1 5.5 6h1z"/></svg></div>
+              <div><div class="stat-val">116 项</div><div class="stat-lbl">游戏调校</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="quick-row">
+          <button class="quick" data-goto="memory">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 12.5H11L10 22l8.5-10.5H13z"/></svg>
+            <div><div class="quick-name">一键加速</div><div class="quick-sub">释放内存 · 关闭后台进程</div></div>
+          </button>
+          <button class="quick" data-goto="junk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6M6 6l1 14a1.5 1.5 0 0 0 1.5 1.3h7A1.5 1.5 0 0 0 17 20l1-14"/></svg>
+            <div><div class="quick-name">清理垃圾</div><div class="quick-sub">49 条规则 · 安全优先</div></div>
+          </button>
+          <button class="quick" data-goto="gaming">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h4M8 9v4"/><path d="M6.5 6h11a4.5 4.5 0 0 1 4.5 4.5v0A4.5 4.5 0 0 1 17.5 15h-2.2a3 3 0 0 0-2.3 1.1l-1.2 1.5a2 2 0 0 1-3 0l-1.2-1.5A3 3 0 0 0 5.3 15H3.5A2.5 2.5 0 0 1 1 12.5v-2A4.5 4.5 0 0 1 5.5 6h1z"/></svg>
+            <div><div class="quick-name">游戏调校</div><div class="quick-sub">116 项性能设置</div></div>
+          </button>
+        </div>
+      </section>
+
+      <!-- ============ 内存优化 ============ -->
+      <section class="page" id="page-memory">
+        <div class="mem-top">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">一键加速</div>
+              <span class="badge">可释放约 1.8 GB</span>
+            </div>
+            <div class="opt-list" id="memOpts">
+              <label class="opt"><div class="opt-main"><div class="opt-name">关闭安全级后台应用</div><div class="opt-sub">不影响系统稳定</div></div><span class="switch"><input type="checkbox" checked><span class="track"><span class="thumb"></span></span></span></label>
+              <label class="opt"><div class="opt-main"><div class="opt-name">清理进程工作集</div><div class="opt-sub">回收空闲内存，不结束进程</div></div><span class="switch"><input type="checkbox" checked><span class="track"><span class="thumb"></span></span></span></label>
+              <label class="opt"><div class="opt-main"><div class="opt-name">关闭可选级后台应用</div><div class="opt-sub">如音乐、网盘等</div></div><span class="switch"><input type="checkbox"><span class="track"><span class="thumb"></span></span></span></label>
+              <label class="opt"><div class="opt-main"><div class="opt-name">关闭 Xbox 后台录制</div><div class="opt-sub">减少游戏时后台开销</div></div><span class="switch"><input type="checkbox"><span class="track"><span class="thumb"></span></span></span></label>
+              <label class="opt"><div class="opt-main"><div class="opt-name">切换到高性能电源计划</div><div class="opt-sub">减少 CPU 降频</div></div><span class="switch"><input type="checkbox"><span class="track"><span class="thumb"></span></span></span></label>
+            </div>
+            <div class="actionbar">
+              <button class="btn btn-primary" id="memBoost">一键加速</button>
+              <button class="btn btn-ghost" id="memRevert">还原系统改动</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">游戏优先级</div>
+              <span class="card-sub" id="prioCount">9 个有窗口的程序</span>
+            </div>
+            <div class="prio-row" style="margin-bottom:12px">
+              <select class="select" id="prioTarget">
+                <option>WeChatAppEx.exe</option>
+                <option>Discord.exe</option>
+                <option>Steam.exe</option>
+                <option>WeGame.exe</option>
+              </select>
+              <select class="select" id="prioLevel">
+                <option>高</option>
+                <option>高于标准</option>
+                <option>标准</option>
+                <option>低于标准</option>
+                <option>空闲</option>
+              </select>
+              <button class="btn btn-primary btn-sm" id="prioApply">应用</button>
+            </div>
+            <div style="margin-bottom:12px">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--body)">
+                <input type="checkbox" class="checkbox" checked id="prioRemember"> 记住此进程的优先级
+              </label>
+            </div>
+            <div style="margin-bottom:6px;font-size:12px;color:var(--body-mid)">已保存的优先级</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px" id="prioSaved">
+              <span class="chip"><b>WeChatAppEx.exe</b> 高 <span class="chip-x" data-forget>×</span></span>
+              <span class="chip"><b>Discord.exe</b> 高于标准 <span class="chip-x" data-forget>×</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 深度内存优化：默认折叠，避免误触 -->
+        <div class="card" style="margin-top:16px">
+          <div class="card-head">
+            <div class="card-title">深度内存优化</div>
+            <span class="badge" id="deepCount">7 项内核接口</span>
+          </div>
+          <div class="opt-list" id="deepOpts"></div>
+          <div class="actionbar">
+            <button class="btn btn-primary" id="deepRun">执行深度优化</button>
+            <button class="btn btn-ghost btn-sm" id="deepSafe">只勾免管理员的</button>
+            <button class="btn btn-ghost btn-sm" id="deepAll">全选</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-head">
+            <div class="card-title">进程列表</div>
+            <span class="card-sub">共 8 个进程</span>
+          </div>
+          <table class="table">
+            <thead><tr><th style="width:40px"></th><th>进程</th><th>内存占用</th><th>状态</th></tr></thead>
+            <tbody id="procList"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ 垃圾清理 ============ -->
+      <section class="page" id="page-junk">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">清理规则</div>
+              <div class="card-sub" id="junkCount">49 条 · 已选 0 条</div>
+            </div>
+            <div class="seg" id="junkPick">
+              <button data-pick="default" class="on">推荐</button>
+              <button data-pick="all">全选</button>
+              <button data-pick="none">全不选</button>
+            </div>
+          </div>
+          <div id="junkList"></div>
+          <div class="actionbar">
+            <button class="btn btn-primary" id="junkScan">扫描</button>
+            <button class="btn btn-ghost" id="junkClean">清理</button>
+            <span class="card-sub" style="margin-left:auto">回收站：592.8 KB</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 游戏与性能 ============ -->
+      <section class="page" id="page-gaming">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">游戏调校</div>
+              <div class="card-sub">116 项性能设置</div>
+            </div>
+          </div>
+          <div class="tune-tabs" id="tuneTabs"></div>
+          <div id="tuneList"></div>
+        </div>
+      </section>
+
+      <!-- ============ 设置 ============ -->
+      <section class="page" id="page-settings">
+        <div class="card">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.09a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+            <div class="t1">设置页面正在改版</div>
+            <div class="t2">以前的选项之后会回到这里。</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ============ 底部操作条（只在内存页出现，垃圾页用卡片内自己的操作行） ============ -->
+    <footer class="actionbar-global" id="actionbar" style="display:none">
+      <span class="sel" id="memSel">已选 0 项</span>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost btn-sm" id="memApply" disabled>整理内存</button>
+      <button class="btn btn-ghost btn-sm" id="memClose" disabled>关闭进程</button>
+      <button class="btn btn-primary btn-sm" id="actionPrimary">一键加速</button>
+    </footer>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ================= 导航 + 页面切换 ================= */
+  const navItems = Array.from(document.querySelectorAll(".nav-item"));
+  const indicator = document.getElementById("navIndicator");
+  const pages = Array.from(document.querySelectorAll(".page"));
+  const crumb = document.getElementById("crumb");
+  const crumbSub = document.getElementById("crumbSub");
+  const STRIDE = 46;
+
+  const META = {
+    overview: { title: "概览", sub: "系统状态一览" },
+    memory:   { title: "内存优化", sub: "一键释放内存" },
+    junk:     { title: "垃圾清理", sub: "49 条清理规则" },
+    gaming:   { title: "游戏与性能", sub: "116 项性能调校" },
+    settings: { title: "设置", sub: "" },
+  };
+
+  let current = "overview";
+
+  function moveIndicator(item) {
+    indicator.style.transform = "translateY(" + (navItems.indexOf(item) * STRIDE) + "px)";
+  }
+
+  function goTo(pageId) {
+    if (pageId === current) return;
+    const next = document.getElementById("page-" + pageId);
+    const cur = document.getElementById("page-" + current);
+    if (!next) return;
+
+    navItems.forEach((n) => n.classList.toggle("active", n.dataset.page === pageId));
+    moveIndicator(navItems.find((n) => n.dataset.page === pageId));
+    crumb.textContent = META[pageId].title;
+    crumbSub.textContent = META[pageId].sub;
+
+    /* 底部操作条只在内存页出现（垃圾页用卡片内自己的操作行） */
+    const ab = document.getElementById("actionbar");
+    ab.style.display = (pageId === "memory") ? "" : "none";
+
+    cur.classList.add("leaving");
+    setTimeout(() => {
+      cur.classList.remove("active", "leaving");
+      next.classList.add("active");
+      current = pageId;
+    }, 120);
+  }
+
+  navItems.forEach((item) => item.addEventListener("click", () => goTo(item.dataset.page)));
+  document.querySelectorAll("[data-goto]").forEach((el) => el.addEventListener("click", () => goTo(el.dataset.goto)));
+  moveIndicator(navItems[0]);
+
+  /* ================= Toast ================= */
+  const toastWrap = document.getElementById("toastWrap");
+  function toast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = msg;
+    toastWrap.appendChild(t);
+    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add("show")));
+    setTimeout(() => {
+      t.classList.remove("show");
+      setTimeout(() => t.remove(), 220);
+    }, 1600);
+  }
+
+  /* ================= 深度内存优化 ================= */
+  const DEEP_OPS = [
+    { key: "empty_working_sets", name: "清空所有进程工作集", desc: "回收全部进程空闲内存", admin: true, on: true },
+    { key: "purge_standby", name: "清空待机内存列表", desc: "释放被系统缓存的页面", admin: true, on: true },
+    { key: "combine_memory", name: "合并内存页面", desc: "压缩可合并的重复页面", admin: false, on: false },
+    { key: "flush_registry", name: "刷新注册表缓存", desc: "回收注册表内存副本", admin: false, on: true },
+    { key: "trim_system_cache", name: "整理系统缓存", desc: "回收系统文件缓存", admin: true, on: true },
+    { key: "empty_dns_cache", name: "清空 DNS 缓存", desc: "释放域名解析缓存", admin: false, on: true },
+    { key: "empty_icon_cache", name: "重建图标缓存", desc: "清理并重建图标缓存", admin: false, on: true },
+  ];
+  const deepOptsEl = document.getElementById("deepOpts");
+  function renderDeep() {
+    deepOptsEl.innerHTML = DEEP_OPS.map((o) =>
+      '<label class="opt"><div class="opt-main"><div class="opt-name">' + o.name +
+        (o.admin ? ' <span class="chip" style="font-size:10px">需管理员</span>' : "") +
+        '</div><div class="opt-sub">' + o.desc + '</div></div>' +
+        '<span class="switch"><input type="checkbox" data-deep="' + o.key + '" ' + (o.on ? "checked" : "") + '><span class="track"><span class="thumb"></span></span></span></label>'
+    ).join("");
+  }
+  renderDeep();
+  deepOptsEl.addEventListener("change", (e) => {
+    if (e.target.matches("[data-deep]")) {
+      DEEP_OPS.find((o) => o.key === e.target.dataset.deep).on = e.target.checked;
+    }
+  });
+  document.getElementById("deepRun").addEventListener("click", () => toast("深度优化完成：释放 1.8 GB"));
+  document.getElementById("deepSafe").addEventListener("click", () => {
+    DEEP_OPS.forEach((o) => { if (!o.admin) o.on = true; });
+    renderDeep(); toast("已勾选免管理员的项");
+  });
+  document.getElementById("deepAll").addEventListener("click", () => {
+    DEEP_OPS.forEach((o) => o.on = true);
+    renderDeep(); toast("已全选");
+  });
+
+  /* ================= 进程列表 ================= */
+  const PROCS = [
+    { name: "WeChatAppEx.exe", mem: "137.4 MB", tag: "可关闭" },
+    { name: "chrome.exe", mem: "892.3 MB", tag: "可整理", count: "×12" },
+    { name: "Discord.exe", mem: "214.6 MB", tag: "可关闭" },
+    { name: "Steam.exe", mem: "156.2 MB", tag: "可关闭" },
+    { name: "OneDrive.exe", mem: "62.1 MB", tag: "可关闭" },
+    { name: "WeGame.exe", mem: "88.7 MB", tag: "可关闭" },
+    { name: "explorer.exe", mem: "45.8 MB", tag: "受保护" },
+    { name: "dwm.exe", mem: "38.2 MB", tag: "受保护" },
+  ];
+  document.getElementById("procList").innerHTML = PROCS.map((p) =>
+    '<tr><td><input type="checkbox" class="checkbox" data-proc="' + p.name + '" ' + (p.tag !== "受保护" ? "checked" : "disabled") + '></td>' +
+    '<td><span class="proc-name">' + p.name + '</span>' + (p.count ? '<span class="proc-tag">' + p.count + '</span>' : "") + '</td>' +
+    '<td style="font-variant-numeric:tabular-nums">' + p.mem + '</td>' +
+    '<td><span class="lv ' + (p.tag === "受保护" ? "lv-locked" : "lv-safe") + '">' + p.tag + '</span></td></tr>'
+  ).join("");
+
+  /* ---- 进程列表选中 → 底部操作条联动 ---- */
+  const memSel = document.getElementById("memSel");
+  const memApply = document.getElementById("memApply");
+  const memClose = document.getElementById("memClose");
+  function syncProcSel() {
+    const n = procList.querySelectorAll(".checkbox:checked").length;
+    memSel.textContent = "已选 " + n + " 项";
+    memApply.disabled = n === 0;
+    memClose.disabled = n === 0;
+  }
+  procList.addEventListener("change", (e) => {
+    if (e.target.classList.contains("checkbox")) syncProcSel();
+  });
+  syncProcSel();
+  memApply.addEventListener("click", () => toast("已整理所选进程：释放 137 MB"));
+  memClose.addEventListener("click", () => toast("已关闭 6 个后台进程"));
+
+  /* ================= 垃圾规则 ================= */
+  const RULES = [
+    { name: "系统临时文件", meta: "临时目录", lv: "safe", on: true },
+    { name: "缩略图缓存", meta: "资源管理器缩略图", lv: "safe", on: true },
+    { name: "字体缓存", meta: "字体缓存目录", lv: "safe", on: true },
+    { name: "剪贴板缓存", meta: "剪贴板历史", lv: "safe", on: true },
+    { name: "着色器缓存", meta: "游戏着色器", lv: "safe", on: true },
+    { name: "浏览器缓存", meta: "Chrome / Edge", lv: "caution", on: true },
+    { name: "Windows 更新缓存", meta: "更新下载残留", lv: "caution", on: true },
+    { name: "传递优化缓存", meta: "系统下载缓存", lv: "caution", on: true },
+    { name: "日志文件", meta: "系统日志", lv: "caution", on: true },
+    { name: "安装程序临时文件", meta: "安装残留", lv: "caution", on: true },
+    { name: "系统缓存", meta: "预取缓存", lv: "risky", on: false },
+    { name: "应用缓存", meta: "网页缓存", lv: "risky", on: false },
+    { name: "旧版 Windows 安装", meta: "系统托管", lv: "locked", on: false },
+  ];
+  const LV_MAP = { safe: "lv-safe", caution: "lv-caution", risky: "lv-risky", locked: "lv-locked" };
+  const LV_TXT = { safe: "安全", caution: "谨慎", risky: "风险", locked: "系统托管" };
+  const junkList = document.getElementById("junkList");
+  const junkCount = document.getElementById("junkCount");
+
+  function renderJunk() {
+    junkList.innerHTML = RULES.map((r, i) => {
+      const locked = r.lv === "locked";
+      return (
+        '<label class="jrow">' +
+          '<input type="checkbox" class="checkbox" data-i="' + i + '" ' + (r.on && !locked ? "checked" : "") + (locked ? "disabled" : "") + '>' +
+          '<div class="jrow-main"><div class="jrow-name">' + r.name + '</div>' +
+          '<div class="jrow-meta">' + r.meta + '</div></div>' +
+          '<span class="lv ' + LV_MAP[r.lv] + '">' + LV_TXT[r.lv] + '</span>' +
+        '</label>'
+      );
+    }).join("");
+    syncJunkCount();
+  }
+  function syncJunkCount() {
+    junkCount.textContent = "49 条 · 已选 " + junkList.querySelectorAll(".checkbox:checked").length + " 条";
+  }
+  junkList.addEventListener("change", (e) => {
+    if (e.target.classList.contains("checkbox")) { RULES[+e.target.dataset.i].on = e.target.checked; syncJunkCount(); }
+  });
+  document.getElementById("junkPick").addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    document.querySelectorAll("#junkPick button").forEach((b) => b.classList.toggle("on", b === btn));
+    const pick = btn.dataset.pick;
+    RULES.forEach((r, i) => { if (r.lv === "locked") { r.on = false; return; } r.on = pick === "all" ? true : pick === "none" ? false : (r.lv !== "risky"); });
+    renderJunk();
+  });
+  renderJunk();
+
+  /* ================= 游戏调校 ================= */
+  const TUNES = [
+    { g: "处理器", n: "游戏 CPU 优先级", d: "提升游戏进程的调度优先级", type: "toggle", on: true },
+    { g: "处理器", n: "游戏高调度类别", d: "让系统优先响应游戏", type: "toggle", on: true },
+    { g: "处理器", n: "游戏系统响应能力", d: "降低系统延迟", type: "toggle", on: true },
+    { g: "处理器", n: "服务进程拆分", d: "每个服务拆分的进程数", type: "select", opts: ["默认", "2", "4", "8", "16", "无限制"] },
+    { g: "处理器", n: "处理器性能偏向", d: "优先前台程序还是后台服务", type: "select", opts: ["程序", "后台服务"] },
+    { g: "显卡", n: "硬件加速 GPU 调度", d: "降低输入延迟", type: "toggle", on: false },
+    { g: "显卡", n: "游戏模式", d: "Windows 游戏模式", type: "toggle", on: true },
+    { g: "显卡", n: "可变刷新率", d: "仅支持 VRR 的显示器", type: "toggle", on: false },
+    { g: "显卡", n: "着色器缓存大小", d: "游戏着色器缓存上限", type: "select", opts: ["默认", "无限制", "1GB", "5GB", "10GB"] },
+    { g: "网络", n: "DNS 服务器", d: "降低网址解析延迟", type: "select", opts: ["自动", "Cloudflare", "Google", "Quad9"] },
+    { g: "网络", n: "Nagle 算法", d: "减少小数据包延迟", type: "toggle", on: true },
+    { g: "系统服务", n: "后台应用", d: "限制后台运行的应用", type: "select", opts: ["默认", "禁止", "强制拒绝"] },
+    { g: "系统服务", n: "Windows 更新服务", d: "暂停自动更新", type: "toggle", on: false },
+    { g: "系统服务", n: "传递优化服务", d: "关闭 P2P 下载", type: "toggle", on: false },
+    { g: "计划任务", n: "自动维护", d: "空闲时自动维护", type: "toggle", on: false },
+    { g: "计划任务", n: "磁盘碎片整理", d: "定期整理计划", type: "toggle", on: false },
+    { g: "视觉效果", n: "窗口动画", d: "最小化/最大化动画", type: "toggle", on: true },
+    { g: "视觉效果", n: "透明效果", d: "窗口透明", type: "toggle", on: true },
+    { g: "Xbox", n: "Xbox Game Bar", d: "游戏内覆盖层", type: "toggle", on: false },
+    { g: "Xbox", n: "Xbox 后台录制", d: "后台录制视频", type: "toggle", on: false },
+    { g: "安全", n: "系统还原", d: "系统还原点", type: "toggle", on: true },
+    { g: "安全", n: "内存完整性", d: "基于虚拟化的安全", type: "toggle", on: false },
+    { g: "辅助功能", n: "动画效果", d: "系统动画", type: "select", opts: ["默认", "关闭"] },
+    { g: "其他", n: "菜单展开延迟", d: "鼠标悬停多久展开", type: "select", opts: ["默认", "100ms", "200ms", "400ms"] },
+  ];
+
+  const GROUP_ORDER = ["处理器", "显卡", "网络", "系统服务", "计划任务", "视觉效果", "Xbox", "安全", "辅助功能", "其他"];
+  const tuneTabs = document.getElementById("tuneTabs");
+  const tuneList = document.getElementById("tuneList");
+  let activeGroup = "处理器";
+  const groupCounts = {};
+  TUNES.forEach((t) => { groupCounts[t.g] = (groupCounts[t.g] || 0) + 1; });
+
+  function renderTabs() {
+    tuneTabs.innerHTML = GROUP_ORDER.map((g) =>
+      '<button class="tune-tab' + (g === activeGroup ? " on" : "") + '" data-g="' + g + '">' + g + " " + groupCounts[g] + "</button>"
+    ).join("");
+  }
+
+  /* 推荐/默认按钮：只给「设为推荐值：开/关」这类面向用户的提示，不带技术类型 */
+  function hintText(t, which) {
+    if (t.type === "select") {
+      const opt = which === "rec" ? t.opts[0] : t.opts[0];
+      return "设为" + (which === "rec" ? "推荐值" : "默认值") + "：" + opt;
+    }
+    return "设为" + (which === "rec" ? "推荐值" : "默认值") + "：" + (t.on ? "开" : "关");
+  }
+
+  function renderTunes() {
+    const list = TUNES.filter((t) => t.g === activeGroup);
+    tuneList.innerHTML = list.map((t) => {
+      const ctl = t.type === "toggle"
+        ? '<span class="switch"><input type="checkbox" ' + (t.on ? "checked" : "") + '><span class="track"><span class="thumb"></span></span></span>'
+        : '<select class="select">' + t.opts.map((o) => '<option>' + o + '</option>').join("") + '</select>';
+      return (
+        '<div class="tune-row">' +
+          '<div class="tune-main"><div class="tune-name">' + t.n + '</div>' +
+          '<div class="tune-desc">' + t.d + '</div></div>' +
+          ctl +
+          '<div class="tune-acts">' +
+            '<button class="btn btn-ghost btn-sm" title="' + hintText(t, "rec") + '">推荐值</button>' +
+            '<button class="btn btn-ghost btn-sm" title="' + hintText(t, "def") + '">默认值</button>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join("");
+  }
+
+  tuneTabs.addEventListener("click", (e) => {
+    const btn = e.target.closest(".tune-tab");
+    if (!btn) return;
+    activeGroup = btn.dataset.g;
+    renderTabs();
+    renderTunes();
+  });
+
+  renderTabs();
+  renderTunes();
+
+  /* ================= 按钮反馈 ================= */
+  const bindToast = (id, msg) => { const el = document.getElementById(id); if (el) el.addEventListener("click", () => toast(msg)); };
+  bindToast("heroBoost", "加速完成：释放 137 MB");
+  bindToast("memBoost", "加速完成：释放 137 MB · 关闭 6 个后台进程");
+  bindToast("memRevert", "已还原系统改动");
+  bindToast("prioApply", "已应用：WeChatAppEx.exe → 高");
+  bindToast("relaunchBtn", "已请求以管理员重启");
+  bindToast("junkScan", "扫描完成：可清理 1.2 GB");
+  bindToast("junkClean", "清理完成：释放 1.2 GB");
+
+  tuneList.addEventListener("click", (e) => {
+    const btn = e.target.closest(".tune-acts button");
+    if (!btn) return;
+    toast(btn.title);
+  });
+
+  document.getElementById("prioSaved").addEventListener("click", (e) => {
+    if (e.target.closest("[data-forget]")) { e.target.closest(".chip").remove(); toast("已取消记住"); }
+  });
+
+})();
+</script>
+</body>
+</html>

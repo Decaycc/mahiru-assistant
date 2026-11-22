@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Mahiru · 颜色与控件改版建议</title>
+<style>
+  /* ============================================================
+     现状令牌（取自 web/css/tokens.css + app.css）
+     ============================================================ */
+  :root{
+    --primary:#ff4f00; --primary-ink:#e14600; --on-primary:#fffefb;
+    --go:#2e7d3e; --go-ink:#276b36;
+    --ink:#201515; --ink-soft:#2f2a26;
+    --body:#605d52; --body-mid:#75716a; --mute:#c5c0b1;
+    --canvas:#f5f5f4; --canvas-soft:#f0f0ef; --surface-hover:#ececea;
+    --surface:#fff; --border:#e9e9e6; --border-strong:#d6d6d2;
+    --sidebar:#f7c9cd; --sidebar-accent:#c2185b;
+    --caution-tint:#f7ecd9; --caution-ink:#6b5423; --banner-tint:#fdf0e6;
+    --shadow-1:0 1px 3px rgba(32,21,21,.05),0 6px 18px rgba(32,21,21,.04);
+    --r-md:8px; --r-sm:6px; --r-pill:9999px;
+    --font:"Inter","Noto Sans SC",system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+    --fs-body:16px; --fs-small:14px; --fs-num:24px;
+
+    /* 建议新增 */
+    --primary-btn:#c23f00; --primary-btn-ink:#a83400;
+    --danger-ink:#7a2e2e;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:44px 48px 80px;
+    font-family:var(--font); font-size:var(--fs-body);
+    color:var(--ink); background:var(--canvas);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+
+  /* ---------------- 文档排版 ---------------- */
+  .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--body-mid);font-weight:600;margin:0 0 10px}
+  h1{font-size:34px;line-height:1.15;letter-spacing:-.02em;margin:0 0 10px;font-weight:700}
+  .lede{font-size:15px;line-height:1.75;color:var(--body);margin:0 0 6px;max-width:76ch}
+  .lede b{color:var(--ink);font-weight:600}
+  .meta{font-size:13px;color:var(--body-mid);margin-top:14px}
+
+  section{margin-top:52px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+  .sec-no{font-size:12px;font-weight:700;color:var(--primary-btn);letter-spacing:.08em}
+  h2{font-size:22px;letter-spacing:-.01em;margin:0;font-weight:650}
+  .sec-sub{font-size:14px;line-height:1.7;color:var(--body);margin:8px 0 20px;max-width:82ch}
+
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
+  .pane{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    box-shadow:var(--shadow-1);padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+  .pane .tag{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.1em;
+    padding:3px 9px;border-radius:var(--r-pill);background:var(--canvas-soft);color:var(--body-mid)}
+  .pane.next .tag{background:var(--ink);color:#fff}
+  .pane .note{font-size:13px;line-height:1.65;color:var(--body-mid);margin:0}
+  .demo{display:flex;flex-direction:column;gap:12px;flex:1;justify-content:center}
+  .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+
+  /* 对比度徽标 */
+  .cr{font-size:11px;font-weight:700;padding:2px 7px;border-radius:var(--r-pill);
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  .cr.bad{background:#fdeceb;color:#9b2c22}
+  .cr.ok{background:#e9f2ea;color:#276b36}
+  .cr.warn{background:#f7ecd9;color:#6b5423}
+
+  /* ============================================================
+     组件（现状实现，逐条对齐 app.css）
+     ============================================================ */
+  .btn{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:8px 16px;border-radius:var(--r-md);font-family:inherit;
+    font-size:var(--fs-small);font-weight:600;
+    border:1px solid var(--border-strong);background:transparent;
+    color:var(--ink);cursor:pointer;
+  }
+  .btn-sm{padding:4px 13px}
+  .btn-primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+  /* 现状：主按钮 hover 压深一档仍是白字 */
+  .btn-primary.is-hover{background:var(--primary-ink);border-color:var(--primary-ink)}
+
+  /* 建议：主按钮换底，保白字 */
+  .btn2{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:8px 16px;border-radius:var(--r-md);font-family:inherit;
+    font-size:var(--fs-small);font-weight:600;
+    border:1px solid var(--border-strong);background:transparent;
+    color:var(--ink);cursor:pointer;
+  }
+  .btn2.primary{background:var(--primary-btn);border-color:var(--primary-btn);color:#fff}
+  .btn2.primary.is-hover{background:var(--primary-btn-ink);border-color:var(--primary-btn-ink)}
+  .btn2.secondary{background:var(--ink);border-color:var(--ink);color:#fff}
+  .btn2.secondary.is-hover{background:var(--ink-soft);border-color:var(--ink-soft)}
+  .btn2.danger{background:var(--danger-ink);border-color:var(--danger-ink);color:#fff}
+  .btn2.ghost{background:transparent}
+  .btn2.ghost.is-hover{background:var(--surface-hover);border-color:var(--ink)}
+  .btn2.sm{padding:6px 13px}
+
+  /* 开关：现状 46×26 */
+  .sw{position:relative;width:46px;height:26px;border-radius:var(--r-pill);flex:none;
+    background:rgba(32,21,21,.15);border:1px solid rgba(197,192,177,.4);display:inline-block}
+  .sw::after{content:"";position:absolute;top:50%;left:3px;width:20px;height:20px;
+    border-radius:50%;background:#fff;transform:translate(0,-50%);
+    box-shadow:0 2px 4px rgba(0,0,6,.2)}
+  .sw.on{background:var(--primary);border-color:rgba(255,79,0,.3)}
+  .sw.on::after{transform:translate(20px,-50%);box-shadow:0 2px 6px rgba(255,79,0,.3)}
+
+  /* 开关：建议 40×22 墨轨 */
+  .sw2{position:relative;width:40px;height:22px;border-radius:var(--r-pill);flex:none;
+    background:rgba(32,21,21,.15);border:1px solid rgba(197,192,177,.45);display:inline-block}
+  .sw2::after{content:"";position:absolute;top:50%;left:2px;width:18px;height:18px;
+    border-radius:50%;background:#fff;transform:translate(0,-50%);
+    box-shadow:0 1px 3px rgba(0,0,6,.22)}
+  .sw2.on{background:var(--ink);border-color:var(--ink)}
+  .sw2.on::after{transform:translate(18px,-50%);box-shadow:0 1px 4px rgba(32,21,21,.28)}
+
+  /* 复选框 */
+  .cb{appearance:none;width:15px;height:15px;border:1.5px solid var(--border-strong);
+    border-radius:var(--r-sm);background:#fff;position:relative;margin:0;cursor:pointer;flex:none}
+  .cb:checked{background:var(--ink);border-color:var(--ink)}
+  .cb:checked::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;
+    border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+
+  /* 徽章 */
+  .badge{font-size:var(--fs-small);padding:2px 10px;border-radius:var(--r-pill);
+    font-weight:600;white-space:nowrap;background:var(--canvas-soft);
+    color:var(--body);border:1px solid transparent;display:inline-block}
+  .badge.safe{background:var(--canvas-soft);color:var(--body-mid);font-weight:500}
+  .badge.caution{background:var(--caution-tint);border-color:#ead9b8;color:var(--caution-ink)}
+  .badge.risky{background:#fff;border-color:var(--ink);color:var(--ink);font-weight:700}
+  .badge2{font-size:12px;padding:1px 8px;border-radius:var(--r-pill);font-weight:600;
+    white-space:nowrap;border:1px solid transparent;display:inline-block}
+  .badge2.caution{background:var(--caution-tint);border-color:#e7d4b2;color:var(--caution-ink)}
+  .badge2.risky{background:#fff;border-color:var(--ink);color:var(--ink);font-weight:700}
+  .badge2.ok{background:var(--canvas-soft);color:var(--body)}
+
+  /* select：现状（原生箭头） */
+  .sel{font-family:inherit;font-size:var(--fs-small);padding:8px 13px;border-radius:var(--r-sm);
+    border:1px solid var(--border-strong);background:#fff;color:var(--ink)}
+  /* select：建议（自绘箭头） */
+  .sel2{font-family:inherit;font-size:var(--fs-small);padding:8px 34px 8px 13px;
+    border-radius:var(--r-sm);border:1px solid var(--border-strong);background:#fff;
+    color:var(--ink);appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23201515' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat;background-position:right 12px center}
+
+  /* 焦点 */
+  .focus-old{outline:none;border:1px solid var(--ink)}
+  .focus-new{outline:2px solid var(--ink);outline-offset:2px;border:1px solid var(--border-strong)}
+  .focus-halo{outline:none;box-shadow:0 0 0 3px rgba(255,79,0,.15);border:1px solid rgba(255,79,0,.3)}
+
+  /* 授权横幅 */
+  .banner{display:flex;align-items:center;gap:12px;padding:12px 14px;
+    border-radius:var(--r-md);background:var(--banner-tint);border:1px solid #f6ddc8;
+    font-size:var(--fs-small);color:var(--body);line-height:1.6}
+  .banner svg{flex:none;color:var(--primary);width:18px;height:18px}
+  .banner > div{flex:1;min-width:0}
+  .banner b{color:var(--ink);font-weight:700}
+  .banner .go,.banner .btn2{flex:none;white-space:nowrap}
+  .banner .go{background:var(--go);color:#fff;border:1px solid transparent;
+    padding:6px 14px;border-radius:var(--r-md);font:inherit;font-weight:600;font-size:var(--fs-small);cursor:pointer}
+  .hex{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;color:var(--body-mid);margin-left:2px}
+
+  /* 色板 */
+  .swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .sw-item{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .chip{height:64px}
+  .sw-meta{padding:10px 12px 12px;font-size:12px;line-height:1.55;color:var(--body)}
+  .sw-meta b{display:block;font-size:13px;color:var(--ink);font-weight:650;margin-bottom:2px}
+  .sw-meta code{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;color:var(--body-mid)}
+  .strike{text-decoration:line-through;opacity:.55}
+
+  /* 表格 */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;background:#fff;
+    border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+  th{background:var(--canvas-soft);font-weight:600;font-size:12.5px;color:var(--body-mid);
+    letter-spacing:.02em;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  td code{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+
+  .foot{margin-top:56px;padding-top:18px;border-top:1px solid var(--border);
+    font-size:13px;color:var(--body-mid);line-height:1.8}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--body-mid);margin-top:10px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="kicker">Mahiru 小助手 · 界面改版建议</p>
+  <h1>颜色与控件：一页看懂的对照稿</h1>
+  <p class="lede">
+    左边是现在跑出来的样子（值逐条取自 <b>web/css/tokens.css</b> 与 <b>web/css/app.css</b>），
+    右边是建议改成什么。所有对比度都是实测值，不是估计。
+  </p>
+  <p class="lede" style="color:var(--body-mid);font-size:13.5px">
+    核心思路只有一句：<b>橙色只留给"主按钮"，其余强调交给墨色</b>——现在橙色同时用在按钮和 6 个开关上，
+    主操作反而不显眼了。
+  </p>
+  <div class="legend">
+    <span><i class="dot" style="background:#ff4f00"></i>橙 = 主操作</span>
+    <span><i class="dot" style="background:#201515"></i>墨 = 选中 / 开关 / 危险</span>
+    <span><i class="dot" style="background:#f7ecd9"></i>亚麻 = 谨慎</span>
+    <span><i class="dot" style="background:#c2185b"></i>玫瑰 = 导航位置</span>
+  </div>
+
+  <!-- ------------------------------------------------ 1 -->
+  <section>
+    <div class="sec-head"><span class="sec-no">01</span><h2>主按钮：白字在橙底上读不清</h2></div>
+    <p class="sec-sub">
+      <code>#fffefb</code> 压在 <code>#ff4f00</code> 上实测 <b>3.27:1</b>，而 14px 正文要求 4.5:1。
+      两种修法都能达标，我推荐第二种：色相不变，只是压深一档。
+    </p>
+
+    <div class="pair">
+      <div class="pane">
+        <span class="tag">现在</span>
+        <div class="demo">
+          <div class="row">
+            <button class="btn btn-primary">开始清理</button>
+            <span class="cr bad">3.27:1 ✗</span>
+            <span class="hex">#ff4f00 + #fffefb</span>
+          </div>
+          <div class="row">
+            <button class="btn btn-primary is-hover">开始清理 · 悬停</button>
+            <span class="cr bad">4.14:1 ✗</span>
+            <span class="hex">#e14600 压深一档仍不够</span>
+          </div>
+        </div>
+        <p class="note">按钮文字 14px / 600，按 WCAG 属"小号文本"，需要 4.5:1。<br>
+          同一问题也出现在内存页的「应用」「切换」和设置页的「检查更新」上。</p>
+      </div>
+
+      <div class="pane next">
+        <span class="tag">建议</span>
+        <div class="demo">
+          <div class="row">
+            <button class="btn2 primary">开始清理</button>
+            <span class="cr ok">5.24:1 ✓</span>
+            <span class="hex">#c23f00 + #ffffff</span>
+          </div>
+          <div class="row">
+            <button class="btn2 primary is-hover">开始清理 · 悬停</button>
+            <span class="cr ok">6.65:1 ✓</span>
+            <span class="hex">#a83400</span>
+          </div>
+        </div>
+        <p class="note"><code>--primary-btn: #c23f00</code> / hover <code>#a83400</code>，
+          白字保持不变。橙色饱和度几乎看不出差别，但对比度一步到位。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------ 2 -->
+  <section>
+    <div class="sec-head"><span class="sec-no">02</span><h2>开关：六个橙点在跟主按钮抢注意力</h2></div>
+    <p class="sec-sub">
+      内存页一屏有 6 个开关，全开时是 6 块橙色 + 橙色投影 + 橙色光环，主按钮被淹掉。
+      开关改成墨色轨道，橙色自然回到"唯一转换动作"的位置上；顺带把 46×26 收到 40×22（Windows 惯例尺寸）。
+    </p>
+
+    <div class="pair">
+      <div class="pane">
+        <span class="tag">现在</span>
+        <div class="demo">
+          <div class="row" style="gap:26px">
+            <span class="sw on"></span><span class="sw on"></span><span class="sw on"></span>
+            <span class="sw on"></span><span class="sw"></span><span class="sw"></span>
+          </div>
+          <div class="row" style="gap:18px;font-size:13px;color:var(--body)">
+            <span>46×26px · 开态 <code>#ff4f00</code></span>
+          </div>
+        </div>
+        <p class="note">开态还用 <code>--toggle-thumb-shadow-on</code> 给滑块加橙色投影，
+          等于同一个动作强调三次。</p>
+      </div>
+
+      <div class="pane next">
+        <span class="tag">建议</span>
+        <div class="demo">
+          <div class="row" style="gap:26px">
+            <span class="sw2 on"></span><span class="sw2 on"></span><span class="sw2 on"></span>
+            <span class="sw2 on"></span><span class="sw2"></span><span class="sw2"></span>
+          </div>
+          <div class="row" style="gap:18px;font-size:13px;color:var(--body)">
+            <span>40×22px · 开态 <code>--ink</code></span>
+          </div>
+        </div>
+        <p class="note">勾选态（复选框）本来就用墨色，两者现在终于是同一种"选中"语言。
+          橙色只出现在"应用 / 开始清理"这类按钮上。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------ 3 -->
+  <section>
+    <div class="sec-head"><span class="sec-no">03</span><h2>按钮三级：写了三级，只用了两级</h2></div>
+    <p class="sec-sub">
+      app.css 的注释自己写着"三级：primary / secondary（墨）/ tertiary"，但 HTML 里
+      <code>.btn-secondary</code> 一次都没出现——「开始扫描」「一键加速」「清空回收站」「开始 DISM」
+      全都和「刷新」「取消」长得一样。补上墨底次级，层级立刻回来。
+    </p>
+
+    <div class="pair">
+      <div class="pane">
+        <span class="tag">现在</span>
+        <div class="demo">
+          <div class="row">
+            <button class="btn btn-primary">开始清理</button>
+            <button class="btn">开始扫描</button>
+            <button class="btn">清空回收站</button>
+            <button class="btn">开始 DISM</button>
+          </div>
+          <div class="row">
+            <button class="btn" disabled style="opacity:.45">整理内存</button>
+            <button class="btn" disabled style="opacity:.45">关闭进程</button>
+          </div>
+        </div>
+        <p class="note">除主按钮外全同款；"清空回收站"这种不可恢复的操作，视觉重量和"刷新"一样。</p>
+      </div>
+
+      <div class="pane next">
+        <span class="tag">建议</span>
+        <div class="demo">
+          <div class="row">
+            <button class="btn2 primary">开始清理</button>
+            <button class="btn2 secondary">开始扫描</button>
+            <button class="btn2 secondary">清空回收站</button>
+            <button class="btn2 ghost">刷新</button>
+          </div>
+          <div class="row">
+            <button class="btn2 danger sm">删除 34 项 · 69.7 MB</button>
+            <button class="btn2 ghost sm">取消</button>
+          </div>
+        </div>
+        <p class="note">三级变成：<b>橙</b>=唯一转换动作，<b>墨</b>=带后果的次级，
+          <b>白描边</b>=导航/取消。破坏性动作再单独一个 <code>--danger-ink</code>，只在确认框里出现。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------ 4 -->
+  <section>
+    <div class="sec-head"><span class="sec-no">04</span><h2>徽章：一屏六个灰药丸，等于没有信息</h2></div>
+    <p class="sec-sub">
+      "安全"徽章 <code>#75716a</code> on <code>#f0f0ef</code> 只有 4.26:1（不达标），而且每行都有，
+      纯噪音。改成"只在异常时出现"——安全项不给徽章，谨慎/风险才上色。顺带把 14px 收到 12px，行高不再被撑开。
+    </p>
+
+    <div class="pair">
+      <div class="pane">
+        <span class="tag">现在</span>
+        <div class="demo">
+          <div class="row" style="justify-content:space-between"><span>DirectX Shader 缓存</span>
+            <span class="badge safe">安全</span></div>
+          <div class="row" style="justify-content:space-between"><span>Edge/Chrome 临时文件</span>
+            <span class="badge safe">安全</span></div>
+          <div class="row" style="justify-content:space-between"><span>浏览器会话恢复</span>
+            <span class="badge caution">谨慎</span></div>
+          <div class="row" style="justify-content:space-between"><span>缩略图缓存</span>
+            <span class="badge risky">风险</span></div>
+          <div class="row"><span class="cr bad">安全 4.26:1 ✗</span>
+            <span class="cr ok">谨慎 6.15:1 ✓</span></div>
+        </div>
+      </div>
+
+      <div class="pane next">
+        <span class="tag">建议</span>
+        <div class="demo">
+          <div class="row" style="justify-content:space-between"><span>DirectX Shader 缓存</span>
+            <span class="badge2 ok">396 KB</span></div>
+          <div class="row" style="justify-content:space-between"><span>Edge/Chrome 临时文件</span>
+            <span style="font-size:13px;color:var(--body-mid)">未发现</span></div>
+          <div class="row" style="justify-content:space-between"><span>浏览器会话恢复</span>
+            <span class="badge2 caution">谨慎</span></div>
+          <div class="row" style="justify-content:space-between"><span>缩略图缓存</span>
+            <span class="badge2 risky">风险</span></div>
+          <div class="row"><span style="font-size:12.5px;color:var(--body-mid)">
+            安全项默认干净，只有需要你注意的行才出颜色</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------ 5 -->
+  <section>
+    <div class="sec-head"><span class="sec-no">05</span><h2>表单控件：三套焦点语言，一个原生箭头</h2></div>
+    <p class="sec-sub">
+      全站 <code>:focus-visible</code> 是 2px 墨描边，但输入框/下拉只有 1px 边框变色（几乎看不见），
+      开关又是橙色光圈；下拉框还留着 Edge 的原生小三角，和 6px 圆角的自定义框不搭。
+    </p>
+
+    <div class="pair">
+      <div class="pane">
+        <span class="tag">现在</span>
+        <div class="demo">
+          <div class="row">
+            <select class="sel"><option>高</option></select>
+            <span class="cr bad">原生箭头</span>
+          </div>
+          <div class="row">
+            <input class="sel focus-old" style="width:150px" value="搜索规则…">
+            <span class="cr warn">1px 边 · 焦点弱</span>
+          </div>
+          <div class="row">
+            <span class="sw on focus-halo"></span>
+            <span class="cr warn">橙色光圈 · 第三套语言</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane next">
+        <span class="tag">建议</span>
+        <div class="demo">
+          <div class="row">
+            <select class="sel2"><option>高</option></select>
+            <span class="cr ok">自绘 chevron</span>
+          </div>
+          <div class="row">
+            <input class="sel2 focus-new" style="width:150px" value="搜索规则…">
+            <span class="cr ok">2px 墨描边 · 统一</span>
+          </div>
+          <div class="row">
+            <span class="sw2 on focus-new"></span>
+            <span class="cr ok">同一套焦点样式</span>
+          </div>
+        </div>
+        <p class="note">键盘用户在任何控件上都能看到同一个"焦点框"，位置一致、不依赖颜色。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------ 6 -->
+  <section>
+    <div class="sec-head"><span class="sec-no">06</span><h2>绿色在三个地方，意思是三种</h2></div>
+    <p class="sec-sub">
+      <code>--go #2e7d3e</code> 用来给"以管理员重启"上色，但绿色的默认联想是"已完成 / 安全"；
+      同一份样式里它又当了设置页图标 hover 色和更新成功点。提权是"警示 + 行动"，应该是最重的那个按钮。
+    </p>
+
+    <div class="pair">
+      <div class="pane">
+        <span class="tag">现在</span>
+        <div class="banner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 5.7v5.6c0 4.6 3 7.4 7 8.4 4-1 7-3.8 7-8.4V5.7L12 3Z"/><path d="M12 8.8v3.4"/><path d="M12 15.4v.01"/></svg>
+          <div><b>当前是普通权限</b> —— 有两项功能需要管理员</div>
+          <button class="go">以管理员重启</button>
+        </div>
+        <p class="note">绿色按钮 + 橙色横幅底 + 黑色正文，三种色彩语言在同一行里。</p>
+      </div>
+
+      <div class="pane next">
+        <span class="tag">建议</span>
+        <div class="banner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 5.7v5.6c0 4.6 3 7.4 7 8.4 4-1 7-3.8 7-8.4V5.7L12 3Z"/><path d="M12 8.8v3.4"/><path d="M12 15.4v.01"/></svg>
+          <div><b>当前是普通权限</b> —— 有两项功能需要管理员</div>
+          <button class="btn2 primary sm">以管理员重启</button>
+        </div>
+        <p class="note">去掉 <code>--go</code>，用同一个主按钮。整页只剩一种"要做的事"的颜色，
+          绿色留给"清理成功"这一个语义。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------ 7 -->
+  <section>
+    <div class="sec-head"><span class="sec-no">07</span><h2>改完之后的色板</h2></div>
+    <p class="sec-sub">灰色划掉的是建议删掉的；标了「新增」的是新加的两个。</p>
+
+    <div class="swatches">
+      <div class="sw-item"><div class="chip" style="background:#c23f00"></div>
+        <div class="sw-meta"><b>--primary-btn</b><code>#c23f00</code><br>主按钮底（新增）</div></div>
+      <div class="sw-item"><div class="chip" style="background:#ff4f00"></div>
+        <div class="sw-meta"><b>--primary</b><code>#ff4f00</code><br>只用于强调描边/图标</div></div>
+      <div class="sw-item"><div class="chip" style="background:#201515"></div>
+        <div class="sw-meta"><b>--ink</b><code>#201515</code><br>选中 / 开关 / 次级按钮</div></div>
+      <div class="sw-item"><div class="chip" style="background:#7a2e2e"></div>
+        <div class="sw-meta"><b>--danger-ink</b><code>#7a2e2e</code><br>仅确认框（新增）</div></div>
+      <div class="sw-item"><div class="chip" style="background:#f7ecd9"></div>
+        <div class="sw-meta"><b>--caution-tint</b><code>#f7ecd9</code><br>谨慎徽章底</div></div>
+      <div class="sw-item"><div class="chip" style="background:#f7c9cd"></div>
+        <div class="sw-meta"><b>--sidebar</b><code>#f7c9cd</code><br>侧栏</div></div>
+      <div class="sw-item"><div class="chip" style="background:#c2185b"></div>
+        <div class="sw-meta"><b>--sidebar-accent</b><code>#c2185b</code><br>导航选中（可保留）</div></div>
+      <div class="sw-item"><div class="chip" style="background:#2e7d3e;opacity:.35"></div>
+        <div class="sw-meta"><b class="strike">--go</b><code>#2e7d3e</code><br>建议删除</div></div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------ 8 -->
+  <section>
+    <div class="sec-head"><span class="sec-no">08</span><h2>要改的就这些，工作量加起来不到 40 行</h2></div>
+    <table>
+      <thead><tr><th>改动</th><th>文件</th><th>行数</th><th>收益</th></tr></thead>
+      <tbody>
+        <tr><td>主按钮换底 + hover</td><td><code>tokens.css</code> / <code>app.css:210</code></td><td>4</td><td>修掉 3.27:1 的不可读</td></tr>
+        <tr><td>删 <code>--go</code>，横幅按钮改 primary</td><td><code>tokens.css:54</code> / <code>app.css:528</code></td><td>5</td><td>消除第三套色彩语义</td></tr>
+        <tr><td>补 <code>.btn-secondary</code> + <code>.btn-danger</code></td><td><code>app.css:190</code></td><td>8</td><td>按钮层级恢复</td></tr>
+        <tr><td>开关 40×22、开态墨轨、去橙光环</td><td><code>tokens.css:107</code></td><td>7</td><td>主按钮回到视觉中心</td></tr>
+        <tr><td>徽章 12px、安全项不出徽章</td><td><code>app.css:230</code> / <code>junk.js</code> 行模板</td><td>6</td><td>列表噪音降一档</td></tr>
+        <tr><td>select 自绘箭头、焦点统一 2px 墨</td><td><code>app.css:290</code> / <code>:220</code></td><td>9</td><td>键盘可用性</td></tr>
+      </tbody>
+    </table>
+
+    <p class="foot">
+      颜色值全部来自 <code>web/css/tokens.css</code>；对比度按 WCAG 2.1 相对亮度公式实测
+      （4.5:1 = 小号文本 AA，3:1 = 大号文本/图形）。<br>
+      这份是静态稿，只有颜色和控件；布局与响应式那几条（940px 塌陷、扫描结果卡不可见）在另一份报告里。
+    </p>
+  </section>
+
+</div>
+</body>
+</html>
+
+

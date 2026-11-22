@@ -1,0 +1,365 @@
+[
+  {
+    "category": "WindowsTemp",
+    "category_name_cn": "Windows 临时文件",
+    "category_name_en": "Windows temporary files",
+    "risk": 1,
+    "locked": false,
+    "default_checked": true,
+    "system_managed": false,
+    "scan_paths": [
+      "%TEMP%",
+      "%TMP%",
+      "%WINDIR%\\Temp"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:143-148",
+    "note": "env_path(\"TEMP\"), env_path(\"TMP\"), env_path(\"SYSTEMROOT\", \"Temp\"); 模式 \"*\" (get_file_patterns categories.rs:347); risk_level=1 (categories.rs:109)"
+  },
+  {
+    "category": "SystemCache",
+    "category_name_cn": "系统缓存",
+    "category_name_en": "System cache",
+    "risk": 3,
+    "locked": false,
+    "default_checked": false,
+    "system_managed": false,
+    "scan_paths": [
+      "%WINDIR%\\Prefetch",
+      "%LOCALAPPDATA%\\Microsoft\\Windows\\Caches"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:149-154",
+    "note": "env_path(\"SYSTEMROOT\",\"Prefetch\"), env_path(\"LOCALAPPDATA\",\"Microsoft\\Windows\\Caches\"); risk_level=3 (categories.rs:122)"
+  },
+  {
+    "category": "BrowserCache",
+    "category_name_cn": "浏览器缓存",
+    "category_name_en": "Browser cache",
+    "risk": 2,
+    "locked": false,
+    "default_checked": true,
+    "system_managed": false,
+    "scan_paths": [
+      "%LOCALAPPDATA%\\Microsoft\\Windows\\INetCache",
+      "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\Default\\Cache",
+      "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\Default\\Code Cache",
+      "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\Default\\GPUCache",
+      "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\Profile *\\Cache",
+      "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\Profile *\\Code Cache",
+      "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\ShaderCache",
+      "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\Default\\Cache",
+      "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\Default\\Code Cache",
+      "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\Default\\GPUCache",
+      "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\Profile *\\Cache",
+      "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\Profile *\\Code Cache",
+      "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\ShaderCache",
+      "%LOCALAPPDATA%\\Mozilla\\Firefox\\Profiles\\*\\cache2",
+      "%APPDATA%\\Mozilla\\Firefox\\Profiles\\*\\cache2",
+      "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser\\User Data\\Default\\Cache",
+      "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser\\User Data\\Default\\Code Cache",
+      "%APPDATA%\\Opera Software\\Opera Stable\\Cache",
+      "%LOCALAPPDATA%\\Tencent\\QQBrowser\\User Data\\Default\\Cache",
+      "%LOCALAPPDATA%\\Tencent\\QQBrowser\\User Data\\Default\\Code Cache",
+      "%LOCALAPPDATA%\\360Chrome\\Chrome\\User Data\\Default\\Cache",
+      "%LOCALAPPDATA%\\360Chrome\\Chrome\\User Data\\Default\\Code Cache",
+      "%LOCALAPPDATA%\\360se6\\User Data\\Default\\Cache",
+      "%LOCALAPPDATA%\\UCBrowser\\User Data\\Default\\Cache",
+      "%LOCALAPPDATA%\\Vivaldi\\User Data\\Default\\Cache",
+      "%LOCALAPPDATA%\\YandexBrowser\\User Data\\Default\\Cache",
+      "%LOCALAPPDATA%\\CentBrowser\\User Data\\Default\\Cache"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:155-227",
+    "note": "27 条路径；含 env_path 与 glob_path(\"LOCALAPPDATA\"/\"APPDATA\", ...) 通配符路径；risk_level=2 (categories.rs:114)"
+  },
+  {
+    "category": "RecycleBin",
+    "category_name_cn": "回收站",
+    "category_name_en": "Recycle Bin",
+    "risk": 3,
+    "locked": false,
+    "default_checked": false,
+    "system_managed": false,
+    "scan_paths": [
+      "{DRIVE}:\\$Recycle.Bin"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:228-231",
+    "note": "动态生成：遍历 A-Z 存在的盘符，每盘符 fixed_path(\"{letter}:\\$Recycle.Bin\")（get_all_drive_letters categories.rs:396-403）；risk_level=3 (categories.rs:121)"
+  },
+  {
+    "category": "WindowsUpdate",
+    "category_name_cn": "Windows 更新缓存",
+    "category_name_en": "Windows Update cache",
+    "risk": 2,
+    "locked": false,
+    "default_checked": true,
+    "system_managed": false,
+    "scan_paths": [
+      "%WINDIR%\\SoftwareDistribution\\Download"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:232-235",
+    "note": "env_path(\"SYSTEMROOT\",\"SoftwareDistribution\\Download\"); risk_level=2 (categories.rs:115)"
+  },
+  {
+    "category": "DeliveryOptimization",
+    "category_name_cn": "传递优化文件",
+    "category_name_en": "Delivery Optimization files",
+    "risk": 2,
+    "locked": false,
+    "default_checked": true,
+    "system_managed": false,
+    "scan_paths": [
+      "%WINDIR%\\SoftwareDistribution\\DeliveryOptimization",
+      "%WINDIR%\\ServiceProfiles\\NetworkService\\AppData\\Local\\Microsoft\\Windows\\DeliveryOptimization\\Cache"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:236-246",
+    "note": "env_path(\"SYSTEMROOT\", ...) 两条；risk_level=2 (categories.rs:116)"
+  },
+  {
+    "category": "WindowsDefenderCache",
+    "category_name_cn": "Microsoft Defender 防病毒",
+    "category_name_en": "Microsoft Defender antivirus",
+    "risk": 2,
+    "locked": false,
+    "default_checked": true,
+    "system_managed": false,
+    "scan_paths": [
+      "%PROGRAMDATA%\\Microsoft\\Windows Defender\\LocalCopy",
+      "%PROGRAMDATA%\\Microsoft\\Windows Defender\\Support",
+      "%PROGRAMDATA%\\Microsoft\\Windows Defender\\Scans\\History\\Service"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:247-262",
+    "note": "env_path(\"PROGRAMDATA\", ...) 三条；risk_level=2 (categories.rs:117)"
+  },
+  {
+    "category": "ThumbnailCache",
+    "category_name_cn": "缩略图缓存",
+    "category_name_en": "Thumbnail cache",
+    "risk": 1,
+    "locked": false,
+    "default_checked": true,
+    "system_managed": false,
+    "scan_paths": [
+      "%LOCALAPPDATA%\\Microsoft\\Windows\\Explorer",
+      "%SYSTEMDRIVE%\\Users\\*\\AppData\\Local\\Microsoft\\Windows\\Explorer"
+    ],
+    "patterns": [
+      "thumbcache_*.db",
+      "iconcache_*.db"
+    ],
+    "source": "categories.rs:325-332",
+    "note": "env_path(\"LOCALAPPDATA\",\"Microsoft\\Windows\\Explorer\") + glob_path(\"SYSTEMDRIVE\",\"Users\\*\\AppData\\Local\\Microsoft\\Windows\\Explorer\"); 模式 thumbcache_*.db, iconcache_*.db (categories.rs:356); risk_level=1 (categories.rs:110)"
+  },
+  {
+    "category": "LogFiles",
+    "category_name_cn": "日志文件",
+    "category_name_en": "Log files",
+    "risk": 2,
+    "locked": false,
+    "default_checked": true,
+    "system_managed": false,
+    "scan_paths": [
+      "%WINDIR%\\Logs",
+      "%LOCALAPPDATA%\\CrashDumps"
+    ],
+    "patterns": [
+      "*.log",
+      "*.etl",
+      "*.evtx"
+    ],
+    "source": "categories.rs:263-266",
+    "note": "env_path(\"SYSTEMROOT\",\"Logs\"), env_path(\"LOCALAPPDATA\",\"CrashDumps\"); 模式 *.log/*.etl/*.evtx (categories.rs:357); risk_level=2 (categories.rs:118)"
+  },
+  {
+    "category": "MemoryDump",
+    "category_name_cn": "内存转储文件",
+    "category_name_en": "Memory dump files",
+    "risk": 3,
+    "locked": false,
+    "default_checked": false,
+    "system_managed": false,
+    "scan_paths": [
+      "%WINDIR%\\Minidump",
+      "%WINDIR%\\MEMORY.DMP"
+    ],
+    "patterns": [
+      "*.dmp",
+      "MEMORY.DMP"
+    ],
+    "source": "categories.rs:267-270",
+    "note": "env_path(\"SYSTEMROOT\",\"Minidump\"), env_path(\"SYSTEMROOT\",\"MEMORY.DMP\"); 模式 *.dmp/MEMORY.DMP (categories.rs:358); risk_level=3 (categories.rs:125)"
+  },
+  {
+    "category": "OldWindowsInstallation",
+    "category_name_cn": "旧版 Windows 安装",
+    "category_name_en": "Old Windows installation",
+    "risk": 3,
+    "locked": true,
+    "default_checked": false,
+    "system_managed": true,
+    "scan_paths": [
+      "%SYSTEMDRIVE%\\Windows.old",
+      "%SYSTEMDRIVE%\\$Windows.~BT",
+      "%SYSTEMDRIVE%\\$Windows.~WS"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:271-276",
+    "note": "system_drive_path(...) 三条（SYSTEMDRIVE，兜底取 SYSTEMROOT 盘符）；is_system_managed()=true (categories.rs:136-138)，前端不提供删除只引导磁盘清理，locked=true；risk_level=3 (categories.rs:126)"
+  },
+  {
+    "category": "AppCache",
+    "category_name_cn": "应用程序缓存",
+    "category_name_en": "Application cache",
+    "risk": 3,
+    "locked": false,
+    "default_checked": false,
+    "system_managed": false,
+    "scan_paths": [
+      "%LOCALAPPDATA%\\Microsoft\\Windows\\WebCache"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:277-281",
+    "note": "env_path(\"LOCALAPPDATA\",\"Microsoft\\Windows\\WebCache\")；注释说明不再泛扫 Packages\\*\\LocalCache；risk_level=3 (categories.rs:123)"
+  },
+  {
+    "category": "ThirdPartyAppCache",
+    "category_name_cn": "第三方应用缓存",
+    "category_name_en": "Third-party app cache",
+    "risk": 2,
+    "locked": false,
+    "default_checked": true,
+    "system_managed": false,
+    "scan_paths": [
+      "%APPDATA%\\discord\\Cache",
+      "%APPDATA%\\discord\\Code Cache",
+      "%APPDATA%\\discord\\GPUCache",
+      "%APPDATA%\\discord\\ShaderCache",
+      "%APPDATA%\\Slack\\Cache",
+      "%APPDATA%\\Microsoft\\Teams\\Cache",
+      "%APPDATA%\\Microsoft\\Teams\\GPUCache",
+      "%LOCALAPPDATA%\\Steam\\htmlcache",
+      "%LOCALAPPDATA%\\EpicGamesLauncher\\Saved\\webcache",
+      "%LOCALAPPDATA%\\Netease\\CloudMusic\\Cache",
+      "%APPDATA%\\Tencent\\QQMusic\\Cache"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:282-303",
+    "note": "11 条 glob_path 通配符路径（应用未安装时自动跳过）；risk_level=2 (categories.rs:124)"
+  },
+  {
+    "category": "FontCache",
+    "category_name_cn": "字体缓存",
+    "category_name_en": "Font cache",
+    "risk": 1,
+    "locked": false,
+    "default_checked": true,
+    "system_managed": false,
+    "scan_paths": [
+      "%WINDIR%\\ServiceProfiles\\LocalService\\AppData\\Local\\FontCache"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:304-307",
+    "note": "env_path(\"SYSTEMROOT\",\"ServiceProfiles\\LocalService\\AppData\\Local\\FontCache\"); risk_level=1 (categories.rs:111)"
+  },
+  {
+    "category": "WindowsErrorReports",
+    "category_name_cn": "Windows 错误报告",
+    "category_name_en": "Windows error reports",
+    "risk": 2,
+    "locked": false,
+    "default_checked": true,
+    "system_managed": false,
+    "scan_paths": [
+      "%LOCALAPPDATA%\\Microsoft\\Windows\\WER",
+      "%PROGRAMDATA%\\Microsoft\\Windows\\WER"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:308-312",
+    "note": "env_path(\"LOCALAPPDATA\",\"Microsoft\\Windows\\WER\") + env_path(\"PROGRAMDATA\",\"Microsoft\\Windows\\WER\"); risk_level=2 (categories.rs:119)"
+  },
+  {
+    "category": "InstallerTemp",
+    "category_name_cn": "安装程序临时文件",
+    "category_name_en": "Installer temporary files",
+    "risk": 2,
+    "locked": false,
+    "default_checked": true,
+    "system_managed": false,
+    "scan_paths": [
+      "%WINDIR%\\Installer\\$PatchCache$",
+      "%LOCALAPPDATA%\\Downloaded Installations"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:313-320",
+    "note": "env_path(\"SYSTEMROOT\",\"Installer\\$PatchCache$\") + env_path(\"LOCALAPPDATA\",\"Downloaded Installations\")；注释说明 C:\\NVIDIA/AMD/Intel 不再纳入扫描；risk_level=2 (categories.rs:120)"
+  },
+  {
+    "category": "ClipboardCache",
+    "category_name_cn": "剪贴板缓存",
+    "category_name_en": "Clipboard cache",
+    "risk": 1,
+    "locked": false,
+    "default_checked": true,
+    "system_managed": false,
+    "scan_paths": [
+      "%LOCALAPPDATA%\\Microsoft\\Windows\\Clipboard"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:321-324",
+    "note": "env_path(\"LOCALAPPDATA\",\"Microsoft\\Windows\\Clipboard\"); risk_level=1 (categories.rs:112)"
+  },
+  {
+    "category": "ShaderCache",
+    "category_name_cn": "DirectX Shader 缓存",
+    "category_name_en": "DirectX shader cache",
+    "risk": 1,
+    "locked": false,
+    "default_checked": true,
+    "system_managed": false,
+    "scan_paths": [
+      "%WINDIR%\\System32\\d3d_cache",
+      "%LOCALAPPDATA%\\D3DSCache",
+      "%LOCALAPPDATA%\\AMD\\DxCache",
+      "%LOCALAPPDATA%\\NVIDIA\\DXCache",
+      "%LOCALAPPDATA%\\Intel\\ShaderCache"
+    ],
+    "patterns": [
+      "*"
+    ],
+    "source": "categories.rs:333-340",
+    "note": "D3DCache 位于 System32 下，扫描器对白名单例外放行（is_rebuildable_system_cache_path）；risk_level=1 (categories.rs:113)"
+  }
+]

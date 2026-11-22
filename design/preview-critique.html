@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>评审建议预览 — 改动效果对比</title>
+<style>
+  /* 用与真实 app 一致的令牌值，保证预览忠实 */
+  :root {
+    --primary: #ff4f00; --primary-ink: #e14600; --sidebar-accent: #c2185b;
+    --go: #2e7d3e; --go-ink: #276b36;
+    --ink: #201515; --body: #605d52; --body-mid: #75716a; --mute: #c5c0b1;
+    --canvas: #f5f5f4; --canvas-soft: #f0f0ef; --surface: #ffffff;
+    --sidebar: #f7c9cd; --border: #e9e9e6; --border-strong: #d6d6d2;
+    --linen: #ecd9c0; --caution-tint: #f7ecd9; --caution-ink: #6b5423;
+    --shadow-1: 0 1px 2px rgba(32,21,21,.06), 0 4px 16px rgba(32,21,21,.05);
+    --fs-title: 27px; --fs-num: 24px; --fs-body: 16px; --fs-small: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 48px 80px; background: var(--canvas);
+    color: var(--ink); font-family: "Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif;
+    line-height: 1.55;
+  }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  .sub { color: var(--body-mid); font-size: 14px; margin-bottom: 36px; }
+  .block { margin-bottom: 48px; }
+  .block > h2 {
+    font-size: 17px; margin: 0 0 4px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .block > .why { color: var(--body); font-size: 13.5px; margin: 6px 0 18px; }
+  .pair { display: flex; gap: 20px; flex-wrap: wrap; }
+  .pane {
+    flex: 1 1 380px; min-width: 340px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 18px 18px 20px; box-shadow: var(--shadow-1);
+  }
+  .pane h3 {
+    margin: 0 0 12px; font-size: 13px; letter-spacing: .4px;
+    text-transform: uppercase; color: var(--body-mid); font-weight: 600;
+  }
+  .pane.before h3 { color: var(--body-mid); }
+  .pane.after h3 { color: var(--go); }
+  .pane.after { border-color: #cfe2d2; }
+
+  /* 卡片 / 标题 */
+  .card { background: var(--surface); border: 1px solid var(--border);
+          border-radius: 8px; padding: 14px 16px; box-shadow: var(--shadow-1); }
+  .section-h { font-size: 14px; font-weight: 600; margin: 0; }
+  .muted { color: var(--body-mid); }
+
+  /* 徽章 */
+  .badge { font-size: 12.5px; padding: 2px 10px; border-radius: 999px;
+           font-weight: 600; white-space: nowrap; letter-spacing: .2px;
+           background: var(--canvas-soft); color: var(--body);
+           border: 1px solid transparent; display: inline-block; }
+  .badge-ok     { background: var(--canvas-soft); color: var(--body-mid); font-weight: 500; }
+  .badge-warn   { background: var(--caution-tint); border-color: #ead9b8; color: var(--caution-ink); font-weight: 600; }
+  .badge-danger { background: var(--surface); border-color: var(--ink); color: var(--ink); font-weight: 700; }
+  .badge-mute   { background: var(--canvas-soft); color: var(--body-mid); font-weight: 400; }
+
+  /* 徽章澄清 —— 方案 A（绿衬底，借 --go 的肯定语义） */
+  .A .badge-ok { background: #e7f0e9; color: var(--go-ink); font-weight: 600; }
+  .A .badge-mute { background: var(--canvas-soft); color: var(--body-mid); font-weight: 400; opacity: .82; }
+  /* 徽章澄清 —— 方案 B（加勾点 + 字重，保持中性，不引入绿色） */
+  .B .badge-ok { background: var(--canvas-soft); color: var(--ink); font-weight: 600; }
+  .B .badge-ok::before { content: '✓'; margin-right: 4px; font-size: 11px; font-weight: 700; color: var(--go); }
+  .B .badge-mute { background: var(--canvas-soft); color: var(--body-mid); font-weight: 400; opacity: .78; }
+
+  .badge-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .badge-row .lab { font-size: 12px; color: var(--body-mid); width: 52px; flex: none; }
+
+  /* 内存页卡片堆 */
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .hdr-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .prio-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  select { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border-strong);
+           background: var(--surface); font: inherit; color: var(--ink); }
+  .btn { padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border-strong);
+         background: var(--surface); font: inherit; color: var(--ink); cursor: pointer; font-size: 13.5px; }
+  .btn-primary { background: var(--primary); border-color: var(--primary); color: #fffefb; }
+  .btn-sm { padding: 4px 12px; font-size: 12.5px; }
+  .btn-ghost { border-color: transparent; background: transparent; color: var(--body-mid); }
+  .opt-list { display: flex; flex-direction: column; gap: 7px; }
+  .opt { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+  .opt b { font-weight: 600; }
+  .opt i { font-style: normal; color: var(--body-mid); font-size: 12.5px; display: block; }
+  .switch {
+    width: 36px; height: 20px; border-radius: 999px; flex: none; appearance: none;
+    background: rgba(32,21,21,.14); border: 1px solid transparent; position: relative;
+    cursor: pointer; transition: background .24s cubic-bezier(.16,1,.3,1);
+  }
+  .switch::after {
+    content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px;
+    border-radius: 50%; background: #fff; transition: transform .28s cubic-bezier(.16,1,.3,1);
+  }
+  .switch:checked { background: var(--primary); }
+  .switch:checked::after { transform: translateX(16px); }
+  .opt-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .arrow { text-align: center; color: var(--body-mid); padding: 6px 0; font-size: 12px; }
+  .tag { font-size: 11px; padding: 1px 8px; border-radius: 999px; background: var(--canvas-soft);
+         color: var(--body-mid); margin-left: 6px; }
+
+  /* 确认对话框 mock */
+  .overlay { position: relative; background: var(--canvas); border-radius: 8px;
+             padding: 26px; display: flex; align-items: center; justify-content: center;
+             border: 1px dashed var(--border-strong); }
+  .dlg { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+         box-shadow: 0 12px 40px rgba(32,21,21,.18); padding: 18px 20px; width: 100%; max-width: 420px; }
+  .dlg h4 { margin: 0 0 6px; font-size: 15px; }
+  .dlg p { margin: 0 0 16px; font-size: 13.5px; color: var(--body); }
+  .dlg .warn-line { color: var(--caution-ink); background: var(--caution-tint);
+                    border-radius: 6px; padding: 8px 10px; font-size: 12.5px; margin-bottom: 14px; }
+  .dlg-acts { display: flex; justify-content: flex-end; gap: 8px; }
+</style>
+</head>
+<body>
+  <h1>评审建议预览</h1>
+  <div class="sub">三项待定建议的「改前 / 改后」对比。每项给一到两个方案，看完再决定用哪个。</div>
+
+  <!-- ============ P1-3 徽章澄清 ============ -->
+  <div class="block">
+    <h2>P1-3 · 徽章澄清（「安全」和「受保护/系统托管」现在几乎长得一样）</h2>
+    <div class="why">现在 <code>.badge-ok</code>（安全）和 <code>.badge-mute</code>（受保护/系统托管）衬底同为浅灰、只有字重 500 vs 400 的差别，肉眼几乎分不出。下面是两个区分方案。</div>
+    <div class="pair">
+      <div class="pane before">
+        <h3>改前 · 现状</h3>
+        <div class="badge-row"><span class="lab">安全</span><span class="badge badge-ok">安全</span><span class="badge badge-mute">受保护</span></div>
+        <div class="badge-row"><span class="lab">谨慎</span><span class="badge badge-warn">谨慎</span><span class="badge badge-danger">风险</span></div>
+        <div class="badge-row"><span class="lab">状态</span><span class="badge badge-ok">可整理</span><span class="badge badge-mute">系统托管</span><span class="badge badge-ok">免管理员</span></div>
+        <p style="font-size:12.5px;color:var(--body-mid);margin:14px 0 0">
+          问题：「安全 / 可整理 / 免管理员」（肯定）与「受保护 / 系统托管」（中性）看起来一样，用户会混淆哪种是「可以放心操作」的。
+        </p>
+      </div>
+      <div class="pane after A">
+        <h3>方案 A · 绿衬底（借「以管理员重启」那抹绿的肯定语义）</h3>
+        <div class="badge-row"><span class="lab">安全</span><span class="badge badge-ok">安全</span><span class="badge badge-mute">受保护</span></div>
+        <div class="badge-row"><span class="lab">状态</span><span class="badge badge-ok">可整理</span><span class="badge badge-mute">系统托管</span></div>
+        <p style="font-size:12.5px;color:var(--body-mid);margin:14px 0 0">
+          肯定项 = 淡绿衬底 + 深绿字；中性项 = 浅灰 + 更淡的字。一眼能分。
+        </p>
+      </div>
+      <div class="pane after B">
+        <h3>方案 B · 勾点 + 字重（保持中性，不引入绿色）</h3>
+        <div class="badge-row"><span class="lab">安全</span><span class="badge badge-ok">安全</span><span class="badge badge-mute">受保护</span></div>
+        <div class="badge-row"><span class="lab">状态</span><span class="badge badge-ok">可整理</span><span class="badge badge-mute">系统托管</span></div>
+        <p style="font-size:12.5px;color:var(--body-mid);margin:14px 0 0">
+          肯定项 = 墨色字重 600 + 绿色小勾；中性项保持灰淡。不扩大调色板。
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ P2-1 内存页精简 ============ -->
+  <div class="block">
+    <h2>P2-1 · 内存页精简（首屏超载 + 两个「一键加速」入口）</h2>
+    <div class="why">现在内存页首屏堆了 游戏优先级、电源计划、一键加速选项（6 开关 + 3 按钮）三张大卡，且底部操作条还有一个「一键加速」。建议：电源计划移到游戏页、游戏优先级改名、卡内「一键加速」按钮降级（底部操作条已承担主入口）。</div>
+    <div class="pair">
+      <div class="pane before">
+        <h3>改前 · 内存页首屏卡片顺序</h3>
+        <div class="stack">
+          <div class="card">
+            <div class="hdr-row"><h3 class="section-h">游戏优先级</h3><span class="muted" style="font-size:12px">9 个有窗口的程序</span></div>
+            <div class="prio-row">
+              <select><option>WeChatAppEx.exe</option></select><span class="muted">设为</span>
+              <select><option>高</option></select>
+              <button class="btn btn-primary btn-sm">应用</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="hdr-row"><h3 class="section-h">电源计划</h3></div>
+            <div class="prio-row">
+              <select style="flex:1"><option>平衡（推荐）</option></select>
+              <button class="btn btn-primary btn-sm">切换</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="hdr-row"><h3 class="section-h">一键加速选项</h3><span class="muted" style="font-size:12px">勾选会一起执行</span></div>
+            <div class="opt-list">
+              <label class="opt"><input type="checkbox" class="switch" checked><span><b>关闭安全级后台应用</b></span></label>
+              <label class="opt"><input type="checkbox" class="switch" checked><span><b>清理进程工作集</b></span></label>
+              <label class="opt"><input type="checkbox" class="switch" checked><span><b>清空待机内存列表</b></span></label>
+            </div>
+            <div class="opt-actions">
+              <button class="btn btn-primary">一键加速</button>
+              <button class="btn">重启已关闭的应用</button>
+              <button class="btn">还原系统设置</button>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:12.5px;color:var(--body-mid);margin:14px 0 0">
+          三张大卡 + 卡内「一键加速」+ 底部「一键加速」= 同一动作两个入口，且首屏一屏放不下。
+        </p>
+      </div>
+      <div class="pane after">
+        <h3>改后 · 内存页（电源计划移走、按钮降级）</h3>
+        <div class="stack">
+          <div class="card">
+            <div class="hdr-row"><h3 class="section-h">游戏进程优先级</h3><span class="muted" style="font-size:12px">9 个有窗口的程序</span></div>
+            <div class="prio-row">
+              <select><option>WeChatAppEx.exe</option></select><span class="muted">设为</span>
+              <select><option>高</option></select>
+              <button class="btn btn-primary btn-sm">应用</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="hdr-row"><h3 class="section-h">一键加速选项</h3><span class="muted" style="font-size:12px">勾选会一起执行</span></div>
+            <div class="opt-list">
+              <label class="opt"><input type="checkbox" class="switch" checked><span><b>关闭安全级后台应用</b></span></label>
+              <label class="opt"><input type="checkbox" class="switch" checked><span><b>清理进程工作集</b></span></label>
+              <label class="opt"><input type="checkbox" class="switch" checked><span><b>清空待机内存列表</b></span></label>
+            </div>
+            <div class="opt-actions">
+              <button class="btn btn-ghost">重启已关闭的应用</button>
+              <button class="btn btn-ghost">还原系统设置</button>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:12.5px;color:var(--body-mid);margin:14px 0 0">
+          电源计划卡片移到「游戏与性能」页；卡内「一键加速」主按钮移除（底部操作条保留唯一主入口），「重启/还原」降为轻文字钮。首屏只剩两张卡。
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ P1-2 游戏页硬化 ============ -->
+  <div class="block">
+    <h2>P1-2 · 游戏页硬化（危险项扳动即写注册表，无确认）</h2>
+    <div class="why">现在游戏与性能页 116 项里，开关一扳就立刻写注册表/计划任务/PowerShell，没有二次确认。安全、系统服务、计划任务这些组的项风险最高，建议在「危险分组」里扳动开关时先弹确认。</div>
+    <div class="pair">
+      <div class="pane before">
+        <h3>改前 · 扳动开关立即生效</h3>
+        <div class="overlay">
+          <div class="card" style="width:100%">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><b style="font-size:13.5px">游戏模式</b><span class="tag">安全</span>
+                <div class="muted" style="font-size:12.5px">开启后优先把资源分给游戏</div></div>
+              <input type="checkbox" class="switch" checked>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:12.5px;color:var(--body-mid);margin:14px 0 0">
+          无提示，直接写注册表。误触或不知道后果时没有反悔机会。
+        </p>
+      </div>
+      <div class="pane after">
+        <h3>改后 · 危险分组扳动时先确认</h3>
+        <div class="overlay">
+          <div class="dlg">
+            <h4>确认修改「游戏模式」</h4>
+            <p>这一项会写入系统注册表，属于「安全」分组。</p>
+            <div class="warn-line">⚠ 建议改动前先了解后果；你随时可以点「默认值」还原。</div>
+            <div class="dlg-acts">
+              <button class="btn">取消</button>
+              <button class="btn btn-primary">仍然修改</button>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:12.5px;color:var(--body-mid);margin:14px 0 0">
+          只在「安全 / 系统服务 / 计划任务」等危险分组第一次扳动时弹一次，点「仍然修改」后生效；普通分组照旧即时生效。
+        </p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>侧栏选中色对比</title>
+<style>
+  :root {
+    --pink: #f7c9cd;
+    --ink: #201515;
+    --on: #fffefb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Inter", "Noto Sans SC", "Microsoft YaHei UI", system-ui, sans-serif;
+    background: #f5f5f4; color: var(--ink);
+    display: flex; flex-wrap: wrap; gap: 28px; padding: 28px;
+  }
+  .cell { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+  .cell .label { font-size: 14px; font-weight: 600; }
+  .cell .hex { font-size: 12px; color: #605d52; }
+  .sidebar {
+    width: 232px; height: 500px;
+    background: var(--pink);
+    border: 1px solid #e9e9e6; border-radius: 12px;
+    display: flex; flex-direction: column;
+    padding: 18px 16px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .brand-mark { width: 38px; height: 38px; border-radius: 10px; background: #fff; overflow: hidden; }
+  .brand-mark img { width: 100%; height: 100%; object-fit: cover; }
+  .brand-name { font-size: 15px; font-weight: 600; }
+  .brand-sub { font-size: 11px; color: rgba(32,21,21,.55); }
+  .nav { display: flex; flex-direction: column; gap: 4px; }
+  .nav-item {
+    position: relative; height: 42px; border-radius: 8px;
+    display: flex; align-items: center; gap: 11px; padding: 0 14px;
+    font-size: 16px; color: rgba(32,21,21,.78); font-weight: 500;
+  }
+  .nav-item.active { color: #fff; font-weight: 600; }
+  .nav-item:hover:not(.active) { background: rgba(255,255,255,.45); }
+  .dot { width: 18px; height: 18px; border-radius: 5px; background: currentColor; opacity: .5; flex: none; }
+  .nav-item.active .dot { opacity: 1; }
+  /* 各变体的激活色 */
+  .c1 .nav-item.active { background: #c2185b; }
+  .c2 .nav-item.active { background: #8e2f4a; }
+  .c3 .nav-item.active { background: #b76e79; }
+  .c4 .nav-item.active { background: #7b3f61; }
+  .c5 .nav-item.active { background: #ff4f00; }  /* 现用橙，作对照 */
+  .art { margin-top: auto; align-self: center; width: 200px; }
+  .art img { width: 100%; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+  <div class="cell c1">
+    <div class="label">A · 莓果玫瑰</div><div class="hex">#c2185b</div>
+    <div class="sidebar">
+      <div class="brand"><div class="brand-mark"><img src="../web/assets/brand-mark.png"></div><div><div class="brand-name">mahiru小助手</div><div class="brand-sub">v1.0.1</div></div></div>
+      <div class="nav">
+        <div class="nav-item active"><span class="dot"></span>概览</div>
+        <div class="nav-item"><span class="dot"></span>内存优化</div>
+        <div class="nav-item"><span class="dot"></span>垃圾清理</div>
+        <div class="nav-item"><span class="dot"></span>游戏与性能</div>
+        <div class="nav-item"><span class="dot"></span>设置</div>
+      </div>
+      <div class="art"><img src="../web/assets/mahiru/sidebar.jpg"></div>
+    </div>
+  </div>
+
+  <div class="cell c2">
+    <div class="label">B · 酒红</div><div class="hex">#8e2f4a</div>
+    <div class="sidebar">
+      <div class="brand"><div class="brand-mark"><img src="../web/assets/brand-mark.png"></div><div><div class="brand-name">mahiru小助手</div><div class="brand-sub">v1.0.1</div></div></div>
+      <div class="nav">
+        <div class="nav-item active"><span class="dot"></span>概览</div>
+        <div class="nav-item"><span class="dot"></span>内存优化</div>
+        <div class="nav-item"><span class="dot"></span>垃圾清理</div>
+        <div class="nav-item"><span class="dot"></span>游戏与性能</div>
+        <div class="nav-item"><span class="dot"></span>设置</div>
+      </div>
+      <div class="art"><img src="../web/assets/mahiru/sidebar.jpg"></div>
+    </div>
+  </div>
+
+  <div class="cell c3">
+    <div class="label">C · 玫瑰棕</div><div class="hex">#b76e79</div>
+    <div class="sidebar">
+      <div class="brand"><div class="brand-mark"><img src="../web/assets/brand-mark.png"></div><div><div class="brand-name">mahiru小助手</div><div class="brand-sub">v1.0.1</div></div></div>
+      <div class="nav">
+        <div class="nav-item active"><span class="dot"></span>概览</div>
+        <div class="nav-item"><span class="dot"></span>内存优化</div>
+        <div class="nav-item"><span class="dot"></span>垃圾清理</div>
+        <div class="nav-item"><span class="dot"></span>游戏与性能</div>
+        <div class="nav-item"><span class="dot"></span>设置</div>
+      </div>
+      <div class="art"><img src="../web/assets/mahiru/sidebar.jpg"></div>
+    </div>
+  </div>
+
+  <div class="cell c4">
+    <div class="label">D · 深梅紫</div><div class="hex">#7b3f61</div>
+    <div class="sidebar">
+      <div class="brand"><div class="brand-mark"><img src="../web/assets/brand-mark.png"></div><div><div class="brand-name">mahiru小助手</div><div class="brand-sub">v1.0.1</div></div></div>
+      <div class="nav">
+        <div class="nav-item active"><span class="dot"></span>概览</div>
+        <div class="nav-item"><span class="dot"></span>内存优化</div>
+        <div class="nav-item"><span class="dot"></span>垃圾清理</div>
+        <div class="nav-item"><span class="dot"></span>游戏与性能</div>
+        <div class="nav-item"><span class="dot"></span>设置</div>
+      </div>
+      <div class="art"><img src="../web/assets/mahiru/sidebar.jpg"></div>
+    </div>
+  </div>
+
+  <div class="cell c5">
+    <div class="label">E · 现用橙（对照）</div><div class="hex">#ff4f00</div>
+    <div class="sidebar">
+      <div class="brand"><div class="brand-mark"><img src="../web/assets/brand-mark.png"></div><div><div class="brand-name">mahiru小助手</div><div class="brand-sub">v1.0.1</div></div></div>
+      <div class="nav">
+        <div class="nav-item active"><span class="dot"></span>概览</div>
+        <div class="nav-item"><span class="dot"></span>内存优化</div>
+        <div class="nav-item"><span class="dot"></span>垃圾清理</div>
+        <div class="nav-item"><span class="dot"></span>游戏与性能</div>
+        <div class="nav-item"><span class="dot"></span>设置</div>
+      </div>
+      <div class="art"><img src="../web/assets/mahiru/sidebar.jpg"></div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>确认对话框 · 按钮预览</title>
+<style>
+  :root {
+    --linen: #ecd9c0;
+    --ink: #201515;
+    --ink-soft: #2f2a26;
+    --on-primary: #fffefb;
+    --primary: #ff4f00;
+    --primary-ink: #e14600;
+    --border-strong: #d6d6d2;
+    --mute: #c5c0b1;
+    --r-md: 8px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: #f5f5f4; color: #201515;
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    gap: 48px; padding: 40px; flex-wrap: wrap;
+  }
+  .wrap { text-align: center; }
+  .wrap h3 { font-size: 15px; font-weight: 600; color: #605d52; margin: 0 0 18px; }
+
+  /* ===== 对话框（三个变体共用同一结构） ===== */
+  .dlg {
+    width: 360px;
+    background: var(--linen);
+    border-radius: var(--r-md);
+    padding: 20px 22px 18px;
+    box-shadow: 0 8px 28px rgba(32, 21, 21, .25);
+    text-align: left;
+  }
+  .dlg-title { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+  .dlg-text { font-size: 14px; line-height: 1.7; color: var(--ink-soft); }
+  .dlg-acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+  /* 基础按钮：垂直+水平都居中，min-width 时文字不靠左 */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 84px;
+    padding: 8px 16px; border-radius: var(--r-md);
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    border: 1px solid var(--border-strong); background: transparent;
+    color: var(--ink); cursor: pointer;
+  }
+
+  /* ---- 变体 A：确定=墨色实底，取消=浅灰实底（同形不同色，最朴素） ---- */
+  .a .dlg-ok { background: var(--ink); border-color: var(--ink); color: var(--on-primary); }
+  .a .dlg-no { background: #f0ece4; border-color: #e0d8ca; color: var(--ink); }
+
+  /* ---- 变体 B：确定=品牌橙实底，取消=墨色实底（品牌强调 + 中性退让） ---- */
+  .b .dlg-ok { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+  .b .dlg-no { background: var(--ink); border-color: var(--ink); color: var(--on-primary); }
+
+  /* ---- 变体 C：确定=墨色实底，取消=透明描边（当前方案，仅修居中） ---- */
+  .c .dlg-ok { background: var(--ink); border-color: var(--ink); color: var(--on-primary); }
+  .c .dlg-no { background: transparent; border-color: var(--border-strong); color: var(--ink); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h3>变体 A：确定墨色 / 取消浅灰</h3>
+    <div class="dlg a">
+      <div class="dlg-title">确认</div>
+      <div class="dlg-text">清空回收站？文件删除后无法恢复。</div>
+      <div class="dlg-acts">
+        <button class="btn dlg-ok">确定</button>
+        <button class="btn dlg-no">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h3>变体 B：确定橙 / 取消墨</h3>
+    <div class="dlg b">
+      <div class="dlg-title">确认</div>
+      <div class="dlg-text">清空回收站？文件删除后无法恢复。</div>
+      <div class="dlg-acts">
+        <button class="btn dlg-ok">确定</button>
+        <button class="btn dlg-no">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h3>变体 C：确定墨 / 取消透明描边（当前）</h3>
+    <div class="dlg c">
+      <div class="dlg-title">确认</div>
+      <div class="dlg-text">清空回收站？文件删除后无法恢复。</div>
+      <div class="dlg-acts">
+        <button class="btn dlg-ok">确定</button>
+        <button class="btn dlg-no">取消</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

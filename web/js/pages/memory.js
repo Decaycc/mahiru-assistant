@@ -1,0 +1,610 @@
+/* 内存优化页：进程列表 + 真实动作（整理 / 关闭 / 一键加速 / 优先级），
+ * 以及游戏优先级与电源计划两块卡。
+ *
+ * 安全前提：界面不做任何"这个进程能不能关"的判断，一律以后端为准。
+ * 后端在 Optimizer 内部会对每个进程重新跑一遍保护判定，
+ * 所以即使这里传错，也不会误杀受保护的进程。
+ */
+
+Pages.memory = (() => {
+  const S = () => Store.state.mem;
+  let searchTerm = '';
+  let tracker = null;
+
+  /* 一键加速的选项，默认值与后端保持一致 */
+  const DEFAULT_OPTS = {
+    kill_safe: true, kill_killable: true, kill_optional: false,
+    kill_services: false, trim: true,
+    standby: true, gamedvr: false, power: false,
+  };
+
+  const PRIORITY_TEXT = {
+    idle: '低', below: '低于正常', normal: '正常',
+    above: '高于正常', high: '高', realtime: '实时',
+  };
+
+  /* ------------------------------------------------------------ 游戏优先级 */
+  let games = [];
+
+  async function loadGames() {
+    const d = await Bridge.call('list_games');
+    if (!d || d.ok === false) return;
+    games = d.games || [];
+    const sel = UI.$('#prio-target');
+    const keep = sel.value;
+
+    sel.innerHTML = games.length
+      ? games.map((g) => {
+        const saved = g.saved ? ` · 记住:${g.saved}` : '';
+        return `<option value="${g.pid}">${UI.esc(g.name)} — `
+             + `${UI.esc(g.title)}（当前 ${UI.esc(g.priority)}${saved}）</option>`;
+      }).join('')
+      : '<option value="">（没有检测到有窗口的程序）</option>';
+    if (keep && games.some((g) => String(g.pid) === keep)) sel.value = keep;
+
+    UI.$('#prio-count').textContent = `${games.length} 个有窗口的程序`;
+    UI.$('#prio-apply').disabled = games.length === 0;
+    renderSaved(d.saved || {});
+  }
+
+  function renderSaved(saved) {
+    const keys = Object.keys(saved);
+    const box = UI.$('#prio-saved-box');
+    box.classList.toggle('hide', keys.length === 0);
+    UI.$('#prio-saved-list').innerHTML = keys.map((k) => `
+      <span class="saved-chip">${UI.esc(k)} → ${UI.esc(saved[k])}
+        <button class="chip-x" data-forget="${UI.esc(k)}" title="取消记忆">×</button>
+      </span>`).join('');
+  }
+
+  async function applyPriority() {
+    const sel = UI.$('#prio-target');
+    const pid = Number(sel.value);
+    if (!pid) { UI.toast('请先选一个程序', 'warn'); return; }
+    const level = UI.$('#prio-level').value;
+    const g = games.find((x) => x.pid === pid);
+
+    const r = await Bridge.call('set_priority', pid, level);
+    if (!r || r.ok === false) {
+      UI.toast((r && (r.error || r.message)) || '设置失败', 'err');
+      return;
+    }
+    UI.toast(`${g ? g.name : 'PID ' + pid} 优先级已设为「${r.level}」`);
+
+    if (UI.$('#prio-remember').checked && g) {
+      await Bridge.call('remember_priority', g.exe, level);
+      UI.toast(`已记住：${g.name} → ${r.level}`);
+    }
+    await loadGames();
+  }
+
+  async function applySaved() {
+    const r = await Bridge.call('apply_saved_priorities_quick');
+    if (!r || r.ok === false) {
+      UI.toast((r && r.error) || '没有可应用的', 'warn');
+      return;
+    }
+    const parts = [];
+    if (r.applied.length) parts.push(`成功 ${r.applied.length}`);
+    if (r.failed.length) parts.push(`失败 ${r.failed.length}`);
+    if (r.not_running.length) parts.push(`未运行 ${r.not_running.length}`);
+    UI.toast(`已应用记住的优先级：${parts.join(' · ') || '无匹配'}`,
+      r.failed.length ? 'warn' : 'ok');
+    await loadGames();
+  }
+
+  /* ------------------------------------------------------------ 电源计划 */
+  async function loadPowerPlans() {
+    const d = await Bridge.call('list_power_plans');
+    if (!d || d.ok === false) return;
+    const sel = UI.$('#power-plan');
+    const plans = d.plans || {};
+    const cur = d.current && d.current.guid;
+
+    sel.innerHTML = Object.entries(plans).map(([guid, name]) =>
+      `<option value="${guid}"${guid === cur ? ' selected' : ''}>${UI.esc(name)}</option>`
+    ).join('') || '<option value="">（无可用计划）</option>';
+  }
+
+  async function applyPowerPlan() {
+    const guid = UI.$('#power-plan').value;
+    if (!guid) { UI.toast('没有可切换的计划', 'warn'); return; }
+    const r = await Bridge.call('set_power_plan', guid);
+    if (!r || r.ok === false) {
+      UI.toast((r && r.message) || '切换失败', 'err');
+      return;
+    }
+    UI.toast('电源计划已切换');
+    await loadPowerPlans();
+  }
+
+  /* ------------------------------------------------------------ 列表 */
+  function rowHtml(p) {
+    const checked = S().selected.has(p.pid) ? 'checked' : '';
+    const tags = [];
+    if (p.protected) {
+      tags.push(`<span class="badge badge-mute" title="${UI.esc(p.why || '受保护')}">受保护</span>`);
+    } else if (p.closable) {
+      tags.push(`<span class="badge badge-warn"${p.why ? ` title="${UI.esc(p.why)}"` : ''}>可关闭</span>`);
+    }    if (p.trimmable && !p.protected) tags.push('<span class="badge badge-ok">可整理</span>');
+
+    const box = p.protected
+      ? '<span class="tick-empty" title="受保护，不会关闭"></span>'
+      : `<input type="checkbox" class="tick" data-pid="${p.pid}" ${checked}>`;
+
+    return `
+      <div class="prow${p.protected ? ' is-protected' : ''}" data-pid="${p.pid}">
+        <div class="pcell-tick">${box}</div>
+        <div class="pcell-name">
+          <div class="pname">${UI.esc(p.name)}</div>
+          <div class="ptitle">${UI.esc(p.title || `PID ${p.pid}`)}</div>
+        </div>
+        <div class="pcell-tags">${tags.join('')}</div>
+        <div class="pcell-mem">${UI.bytes(p.mem)}</div>
+      </div>`;
+  }
+
+  function visibleRows() {
+    const m = S();
+    let list = m.onlyClosable
+      ? m.processes.filter((p) => p.closable || p.trimmable)
+      : m.processes;
+    if (searchTerm) {
+      const t = searchTerm.toLowerCase();
+      list = list.filter((p) => p.name.toLowerCase().includes(t));
+    }
+    return list;
+  }
+
+  function render() {
+    const m = S();
+    const list = visibleRows();
+
+    UI.$('#mem-list').innerHTML = list.length
+      ? list.map(rowHtml).join('')
+      : '<div class="empty">没有匹配的进程</div>';
+
+    UI.$('#mem-stat').textContent =
+      `${list.length} / ${m.total} 个 · 可整理合计 ${UI.bytes(m.reclaimable)}`;
+
+    const n = m.selected.size;
+    UI.$('#mem-sel').textContent = `已选 ${n} 项`;
+    UI.$('#mem-apply').disabled = n === 0 || busy();
+    UI.$('#mem-close').disabled = n === 0 || busy();
+
+    const all = UI.$('#mem-all');
+    const selectable = list.filter((p) => !p.protected).map((p) => p.pid);
+    const picked = selectable.filter((pid) => m.selected.has(pid)).length;
+    all.checked = selectable.length > 0 && picked === selectable.length;
+    all.indeterminate = picked > 0 && picked < selectable.length;
+    all.disabled = selectable.length === 0;
+  }
+
+  /* ------------------------------------------------------------ 加载 */
+  /* 进程列表骨架屏：真实数据要枚举 180+ 进程，通常 1~2 秒。
+     先画等高的占位行，数据回来再替换，避免"文字 -> 列表"的跳变。 */
+  function showProcSkeleton(n = 8) {
+    UI.$('#mem-list').innerHTML =
+      `<div class="skeleton proc-skel" aria-hidden="true">${
+        Array.from({ length: n }, () =>
+          '<div class="prow skel-row">' +
+          '<div class="skel-bar w-tick"></div>' +
+          '<div class="skel-bar w-name"></div>' +
+          '<div class="skel-bar w-tag"></div>' +
+          '<div class="skel-bar w-mem"></div>' +
+          '</div>').join('')
+      }</div>`;
+  }
+
+  async function load(force) {
+    const m = S();
+    if (m.loaded && !force) return;
+    showProcSkeleton();
+
+    const [d, caps] = await Promise.all([
+      Bridge.call('list_processes'),
+      Bridge.call('get_capabilities'),
+    ]);
+
+    if (!d || d.ok === false) {
+      UI.$('#mem-list').innerHTML =
+        `<div class="empty err">${UI.esc((d && d.error) || '读取失败')}</div>`;
+      return;
+    }
+    m.processes = d.processes || [];
+    m.total = d.total || 0;
+    m.trimmable = d.trimmable || 0;
+    m.closable = d.closable || 0;
+    m.reclaimable = d.reclaimable || 0;
+    m.selected.clear();
+    m.loaded = true;
+
+    applyCapabilities(caps);
+    render();
+  }
+
+  /* 权限决定哪些选项可用，不能用的直接禁用并说明原因，
+     而不是让用户勾了之后执行失败。
+
+     已是管理员时，把"需要管理员"的提示全部收起来 —— 留着只会让人困惑：
+     已经拿到权限了还一直提示要点「以管理员重启」。 */
+  function applyCapabilities(caps) {
+    if (!caps || caps.ok === false) return;
+    const admin = !!caps.admin;
+    UI.$('#admin-banner').classList.toggle('hide', admin);
+
+    const standbyRow = UI.$('#opt-standby-row');
+    const standbyBox = standbyRow.querySelector('input');
+    standbyBox.disabled = !caps.can_standby;
+    standbyRow.classList.toggle('is-locked', !caps.can_standby);
+
+    /* "需管理员"改为徽标：只在真的没权限时出现，
+       不再用一整行浅色说明文字占位。 */
+    UI.$$('.opt-need-admin').forEach((el) => {
+      const row = el.closest('.opt');
+      const box = row && row.querySelector('input');
+      const needs = box && (box.dataset.opt === 'standby'
+        || box.dataset.opt === 'kill_services');
+      el.classList.toggle('hide', admin || !needs);
+    });
+
+    // 深度优化各项上的"需管理员 / 当前会失败"角标：有权限时全部撤掉。
+    // 角标由 loadDeepOps 渲染、applyCapabilities 可能在它之前跑完，
+    // 所以两处都调用这个函数（幂等），无论谁先谁后都能对齐。
+    syncDeepAdminBadges(admin);
+
+    UI.$('#mem-relaunch-closed').disabled = !caps.closed_apps;
+    UI.$('#mem-relaunch-closed').textContent = caps.closed_apps
+      ? `重启已关闭的应用（${caps.closed_apps}）` : '重启已关闭的应用';
+    UI.$('#mem-revert').disabled = !caps.has_gamedvr_backup;
+    UI.$('#mem-revert').title = caps.has_gamedvr_backup
+      ? '' : '还没有改动过系统设置';
+  }
+
+  /* ------------------------------------------------------------ 选项 */
+  function readOpts() {
+    const o = Object.assign({}, DEFAULT_OPTS);
+    UI.$$('#mem-opts input[data-opt]').forEach((el) => {
+      o[el.dataset.opt] = el.checked;
+    });
+    return o;
+  }
+
+  function writeOpts(o) {
+    UI.$$('#mem-opts input[data-opt]').forEach((el) => {
+      if (el.dataset.opt in o) el.checked = !!o[el.dataset.opt];
+    });
+  }
+
+  /* ------------------------------------------------------------ 任务 */
+  const busy = () => !!tracker;
+
+  function setBusy(on, title) {
+    UI.$('#mem-log-card').classList.toggle('hide', !on);
+    // 一键加速的主 CTA 在粘性底栏（#action-primary），卡片里那个同名按钮已移除
+    const ap = UI.$('#action-primary');
+    if (ap) ap.disabled = on;
+    UI.$('#mem-apply').disabled = on || S().selected.size === 0;
+    UI.$('#mem-close').disabled = on || S().selected.size === 0;
+    if (on) {
+      UI.$('#mem-log-title').textContent = title || '执行中';
+      UI.$('#mem-log-state').className = 'badge badge-warn';
+      UI.$('#mem-log-state').textContent = '运行中';
+      UI.$('#mem-log-progress').textContent = '—';
+      UI.logClear('#mem-log');
+      UI.$('#mem-log-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  async function runJob(starter, title) {
+    if (busy()) { UI.toast('已有任务在运行', 'warn'); return; }
+    setBusy(true, title);
+
+    const r = await starter();
+    if (!r || r.ok === false) {
+      setBusy(false);
+      UI.toast((r && r.error) || '启动失败', 'err');
+      return;
+    }
+    const before = await Bridge.call('memory_snapshot');
+
+    tracker = Bridge.track(r.job_id, async (s) => {
+      (s.logs || []).forEach((line) => UI.logAppend('#mem-log', line));
+      if (s.state === 'running') {
+        if (s.progress) UI.$('#mem-log-progress').textContent = s.progress;
+        return;
+      }
+
+      tracker = null;
+      setBusy(false);
+      UI.$('#mem-log-progress').textContent = `耗时 ${UI.duration(s.elapsed)}`;
+      const badge = UI.$('#mem-log-state');
+      if (s.state === 'done') {
+        badge.className = 'badge badge-ok';
+        badge.textContent = '已完成';
+        await showResult(before, s.result || {});
+      } else if (s.state === 'cancelled') {
+        badge.className = 'badge badge-mute';
+        badge.textContent = '已取消';
+      } else {
+        badge.className = 'badge badge-danger';
+        badge.textContent = '出错';
+        UI.logAppend('#mem-log', s.error || '未知错误', true);
+      }
+      // 动作会改变进程列表，重新拉一次
+      await load(true);
+      UI.$('#mem-log-card').classList.remove('hide');
+    });
+  }
+
+  async function showResult(before, result) {
+    const after = await Bridge.call('memory_snapshot');
+    const b = (before && before.ok !== false) ? before.avail : 0;
+    const a = (after && after.ok !== false) ? after.avail : 0;
+    const delta = a - b;
+
+    const items = [];
+    if (result.trimmed !== undefined) {
+      items.push(['整理的进程', `${result.trimmed}`, '个']);
+      if (result.skipped) items.push(['跳过（不满足条件）', `${result.skipped}`, '个']);
+      // 工作集释放量与系统可用内存变化是两个不同的量，必须分开显示
+      items.push(['工作集释放', UI.bytes(result.ws_freed || 0)]);
+    }
+    if (result.closed !== undefined) {
+      items.push(['已关闭', `${result.closed}`, '个']);
+      if (result.failed) items.push(['关闭失败', `${result.failed}`, '个']);
+    }
+    if (result.opts) {
+      items.push(['执行项', Object.entries(result.opts)
+        .filter(([, v]) => v).map(([k]) => ({
+          kill_safe: '关安全级', kill_killable: '关托盘类',
+          kill_optional: '关可选级', kill_services: '停系统服务',
+          trim: '整理工作集',
+          standby: '清待机', gamedvr: 'GameDVR', power: '电源计划',
+        }[k] || k)).join(' · ') || '（全部关闭）']);
+    }
+    items.push(['系统可用内存', `${UI.bytes(b)} → ${UI.bytes(a)}`]);
+    items.push(['实际变化', `${delta >= 0 ? '+' : ''}${UI.bytes(Math.abs(delta))}`]);
+
+    const card = UI.$('#mem-result');
+    card.classList.remove('hide');
+    card.innerHTML = `
+      <div class="row-between" style="margin-bottom:12px">
+        <h2 class="section-h">最近一次结果</h2>
+      </div>
+      <div class="result-grid">
+        ${items.map(([k, v, unit], i) => `
+          <div class="result-item">
+            <div class="k">${UI.esc(k)}</div>
+            <div class="v${i === items.length - 1 ? ' good' : ''}">
+              ${UI.esc(v)}${unit ? ` <small>${UI.esc(unit)}</small>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="stat-foot" style="margin-top:14px">
+        「工作集释放」是把闲置内存从进程里换出的量；
+        「实际变化」是系统可用内存的真实增减 —— 前者通常明显大于后者，
+        因为换出的页进了待机列表，仍被系统算作可用缓存。两者都正常。
+      </div>`;
+  }
+
+  /* ------------------------------------------------------------ 深度优化 */
+  let deepOps = [];
+
+  /* 已经是管理员时，把所有"需管理员"的痕迹收掉：
+     - 角标（需管理员 / 当前会失败）
+     - 项目的 is-locked 灰态
+     幂等：渲染前后都能安全重复调用。 */
+  function syncDeepAdminBadges(admin) {
+    const isAdmin = (admin === undefined) ? !!Store.state.ui.admin : !!admin;
+    UI.$$('#mem-deep-opts .needs-admin-badge').forEach((el) => {
+      el.classList.toggle('hide', isAdmin);
+    });
+    if (isAdmin) {
+      UI.$$('#mem-deep-opts .opt').forEach((el) => el.classList.remove('is-locked'));
+    }
+  }
+
+  async function loadDeepOps() {
+    const d = await Bridge.call('deep_ops_info');
+    if (!d || d.ok === false) return;
+    deepOps = d.ops || [];
+    UI.$('#mem-deep-count').textContent = `${deepOps.length} 项内核接口`;
+    /* 深度优化项的排版原则：默认只显示名称 + 一句说明。
+       徽标只在"当前会失败"时出现（免管理员是常态，不必逐个标注）；
+       警告只在勾选后才展开，避免一屏堆满同色提示块。 */
+    UI.$('#mem-deep-opts').innerHTML = deepOps.map((o) => {
+      const admin = !!Store.state.ui.admin;
+      const needBadge = o.needs_admin && !admin && o.blocked;
+      return `
+      <label class="opt${o.blocked && !admin ? ' is-locked' : ''}">
+        <input type="checkbox" class="switch" data-deep="${o.key}"
+               ${o.default ? 'checked' : ''}>
+        <span>
+          <b>${UI.esc(o.name)}${needBadge
+            ? '<span class="badge needs-admin-badge badge-warn">需管理员</span>'
+            : ''}</b>
+          ${o.warning ? `<i class="warn-note deep-warn">${UI.esc(o.warning)}</i>` : ''}
+        </span>
+      </label>`;
+    }).join('');
+    // 警告文字默认收着，勾选该项时才显示
+    UI.$$('#mem-deep-opts input[data-deep]').forEach((el) => {
+      const sync = () => {
+        const lab = el.closest('.opt');
+        const w = lab && lab.querySelector('.deep-warn');
+        if (w) w.classList.toggle('show', el.checked);
+      };
+      el.addEventListener('change', sync);
+      sync();
+    });
+    // 渲染完再对齐一次：此时才知道有没有已经是管理员的项
+    syncDeepAdminBadges();
+  }
+
+  function readDeepOpts() {
+    const o = {};
+    UI.$$('#mem-deep-opts input[data-deep]').forEach((el) => {
+      o[el.dataset.deep] = el.checked;
+    });
+    return o;
+  }
+
+  function setDeepOpts(pred) {
+    UI.$$('#mem-deep-opts input[data-deep]').forEach((el) => {
+      const meta = deepOps.find((o) => o.key === el.dataset.deep);
+      el.checked = pred(meta || {});
+    });
+  }
+
+  /* ------------------------------------------------------------ 事件 */
+  function bind() {
+    const list = UI.$('#mem-list');
+
+    list.addEventListener('change', (e) => {
+      const cb = e.target.closest('.tick');
+      if (!cb) return;
+      const pid = Number(cb.dataset.pid);
+      if (cb.checked) S().selected.add(pid); else S().selected.delete(pid);
+      render();
+    });
+
+    list.addEventListener('click', (e) => {
+      if (e.target.closest('.tick')) return;
+      const row = e.target.closest('.prow');
+      if (!row || row.classList.contains('is-protected')) return;
+      const pid = Number(row.dataset.pid);
+      if (S().selected.has(pid)) S().selected.delete(pid); else S().selected.add(pid);
+      render();
+    });
+
+    UI.$('#mem-all').addEventListener('change', (e) => {
+      const ids = visibleRows().filter((p) => !p.protected).map((p) => p.pid);
+      if (e.target.checked) ids.forEach((i) => S().selected.add(i));
+      else ids.forEach((i) => S().selected.delete(i));
+      render();
+    });
+
+    UI.$('#mem-only-closable').addEventListener('change', (e) => {
+      S().onlyClosable = e.target.checked;
+      render();
+    });
+
+    UI.$('#mem-search').addEventListener('input', (e) => {
+      searchTerm = e.target.value.trim();
+      render();
+    });
+
+    /* --- 游戏优先级 --- */
+    UI.$('#prio-refresh').addEventListener('click', loadGames);
+    UI.$('#prio-apply').addEventListener('click', applyPriority);
+    UI.$('#prio-apply-saved').addEventListener('click', applySaved);
+    UI.$('#prio-saved-list').addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-forget]');
+      if (!btn) return;
+      await Bridge.call('remember_priority', btn.dataset.forget, '');
+      UI.toast('已取消记忆');
+      await loadGames();
+    });
+
+    /* --- 电源计划 --- */
+    UI.$('#power-apply').addEventListener('click', applyPowerPlan);
+
+    UI.$('#mem-apply').addEventListener('click', () => runJob(
+      () => Bridge.call('start_trim', Array.from(S().selected)),
+      '整理工作集'));
+
+    UI.$('#mem-close').addEventListener('click', () => runJob(
+      () => Bridge.call('start_close', Array.from(S().selected), true),
+      '关闭进程'));
+
+    const boost = () => runJob(() => Bridge.call('start_boost', readOpts()),
+                               '一键加速');
+    // 一键加速的主 CTA 只在粘性底栏（#action-primary）：卡片里那个同名按钮已移除，
+    // 一屏两个同名按钮，用户不知道该点哪个。
+    UI.$('#action-primary').addEventListener('click', boost);
+
+    UI.$('#mem-relaunch').addEventListener('click', () => Pages.settings.relaunch());
+
+    UI.$('#mem-relaunch-closed').addEventListener('click', () =>
+      runJob(() => Bridge.call('relaunch_closed'), '重启已关闭的应用'));
+
+    UI.$('#mem-revert').addEventListener('click', () =>
+      runJob(() => Bridge.call('revert_system'), '还原系统设置'));
+
+    /* --- 系统服务 --- */
+    UI.$('#mem-svc-stop').addEventListener('click', async () => {
+      const ok = await UI.confirm(
+        '将停止 16 项打游戏时可牺牲的系统服务'
+        + '（搜索索引、遥测、Xbox、打印后台等）。\n\n'
+        + '停止后这些功能暂时不可用，可在「还原服务」里一键恢复。\n'
+        + '需要管理员权限。继续吗？');
+      if (!ok) return;
+      runJob(() => Bridge.call('start_stop_services', null, false),
+             '停止系统服务');
+    });
+
+    UI.$('#mem-svc-restore').addEventListener('click', () =>
+      runJob(() => Bridge.call('restart_services'), '还原系统服务'));
+
+    UI.$('#mem-log-cancel').addEventListener('click', async () => {
+      if (!tracker) return;
+      // 任务 id 存在 tracker 里不好取，这里靠后端取消全部在跑的
+      const r = await Bridge.call('running_jobs');
+      (r.jobs || []).forEach((id) => Bridge.call('cancel', id));
+    });
+
+    /* --- 深度优化 --- */
+    UI.$('#mem-deep-run').addEventListener('click', async () => {
+      const opts = readDeepOpts();
+      const picked = Object.values(opts).filter(Boolean).length;
+      if (!picked) { UI.toast('一项都没勾选', 'warn'); return; }
+
+      // 有风险的项要二次确认 —— 只念关键风险，不展开（用户要求文案简洁）
+      const risky = deepOps.filter((o) => opts[o.key] && o.warning);
+      if (risky.length) {
+        const msg = `将执行 ${picked} 项深度优化。\n\n`
+          + risky.map((o) => `【${o.name}】${o.warning}`).join('\n');
+        if (!await UI.confirm(msg)) return;
+      }
+      runJob(() => Bridge.call('start_deep_optimize', opts), '深度内存优化');
+    });
+
+    UI.$('#mem-deep-safe').addEventListener('click', () => {
+      setDeepOpts((o) => !o.needs_admin);
+      UI.toast('已勾选免管理员的项');
+    });
+    UI.$('#mem-deep-all').addEventListener('click', () => {
+      setDeepOpts(() => true);
+    });
+  }
+
+  async function loadServices() {
+    const d = await Bridge.call('list_gaming_services');
+    if (!d || d.ok === false) return;
+    const list = d.services || [];
+    const running = list.filter((s) => s.running).length;
+    const box = UI.$('#mem-svc-list');
+    if (!box) return;
+    if (!list.length) {
+      box.textContent = '没有可管理的服务';
+      return;
+    }
+    box.innerHTML = `可停 <b>${list.length}</b> 项 · 运行中 <b>${running}</b> 项`
+      + (d.admin ? '' : ' · <b>需管理员</b>');
+  }
+
+  async function enter() {
+    await load(false);
+    await loadGames();
+    await loadPowerPlans();
+    loadServices();
+    if (!deepOps.length) await loadDeepOps();
+  }
+
+  function init() { bind(); }
+
+  return { init, enter, load, loadGames,
+           get running() { return busy(); } };
+})();
+

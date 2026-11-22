@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设置 · Mahiru 预览</title>
+<style>
+  :root {
+    --canvas:   #fffefb;
+    --ink:      #201515;
+    --body:     #605d52;
+    --muted:    #939084;
+    --hairline: rgba(197, 192, 177, .3);
+    --hover-bg: #f5f3ec;
+    --tag-bg:   #eceae3;
+    --accent:   #ff4f00;
+    --accent-glow: rgba(255, 79, 0, .32);
+    --sand:     #d9d2c2;
+    /* 三个功能各自的强调色（取自应用现有色板，非新造色相） */
+    --acc-memory: #2e7d3e;   /* 内存优化：绿 */
+    --acc-junk:   #b8782a;   /* 垃圾清理：金 */
+    --acc-gaming: #c2185b;   /* 游戏与性能：莓果 */
+    --acc-memory-tint: rgba(46, 125, 62, .07);
+    --acc-junk-tint:   rgba(184, 120, 42, .08);
+    --acc-gaming-tint: rgba(194, 24, 91, .07);
+    --mono:     ui-monospace, "Cascadia Mono", Consolas, "SF Mono", monospace;
+    --ease:     cubic-bezier(.4, 0, .2, 1);
+    --ease-out: cubic-bezier(.16, 1, .3, 1);
+    --r-sm: 6px;
+    --r-pill: 9999px;
+    --fs-hero: 48px;
+    --fs-caption: 13px;
+    --fs-mono: 12px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--body);
+    font-family: "Inter", "Noto Sans SC", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .setting-page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 72px 48px 96px;
+    display: grid;
+    grid-template-columns: 3fr 7fr;
+    gap: 64px;
+    align-items: start;
+  }
+
+  /* ---------- 左栏：hero ---------- */
+  .setting-hero {
+    position: sticky;
+    top: 72px;
+  }
+
+  .setting-title {
+    margin: 0;
+    font-size: var(--fs-hero);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.05;
+  }
+
+  .setting-sub {
+    margin: 16px 0 0;
+    font-size: var(--fs-caption);
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 240px;
+  }
+
+  /* ---------- 右栏：主体 ---------- */
+  .setting-body { min-width: 0; }
+
+  .block { padding: 0 0 32px; }
+  .block + .block {
+    padding-top: 40px;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .block-label {
+    margin: 0 0 8px;
+    font-size: var(--fs-caption);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* ---------- 功能列表 ---------- */
+  .feature-row {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 16px;
+    align-items: center;
+    padding: 16px 12px;
+    margin: 0 -12px;
+    border-bottom: 1px solid var(--hairline);
+    border-radius: var(--r-sm);
+    transition: background var(--ease) 160ms, padding-left var(--ease) 160ms;
+  }
+  .feature-row:last-child { border-bottom: 0; }
+
+  .feature-row:hover {
+    background: var(--hover-bg);
+    padding-left: 16px;   /* 12px + 4px 位移 */
+  }
+
+  /* 每个功能有各自的强调色与 tint */
+  .feature-row.f-memory:hover { background: var(--acc-memory-tint); }
+  .feature-row.f-junk:hover   { background: var(--acc-junk-tint); }
+  .feature-row.f-gaming:hover { background: var(--acc-gaming-tint); }
+
+  .feature-ico {
+    width: 24px;
+    height: 24px;
+    color: var(--body);
+    transition: color var(--ease) 160ms;
+  }
+  .feature-row:hover .feature-ico { color: var(--ink); }
+  .feature-row.f-memory:hover .feature-ico { color: var(--acc-memory); }
+  .feature-row.f-junk:hover   .feature-ico { color: var(--acc-junk); }
+  .feature-row.f-gaming:hover .feature-ico { color: var(--acc-gaming); }
+
+  .feature-ico svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .feature-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+
+  .feature-desc {
+    margin: 3px 0 0;
+    font-size: var(--fs-caption);
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  /* ---------- 关于 ---------- */
+  .about-name-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .about-name {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .version-tag {
+    font-family: var(--mono);
+    font-size: var(--fs-mono);
+    line-height: 1;
+    padding: 5px 8px;
+    background: var(--tag-bg);
+    color: var(--body);
+    border-radius: var(--r-sm);
+    letter-spacing: 0.02em;
+  }
+
+  .about-meta {
+    margin: 14px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-size: var(--fs-caption);
+    color: var(--muted);
+  }
+
+  .about-meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .about-meta b { color: var(--body); font-weight: 500; }
+
+  .ghost-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 18px;
+    padding: 9px 16px;
+    background: transparent;
+    border: 1px solid var(--sand);
+    border-radius: var(--r-sm);
+    color: var(--body);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color var(--ease) 160ms, background var(--ease) 160ms,
+                color var(--ease) 160ms, transform var(--ease-out) 160ms;
+  }
+  .ghost-link svg {
+    width: 15px; height: 15px;
+    fill: none; stroke: currentColor;
+    stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .ghost-link:hover {
+    border-color: var(--accent);
+    background: var(--hover-bg);
+    color: var(--accent);
+  }
+  .ghost-link:active { transform: scale(.98); }
+
+  /* ---------- 更新 ---------- */
+  .update-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    box-shadow: 0 1px 0 rgba(255,255,255,.15) inset;
+    transition: transform var(--ease-out) 160ms, box-shadow var(--ease) 160ms,
+                background var(--ease) 160ms, opacity var(--ease) 160ms;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 1px 0 rgba(255,255,255,.15) inset,
+                0 8px 20px var(--accent-glow);
+  }
+  .btn-primary:active {
+    transform: translateY(0) scale(.98);
+    box-shadow: 0 2px 5px rgba(32,21,21,.25) inset;
+  }
+  .btn-primary:disabled {
+    cursor: default;
+    opacity: .72;
+    transform: none;
+    box-shadow: 0 1px 0 rgba(255,255,255,.15) inset;
+  }
+
+  /* 旋转加载圈 */
+  .spinner {
+    width: 15px;
+    height: 15px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+  .btn-primary.loading .spinner { display: inline-block; }
+  .btn-primary.loading .btn-label { opacity: .85; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 下载图标（发现新版本后主按钮切换为「下载更新」） */
+  .dl-ico {
+    display: none;
+    width: 15px;
+    height: 15px;
+  }
+  .dl-ico svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .btn-primary.download .dl-ico { display: inline-flex; }
+  .btn-primary.download .spinner { display: none; }
+
+  /* 三种状态，透明度过渡 */
+  .update-status {
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+    font-size: var(--fs-caption);
+    line-height: 1.5;
+  }
+  .status {
+    display: none;
+    opacity: 0;
+    transition: opacity var(--ease) 200ms;
+    align-items: center;
+    gap: 7px;
+  }
+  .status.show { display: inline-flex; opacity: 1; }
+  .status .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    flex: 0 0 auto;
+  }
+  .status-latest { color: var(--body); }
+  .status-latest .dot { background: #3a9d5d; }
+  .status-new { color: var(--accent); font-weight: 600; }
+  .status-new .dot { background: var(--accent); }
+
+  @media (max-width: 760px) {
+    .setting-page { grid-template-columns: 1fr; gap: 40px; padding: 48px 24px 72px; }
+    .setting-hero { position: static; }
+  }
+</style>
+</head>
+<body>
+  <div class="setting-page">
+    <!-- 左栏 -->
+    <aside class="setting-hero">
+      <h1 class="setting-title">设置</h1>
+      <p class="setting-sub">了解这个工具能做什么，查看当前版本，检查是否有更新。</p>
+    </aside>
+
+    <!-- 右栏 -->
+    <main class="setting-body">
+
+      <!-- 软件功能 -->
+      <section class="block">
+        <p class="block-label">软件功能</p>
+        <div class="feature-list">
+
+          <div class="feature-row f-memory">
+            <div class="feature-ico">
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="6" width="18" height="12" rx="2"/>
+                <path d="M8 9.5h8M8 14.5h5"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="feature-title">内存优化</h2>
+              <p class="feature-desc">一键关闭后台程序、清理进程工作集、释放待机内存。</p>
+            </div>
+          </div>
+
+          <div class="feature-row f-junk">
+            <div class="feature-ico">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 7l2-3h12l2 3"/>
+                <path d="M5 7l1 13h12l1-13"/>
+                <path d="M9 10v6M15 10v6"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="feature-title">垃圾清理</h2>
+              <p class="feature-desc">清系统 / 浏览器 / 软件缓存，安全分级，可移入回收站。</p>
+            </div>
+          </div>
+
+          <div class="feature-row f-gaming">
+            <div class="feature-ico">
+              <svg viewBox="0 0 24 24">
+                <path d="M6 11h4M8 9v4"/>
+                <path d="M15 10h.01M17.5 13h.01"/>
+                <path d="M6.5 6h11a4.5 4.5 0 0 1 0 9h-2.1a5 5 0 0 1-9.9.9L5 15.5a4.5 4.5 0 0 1 1.5-9.5z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="feature-title">游戏与性能</h2>
+              <p class="feature-desc">游戏进程优先级 + 116 项系统调校，每项可还原默认。</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 关于 -->
+      <section class="block">
+        <p class="block-label">关于 Mahiru</p>
+        <div class="about-name-row">
+          <h2 class="about-name">mahiru 小助手</h2>
+          <span class="version-tag">v1.0.1</span>
+        </div>
+        <div class="about-meta">
+          <span>作者 <b>decaycc</b></span>
+          <span>Windows 系统清理与性能优化工具</span>
+        </div>
+        <button class="ghost-link" id="github-btn" type="button">
+          <svg viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12 12 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+          在 GitHub 上查看项目
+        </button>
+      </section>
+
+      <!-- 更新 -->
+      <section class="block">
+        <p class="block-label">软件更新</p>
+        <div class="update-row">
+          <button class="btn-primary" id="check-btn" type="button">
+            <span class="spinner"></span>
+            <span class="dl-ico">
+              <svg viewBox="0 0 24 24"><path d="M12 3v10m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            </span>
+            <span class="btn-label">检查更新</span>
+          </button>
+          <div class="update-status">
+            <span class="status status-latest" id="st-latest"><span class="dot"></span>已是最新版本</span>
+            <span class="status status-new" id="st-new"><span class="dot"></span>发现新版本 v1.1.0</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+<script>
+  var checkBtn = document.getElementById('check-btn');
+  var stLatest = document.getElementById('st-latest');
+  var stNew = document.getElementById('st-new');
+  var githubBtn = document.getElementById('github-btn');
+  var btnLabel = checkBtn.querySelector('.btn-label');
+  var NEW_VERSION = 'v1.1.0';
+  var NEW_URL = 'https://github.com/Decaycc/mahiru-assistant/releases/latest';
+
+  function setStatus(show) {
+    // 先全部隐藏
+    stLatest.classList.remove('show');
+    stNew.classList.remove('show');
+    if (show) show.classList.add('show');
+  }
+
+  function openUrl(url) {
+    if (window.pywebview && window.pywebview.api && window.pywebview.api.open_url) {
+      window.pywebview.api.open_url(url);
+    } else {
+      // 预览环境无后端，静默占位（落真实项目时走 open_url）
+      console.log('[preview] open_url -> ' + url);
+    }
+  }
+
+  function checkUpdate() {
+    checkBtn.classList.add('loading');
+    checkBtn.disabled = true;
+    setStatus(null);
+    btnLabel.textContent = '检查更新';
+
+    setTimeout(function () {
+      checkBtn.classList.remove('loading');
+      checkBtn.disabled = false;
+      // 50/50 概率模拟
+      if (Math.random() < 0.5) {
+        // 发现新版本：主按钮切换为「下载更新」，并记忆目标 URL
+        setStatus(stNew);
+        checkBtn.classList.add('download');
+        btnLabel.textContent = '下载更新';
+        checkBtn.setAttribute('data-url', NEW_URL);
+      } else {
+        setStatus(stLatest);
+        checkBtn.classList.remove('download');
+        btnLabel.textContent = '检查更新';
+        checkBtn.removeAttribute('data-url');
+      }
+    }, 1500);
+  }
+
+  checkBtn.addEventListener('click', function () {
+    var url = checkBtn.getAttribute('data-url');
+    if (url) {
+      // 已经是「下载更新」态 → 直接打开下载链接
+      openUrl(url);
+    } else {
+      checkUpdate();
+    }
+  });
+
+  // 预留 pywebview 打开外部链接接口
+  githubBtn.addEventListener('click', function () {
+    openUrl('https://github.com/Decaycc/mahiru-assistant');
+  });
+</script>
+</body>
+</html>
