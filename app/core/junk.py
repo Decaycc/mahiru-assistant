@@ -87,9 +87,9 @@ def _join(*parts) -> str:
 def _chromium_cache_paths(user_data: str) -> list[str]:
     """Chromium 系浏览器（Edge / Chrome / Brave / Opera…）的完整缓存路径集合。
 
-    参考 BleachBit 的 microsoft_edge.xml / google_chrome.xml：
-    除了 Default\\Cache，还有各配置文件的多种缓存、扩展的 GPU 缓存、
-    以及用户数据根目录下的着色器缓存。用 * 通配以覆盖所有配置文件。
+    覆盖范围比只清 Default\\Cache 更完整：包含各配置文件的多种缓存、
+    扩展的 GPU 缓存，以及用户数据根目录下的着色器缓存。
+    用 * 通配以覆盖所有配置文件。
     """
     if not user_data:
         return []
@@ -259,8 +259,7 @@ RULES: list[dict] = [
           patterns=["*.dat"]),
 
     # ---------------- 浏览器缓存 ----------------
-    # 路径集合参考 BleachBit 的 microsoft_edge.xml / google_chrome.xml 规则
-    # （GPL 开源、长期维护），比只清 Default\Cache 完整得多。
+    # 覆盖各配置文件的多级缓存，比只清 Default\Cache 完整。
     _rule("edge_cache", "Edge 缓存", "浏览器缓存", "safe", "contents",
           _chromium_cache_paths(_join(LOCAL, "Microsoft", "Edge", "User Data")),
           "网页缓存、脚本缓存、GPU/WebGPU 缓存、着色器缓存，覆盖所有配置文件。\n"
@@ -353,7 +352,7 @@ RULES: list[dict] = [
     _rule("winre_agent", "更新回滚残留", "更新残留", "caution", "contents",
           [SYSTEM_ROOT_DIR + "$WinREAgent"],
           "系统更新过程中的回滚数据。更新稳定运行一段时间后可删。\n"
-          "（$Windows.~BT / $Windows.~WS 已由 LightC 的「旧版 Windows 安装」规则接管。）"),
+          "（$Windows.~BT / $Windows.~WS 已由「旧版 Windows 安装」规则接管。）"),
 
     # ---------------- 开发工具缓存 ----------------
     _rule("pip_cache", "pip 缓存", "开发缓存", "safe", "contents",
@@ -431,7 +430,7 @@ RULES: list[dict] = [
           "被系统占用时删不掉；删除后索引会重建，期间搜索变慢。",
           default=False),
 
-    # ---------------- 开发工具残留（散布全盘，参考 BleachBit deepscan）----
+    # ---------------- 开发工具残留（散布全盘，按名字匹配）----
     _rule("dev_artifacts", "开发构建残留（node_modules / __pycache__ / venv）",
           "开发缓存", "caution", "types",
           fixed_drives(),
@@ -453,6 +452,76 @@ RULES: list[dict] = [
                  "glob:*.bak", "glob:*~", "glob:~wr*.tmp", "glob:ppt*.tmp",
                  "glob:*.swp", "glob:*.swo"],
           default=False),
+
+    # ---------------- 国产社交 / 办公软件 ----
+    # 只收缓存、图片、视频、日志、临时文件这类可重建内容；
+    # 聊天记录数据库（Msg / MsgAttach 的 db 文件）一律不碰 —— 那是用户数据，
+    # 删了无法恢复，上游也把它标成 CRITICAL 锁定。
+    _rule("wechat_cache", "微信缓存（图片 / 视频 / 日志）", "应用缓存", "caution",
+          "contents",
+          [_join(PROFILE, "Documents", "WeChat Files", "*", "FileStorage", "Cache"),
+           _join(PROFILE, "Documents", "WeChat Files", "*", "FileStorage", "Video"),
+           _join(PROFILE, "Documents", "WeChat Files", "*", "FileStorage", "Image"),
+           _join(PROFILE, "Documents", "xwechat_files", "*", "cache"),
+           _join(PROFILE, "Documents", "xwechat_files", "*", "temp"),
+           _join(LOCAL, "Tencent", "WeChat", "Cache"),
+           _join(ROAMING, "Tencent", "WeChat", "Cache")],
+          "微信 PC 版的图片、视频与临时缓存。\n"
+          "不含聊天记录数据库与已保存的文件。",
+          default=False),
+    _rule("wxwork_cache", "企业微信缓存", "应用缓存", "caution", "contents",
+          [_join(PROFILE, "Documents", "WXWork", "*", "Cache", "Image"),
+           _join(PROFILE, "Documents", "WXWork", "*", "Cache", "Video"),
+           _join(PROFILE, "Documents", "WXWork", "*", "Temp"),
+           _join(PROFILE, "Documents", "WXWork", "*", "Logs"),
+           _join(ROAMING, "Tencent", "WXWork", "Cache"),
+           _join(LOCAL, "Tencent", "WXWork", "Cache")],
+          "企业微信的图片、视频、日志与临时缓存。",
+          default=False),
+    _rule("dingtalk_cache", "钉钉缓存", "应用缓存", "caution", "contents",
+          [_join(ROAMING, "DingTalk", "Cache"),
+           _join(LOCAL, "DingTalk", "Cache"),
+           _join(ROAMING, "Alibaba", "DingTalk", "Cache"),
+           _join(PROFILE, "Documents", "DingTalk", "Cache"),
+           _join(PROFILE, "Documents", "DingTalk", "Logs")],
+          "钉钉的图片、视频与临时缓存。"),
+    _rule("feishu_cache", "飞书缓存", "应用缓存", "caution", "contents",
+          [_join(ROAMING, "feishu", "Cache"),
+           _join(ROAMING, "LarkShell", "sdk_storage"),
+           _join(ROAMING, "Lark", "Cache"),
+           _join(PROFILE, "Documents", "Feishu", "Cache")],
+          "飞书的图片、文件传输与网页缓存。"),
+    _rule("qq_chat_cache", "QQ 缓存（NTQQ / 旧版）", "应用缓存", "caution",
+          "contents",
+          [_join(ROAMING, "Tencent", "QQ", "Cache"),
+           _join(ROAMING, "Tencent", "QQNT", "Cache"),
+           _join(LOCAL, "Tencent", "QQ", "Cache"),
+           _join(PROFILE, "Documents", "Tencent Files", "*", "Image"),
+           _join(PROFILE, "Documents", "Tencent Files", "*", "Video")],
+          "QQ 的图片、视频与临时缓存。\n"
+          "不含聊天记录与接收到的文件。",
+          default=False),
+    _rule("wps_cache", "WPS Office 缓存", "应用缓存", "caution", "contents",
+          [_join(ROAMING, "kingsoft", "office6", "cache"),
+           _join(LOCAL, "Kingsoft", "WPS Office", "cache"),
+           _join(LOCAL, "kingsoft", "WPS Office", "Cache"),
+           _join(PROFILE, "Documents", "WPS Cloud Files", ".cache")],
+          "WPS 的文档预览、云文档与临时缓存。\n"
+          "不含用户保存的文档。"),
+    _rule("netease_music_cache", "网易云音乐缓存", "应用缓存", "safe",
+          "contents",
+          [_join(LOCAL, "Netease", "CloudMusic", "Cache"),
+           _join(LOCAL, "Netease", "CloudMusic", "Temp")],
+          "网易云音乐的歌曲与封面缓存，重新播放会自动下载。"),
+    _rule("thunder_cache", "迅雷下载缓存", "应用缓存", "caution", "contents",
+          [_join(LOCAL, "Thunder Network", "Thunder", "Cache"),
+           _join(ROAMING, "Thunder Network", "Thunder", "Cache")],
+          "迅雷的下载缓冲与网页缓存。"),
+    _rule("baidu_netdisk_cache", "百度网盘缓存", "应用缓存", "safe", "contents",
+          [_join(LOCAL, "baidu", "BaiduNetdisk", "Cache"),
+           _join(ROAMING, "baidu", "BaiduNetdisk", "Cache"),
+           _join(LOCAL, "BaiduYunGuanjia", "Cache")],
+          "百度网盘的传输缓存与缩略图。"),
 
     # ---------------- 系统级动作 ----------------
     _rule("dism_components", "组件存储清理 (DISM)", "系统残留", "caution", "dism",
@@ -503,7 +572,7 @@ _NEVER_WALK = ("anticheat", "anti_cheat", "anti-cheat", "tenprotect", "tp3",
                "aceguard", "ace_guard")
 
 # 隐私敏感目录名：这些是用户数据，不是垃圾。任何规则都不允许匹配到它们。
-# 起因：照搬 BleachBit 的 INet* 通配时，它连 INetCookies / INetHistory
+# 起因：早期用 INet* 通配时，它连 INetCookies / INetHistory
 # 一起匹配上了 —— 那等于替用户删掉了 Cookie 和浏览历史。
 _PRIVACY_DIRS = {
     "cookies", "inetcookies", "history", "inethistory", "bookmarks",
@@ -625,6 +694,34 @@ _CONTAINER_CACHES = [
      "title": "Epic 启动器缓存", "category": "游戏平台", "level": "safe",
      "subpaths": (r"portal\cache", r"logs"),
      "desc": "Epic 启动器的网页与清单缓存。"},
+    # --- 桌面应用缓存 ---
+    # 这些不是游戏，但在多数机器上都会装，且缓存体积可观。
+    # 全部用「目录名 + marker 校验」的方式发现，不写死路径。
+    {"key": "discord", "names": ("discord",),
+     "marker": ("cache", "code cache", "gpucache", "app"),
+     "title": "Discord 缓存", "category": "应用缓存", "level": "safe",
+     "scan_cache_names": True,
+     "desc": "Discord 的图片与网页缓存。"},
+    {"key": "teams", "names": ("microsoft\\teams", "teams"),
+     "marker": ("cache", "gpucache", "code cache", "current"),
+     "title": "Microsoft Teams 缓存", "category": "应用缓存", "level": "safe",
+     "scan_cache_names": True,
+     "desc": "Teams 的网页与头像缓存。"},
+    {"key": "spotify", "names": ("spotify",),
+     "marker": ("data", "cache", "spotify.exe"),
+     "title": "Spotify 缓存", "category": "应用缓存", "level": "safe",
+     "scan_cache_names": True,
+     "desc": "Spotify 的歌曲与封面缓存。"},
+    {"key": "slack", "names": ("slack",),
+     "marker": ("cache", "gpucache", "code cache", "app"),
+     "title": "Slack 缓存", "category": "应用缓存", "level": "safe",
+     "scan_cache_names": True,
+     "desc": "Slack 的会话图片与网页缓存。"},
+    {"key": "vscode", "names": ("code",),
+     "marker": ("cache", "cacheddata", "gpucache", "logs"),
+     "title": "VS Code 缓存", "category": "开发缓存", "level": "safe",
+     "scan_cache_names": True,
+     "desc": "VS Code 的扩展缓存与日志。"},
 ]
 
 
@@ -722,7 +819,7 @@ RULES.extend(discover_app_cache_rules())
 
 
 # ---------------------------------------------------------------------------
-# 第三方规则库（BleachBit / Winapp2）
+# 第三方规则库
 # ---------------------------------------------------------------------------
 # 这两个开源规则库合计覆盖上千个应用，正好补上「本机没装、但别人电脑上会有」
 # 的软件。规则只在本机真实存在时才会命中；没装的软件贡献 0，不影响扫描。
@@ -899,7 +996,7 @@ def register_third_party_rule() -> int:
         RULES.append(_rule(
             "third_party_apps", "其他应用缓存（社区规则库）", "应用缓存",
             "safe", "contents", got["safe"],
-            f"来自 BleachBit、Winapp2、Winapp3 与 winapp2 归档条目几个开源"
+            f"来自社区规则库几个来源的"
             f"规则库，覆盖 {len(got['safe'])} 个"
             f"**本机真实存在**的应用缓存目录。\n"
             f"本机没装的软件不会出现；换台电脑会自动换成那台机器上装了的。\n"
@@ -1050,11 +1147,21 @@ def dir_size(path: str, cancel: threading.Event | None = None,
 
 
 def expand_paths(rule: dict) -> list[str]:
-    """展开规则里的路径（支持 * 通配），返回真实存在的路径列表。"""
+    """展开规则里的路径（支持环境变量与 * 通配），返回真实存在的路径列表。
+
+    两条可移植性保证：
+      · ``%VAR%`` 先展开 —— 规则里绝不写死用户名或盘符
+      · 通配用 glob；不存在的直接跳过，不报错
+    """
     import glob as _glob
     found: list[str] = []
     for p in rule["paths"]:
         if not p:
+            continue
+        # 环境变量展开：支持 %LOCALAPPDATA% 与 %USERPROFILE% 这类写法
+        p = os.path.expandvars(p)
+        if "%" in p:
+            # 展开后仍残留 % 说明该变量在本机不存在 —— 这条规则不适用于本机
             continue
         if "*" in p or "?" in p:
             found.extend(_glob.glob(p))
@@ -1070,9 +1177,9 @@ def expand_paths(rule: dict) -> list[str]:
 
 # ---------------- types 模式：全盘按名字深扫 ----------------
 # 语法： "file:名字" 精确文件名 | "dir:名字" 精确目录名 | "glob:通配" 通配匹配
-# 参考 BleachBit 的 deepscan.xml（它的 deep 搜索是同样思路）。
+# 按目录名/文件名匹配，适合查找散落在各个项目里的构建产物。
 
-# 深扫时永不进入的目录。理由与 BleachBit 一致：
+# 深扫时永不进入的目录：
 #   - 系统/程序目录里的东西不属于"散落的构建残留"
 #   - AppData 下多为应用自带依赖，删了会破坏软件
 _SKIP_WALK_DIRS = {
@@ -1645,10 +1752,10 @@ def _safe_target(path: str) -> bool:
         except (OSError, ValueError):
             pass
 
-    # LightC 的 is_rebuildable_system_cache_path 语义：System32 里只有
+    # 可重建系统缓存的判定：System32 里只有
     # d3d_cache（DirectX 着色器缓存）能安全重建，允许清理它本身及子项。
     # 必须在下面的 PROTECTED_PATHS 之前判断，否则 System32 前缀会把它
-    # 整棵拦住，LightC 的 ShaderCache 规则就成了摆设。
+    # 整棵拦住，ShaderCache 规则就成了摆设。
     try:
         d3d_cache = os.path.normcase(os.path.abspath(
             _join(WINDIR, "System32", "d3d_cache")))
@@ -2192,12 +2299,12 @@ def cli_selftest() -> int:
 register_third_party_rule()
 
 
-# LightC 规则库（用户授权整体照搬 18 类，参数与风险分级和 LightC 一致）。
+# 扩展规则库（18 类，参数与风险分级见 rules_lightc.py）。
 # 同样放在模块末尾、所有常量与函数定义好之后再导入，避免循环导入
 # （rules_lightc 构造规则时需要 junk 的 _rule / _join / 路径常量）。
 def _register_lightc_rules() -> int:
     from app.core import rules_lightc
-    # 被 LightC 接管的内置规则：同一条路径若同时留在两条规则里，会重复
+    # 被扩展规则接管的内置规则：同一条路径若同时留在两条规则里，会重复
     # 统计空间、也可能重复删除，这里按 key 精确移除。
     replaced = {
         "user_temp", "win_temp", "prefetch", "font_cache",

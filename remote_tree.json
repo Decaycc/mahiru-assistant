@@ -1,0 +1,1808 @@
+{
+  "sha": "b0cebc16aa7a2d78be43f1fcbd79891bdeeeb386",
+  "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/b0cebc16aa7a2d78be43f1fcbd79891bdeeeb386",
+  "tree": [
+    {
+      "path": ".gitattributes",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1d6a40585447773fd7875ace684dad4ec34d8704",
+      "size": 338,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/1d6a40585447773fd7875ace684dad4ec34d8704"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d00620d50bccc23e9e07ef34a008720823fb83f1",
+      "size": 372,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/d00620d50bccc23e9e07ef34a008720823fb83f1"
+    },
+    {
+      "path": ".impeccable",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "3e1a2f93523f2e5afbcb7702427841bbc1e2c81f",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/3e1a2f93523f2e5afbcb7702427841bbc1e2c81f"
+    },
+    {
+      "path": ".impeccable/critique",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c83c5b7e50efb84ceb537de8ea87125c594f8669",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/c83c5b7e50efb84ceb537de8ea87125c594f8669"
+    },
+    {
+      "path": ".impeccable/critique/2026-10-16T12-18-11Z__web-index-html.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "482a26a5cad547c0aa35c634b7e66dd917bd242e",
+      "size": 9199,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/482a26a5cad547c0aa35c634b7e66dd917bd242e"
+    },
+    {
+      "path": "DESIGN.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "884f0b5bdff33fe395f2ff59e3b357a5b6d972f4",
+      "size": 14580,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/884f0b5bdff33fe395f2ff59e3b357a5b6d972f4"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "38864a3a6fefb33df734cefb0858f8af0c45ed55",
+      "size": 1281,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/38864a3a6fefb33df734cefb0858f8af0c45ed55"
+    },
+    {
+      "path": "PLAN.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a94913eaf8c1531d54d85d5f587719392536b782",
+      "size": 47496,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/a94913eaf8c1531d54d85d5f587719392536b782"
+    },
+    {
+      "path": "PRODUCT.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aa1fc65a337166c399168f30226596d15cb4b6c0",
+      "size": 7826,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/aa1fc65a337166c399168f30226596d15cb4b6c0"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "be400b243e125a50ac0866a6dbd558d1782a5373",
+      "size": 7663,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/be400b243e125a50ac0866a6dbd558d1782a5373"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f334e58a8d878bdd83581d12faaaf3586aa9e5b6",
+      "size": 2919,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/f334e58a8d878bdd83581d12faaaf3586aa9e5b6"
+    },
+    {
+      "path": "app",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b7bf489a04c90f629c4ae6c9ad04633333fdd44b",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/b7bf489a04c90f629c4ae6c9ad04633333fdd44b"
+    },
+    {
+      "path": "app/__init__.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "app/__main__.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e7b73fe4fd49048831d293f842aeaf3dab09c5fb",
+      "size": 147,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/e7b73fe4fd49048831d293f842aeaf3dab09c5fb"
+    },
+    {
+      "path": "app/bridge.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d219706e35b94d7e22f30ff3d9b35b7a83304778",
+      "size": 61584,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/d219706e35b94d7e22f30ff3d9b35b7a83304778"
+    },
+    {
+      "path": "app/core",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1a46ebd5850bc7ed74bc4c5ba19e0c68f641266f",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/1a46ebd5850bc7ed74bc4c5ba19e0c68f641266f"
+    },
+    {
+      "path": "app/core/__init__.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "size": 0,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "app/core/junk.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2a48e1697717faa99466334c40e98121a64eeb6a",
+      "size": 97963,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/2a48e1697717faa99466334c40e98121a64eeb6a"
+    },
+    {
+      "path": "app/core/mem.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "59fb69a3ef227a909b09bfdc20ed7a24280cd95b",
+      "size": 63436,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/59fb69a3ef227a909b09bfdc20ed7a24280cd95b"
+    },
+    {
+      "path": "app/core/rule_update.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "952ba17cf4ee68c699de03446d2d1b7617e55dba",
+      "size": 44115,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/952ba17cf4ee68c699de03446d2d1b7617e55dba"
+    },
+    {
+      "path": "app/core/rules_lightc.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "71b9b37581c2ab3f65c35f6d4ac3a19df94516fe",
+      "size": 12273,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/71b9b37581c2ab3f65c35f6d4ac3a19df94516fe"
+    },
+    {
+      "path": "app/core/selftest.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b305539e5eecf56de2cb4b14fd7da387f0f9d66c",
+      "size": 15947,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/b305539e5eecf56de2cb4b14fd7da387f0f9d66c"
+    },
+    {
+      "path": "app/core/third_party_rules.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "df8e907d63b3fe6ced817ec11d1ed507a277a99e",
+      "size": 462364,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/df8e907d63b3fe6ced817ec11d1ed507a277a99e"
+    },
+    {
+      "path": "app/core/third_party_rules.py.bak",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7221e9f16a3aea87dbdb83e4c87978e623f38c47",
+      "size": 322513,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/7221e9f16a3aea87dbdb83e4c87978e623f38c47"
+    },
+    {
+      "path": "app/core/tools.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7cc9ed753cf14f85b1358096003d42f1ec6feaa3",
+      "size": 31197,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/7cc9ed753cf14f85b1358096003d42f1ec6feaa3"
+    },
+    {
+      "path": "app/core/tunes_winhance.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4ac7f73f0b83a5b9b2c60a4e63d209406570a2c4",
+      "size": 213388,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/4ac7f73f0b83a5b9b2c60a4e63d209406570a2c4"
+    },
+    {
+      "path": "app/core/winhance.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f3924d075ef3e1f148051588657f09f61b316ad9",
+      "size": 23281,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/f3924d075ef3e1f148051588657f09f61b316ad9"
+    },
+    {
+      "path": "app/elevation.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "828523d99433f71a833cb5dc2262927cce0a5e52",
+      "size": 4460,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/828523d99433f71a833cb5dc2262927cce0a5e52"
+    },
+    {
+      "path": "app/jobs.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b3c57900f0cd913fbdbd4cd3f94cc7f723b678e5",
+      "size": 5529,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/b3c57900f0cd913fbdbd4cd3f94cc7f723b678e5"
+    },
+    {
+      "path": "app/main.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "49e88b36fa93314ab915f573f00d5b6db6f7a6f1",
+      "size": 48883,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/49e88b36fa93314ab915f573f00d5b6db6f7a6f1"
+    },
+    {
+      "path": "app/paths.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fe9fd8bd1ec9093cbef5d7e5d884458fb1300f85",
+      "size": 2523,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/fe9fd8bd1ec9093cbef5d7e5d884458fb1300f85"
+    },
+    {
+      "path": "design",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "f13ee2040bd660f61cc519cca313e0ecb69a908e",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/f13ee2040bd660f61cc519cca313e0ecb69a908e"
+    },
+    {
+      "path": "design/brand-mark.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f4a2441230f92c0cd3809801462ccf72e7ca108a",
+      "size": 5216,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/f4a2441230f92c0cd3809801462ccf72e7ca108a"
+    },
+    {
+      "path": "design/brand-mark@2x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "15baacf188e8ea2e09171ab0e6bdbb61027d833c",
+      "size": 17908,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/15baacf188e8ea2e09171ab0e6bdbb61027d833c"
+    },
+    {
+      "path": "design/icon-256.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "07cd97a863da75ddb6688c5964857ad60876aeeb",
+      "size": 108543,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/07cd97a863da75ddb6688c5964857ad60876aeeb"
+    },
+    {
+      "path": "design/icon-sizes.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "34002bb69a3be72ca45cb687a6d15d3f3ec45cfa",
+      "size": 135102,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/34002bb69a3be72ca45cb687a6d15d3f3ec45cfa"
+    },
+    {
+      "path": "design/icon-source.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0d67c9bda191cf2c4edcf6c075c136b492bf69db",
+      "size": 343955,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/0d67c9bda191cf2c4edcf6c075c136b492bf69db"
+    },
+    {
+      "path": "design/icon.ico",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aab5d339cbc725e73817d6691fd668a17a12666b",
+      "size": 183840,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/aab5d339cbc725e73817d6691fd668a17a12666b"
+    },
+    {
+      "path": "design/icon.svg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2b2cd30c8f112a0ea5d0f9faef8b08455607bb18",
+      "size": 5838,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/2b2cd30c8f112a0ea5d0f9faef8b08455607bb18"
+    },
+    {
+      "path": "design/icon_render.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "abe963c18a330c494f94fa74c8f6548b05bd4aa0",
+      "size": 443,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/abe963c18a330c494f94fa74c8f6548b05bd4aa0"
+    },
+    {
+      "path": "design/mahiru-source.jpg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "db5b7bcf71a62c9f85cf27be2631c5f9e29510fa",
+      "size": 331800,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/db5b7bcf71a62c9f85cf27be2631c5f9e29510fa"
+    },
+    {
+      "path": "design/mahiru-sprite.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bb493401be600b5d932282b4a87240520ea66600",
+      "size": 28843,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/bb493401be600b5d932282b4a87240520ea66600"
+    },
+    {
+      "path": "design/make_icon.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f449a7d1ac0f3b7c69baea41b226897253e77336",
+      "size": 5614,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/f449a7d1ac0f3b7c69baea41b226897253e77336"
+    },
+    {
+      "path": "design/mockup.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "15c767d451f186122114de5a3575ed0d863b4137",
+      "size": 44966,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/15c767d451f186122114de5a3575ed0d863b4137"
+    },
+    {
+      "path": "design/preview-accent.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e18a8f1e43e5e7ce1d0a7780869b342445ec0ed5",
+      "size": 6358,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/e18a8f1e43e5e7ce1d0a7780869b342445ec0ed5"
+    },
+    {
+      "path": "design/preview-critique.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "39ae3096272bb958ce0d7820b8e418e86d17f6ca",
+      "size": 16003,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/39ae3096272bb958ce0d7820b8e418e86d17f6ca"
+    },
+    {
+      "path": "design/preview-dialog.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "05223a8475b90555102bd6becc20a0388a8e5408",
+      "size": 3842,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/05223a8475b90555102bd6becc20a0388a8e5408"
+    },
+    {
+      "path": "design/preview-layout.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8584dd64cb0fab9d2ff2cfc631363f941d74a589",
+      "size": 41836,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/8584dd64cb0fab9d2ff2cfc631363f941d74a589"
+    },
+    {
+      "path": "design/preview-layout2.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c902505f8ab1c56441e12d89044488811b808fa4",
+      "size": 47344,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/c902505f8ab1c56441e12d89044488811b808fa4"
+    },
+    {
+      "path": "design/preview-settings-v3.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "064df923a5b5671e16869c51446530850ff78747",
+      "size": 14271,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/064df923a5b5671e16869c51446530850ff78747"
+    },
+    {
+      "path": "design/preview-settings.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "86dce900d1e24d1ccbccec0e4e95096ce9cf2c2d",
+      "size": 11717,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/86dce900d1e24d1ccbccec0e4e95096ce9cf2c2d"
+    },
+    {
+      "path": "design/preview-soft.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7d954797e7bb71b52ad7f9a7595fd2b5ef99dd3d",
+      "size": 16077,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/7d954797e7bb71b52ad7f9a7595fd2b5ef99dd3d"
+    },
+    {
+      "path": "design/preview-stickers.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1810c87321bef6a875ca1a4951a1ceb6c173fa5a",
+      "size": 17389,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/1810c87321bef6a875ca1a4951a1ceb6c173fa5a"
+    },
+    {
+      "path": "design/preview-switch.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cf4b9dd6acd1d99d0d9d8126c83c205af94dabc9",
+      "size": 8433,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/cf4b9dd6acd1d99d0d9d8126c83c205af94dabc9"
+    },
+    {
+      "path": "design/release-notes-1.0.1.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5d3a0281ee57a95d4f4a079484283b873935b96f",
+      "size": 2437,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/5d3a0281ee57a95d4f4a079484283b873935b96f"
+    },
+    {
+      "path": "design/release-notes-1.0.2.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c7245519f59be00a0f42207f252e6450fe9113fa",
+      "size": 2001,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/c7245519f59be00a0f42207f252e6450fe9113fa"
+    },
+    {
+      "path": "design/release-notes.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "da1ca1f04316dff86868ff73783f99f36e2f99e7",
+      "size": 2810,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/da1ca1f04316dff86868ff73783f99f36e2f99e7"
+    },
+    {
+      "path": "design/shots",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "a3e496d9290b6871e83fd2adab4c0ca5a8bdf4c6",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/a3e496d9290b6871e83fd2adab4c0ca5a8bdf4c6"
+    },
+    {
+      "path": "design/shots/01-概览.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7849dd6d0b8e73d59b7ef8c2007e3c0fef16ba1e",
+      "size": 57216,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/7849dd6d0b8e73d59b7ef8c2007e3c0fef16ba1e"
+    },
+    {
+      "path": "design/shots/02-内存优化.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "368cc13062debc8cd6bffeac9e834a2f90205fc8",
+      "size": 88859,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/368cc13062debc8cd6bffeac9e834a2f90205fc8"
+    },
+    {
+      "path": "design/shots/03-垃圾清理.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "49477fb3f7fe437fa0b8d0ca2c2aacbec07b98c4",
+      "size": 98673,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/49477fb3f7fe437fa0b8d0ca2c2aacbec07b98c4"
+    },
+    {
+      "path": "design/shots/04-小功能.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "83c492f73776e8ac6696b5035955dea306f449ce",
+      "size": 72262,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/83c492f73776e8ac6696b5035955dea306f449ce"
+    },
+    {
+      "path": "design/shots/05-设置.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "15c5e7b20e9e29f43b384bbbab92e9058f57ddde",
+      "size": 52086,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/15c5e7b20e9e29f43b384bbbab92e9058f57ddde"
+    },
+    {
+      "path": "design/shots/06-深色主题-垃圾清理.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "794310bdb4e405e873f99f35d2309fd85e3a171a",
+      "size": 99339,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/794310bdb4e405e873f99f35d2309fd85e3a171a"
+    },
+    {
+      "path": "design/shots/07-深色主题-小功能.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a755b953975ee4eed6bf8caeb27ff2f34d221d5e",
+      "size": 73666,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/a755b953975ee4eed6bf8caeb27ff2f34d221d5e"
+    },
+    {
+      "path": "design/shots/11-M3-01-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "63c800c7f208d081793545eeff180419345447ab",
+      "size": 78798,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/63c800c7f208d081793545eeff180419345447ab"
+    },
+    {
+      "path": "design/shots/11-M3-02-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3ee5af1dd5bc2fc4bf67408d182bdc927f3f7d56",
+      "size": 86478,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/3ee5af1dd5bc2fc4bf67408d182bdc927f3f7d56"
+    },
+    {
+      "path": "design/shots/11-M3-03-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2cde6468547d36a27e420dbd573256940ee42ebc",
+      "size": 70757,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/2cde6468547d36a27e420dbd573256940ee42ebc"
+    },
+    {
+      "path": "design/shots/11-M3-04-tools.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "daef552d64c98f9698d1a1362f93d819395cea9d",
+      "size": 79489,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/daef552d64c98f9698d1a1362f93d819395cea9d"
+    },
+    {
+      "path": "design/shots/11-M3-05-settings.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "472462c0f975e4a38b288a3b8743fd02cb263684",
+      "size": 61421,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/472462c0f975e4a38b288a3b8743fd02cb263684"
+    },
+    {
+      "path": "design/shots/11-M3-06-light-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b51fd6add829bed6023ba9140ca35f4bfb8bb3a5",
+      "size": 87145,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/b51fd6add829bed6023ba9140ca35f4bfb8bb3a5"
+    },
+    {
+      "path": "design/shots/12-M4-02-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cb818727989911df014472c3f8564901ca6ffb12",
+      "size": 91319,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/cb818727989911df014472c3f8564901ca6ffb12"
+    },
+    {
+      "path": "design/shots/12-check-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "22b1a6be948f5bf779bdb9d7911c892dea39aa4d",
+      "size": 65779,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/22b1a6be948f5bf779bdb9d7911c892dea39aa4d"
+    },
+    {
+      "path": "design/shots/12-on-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5071af722e17199bd7e000aaa74f468ec67bde9d",
+      "size": 66398,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/5071af722e17199bd7e000aaa74f468ec67bde9d"
+    },
+    {
+      "path": "design/shots/12-on2-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dd3720b5b73a7a39f0b9d0b367ccb5b691ea4f0f",
+      "size": 66651,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/dd3720b5b73a7a39f0b9d0b367ccb5b691ea4f0f"
+    },
+    {
+      "path": "design/shots/13-M5-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "569033a86dbb200275206de4fd057b913e81607d",
+      "size": 88043,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/569033a86dbb200275206de4fd057b913e81607d"
+    },
+    {
+      "path": "design/shots/13-rules-low-settings.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f78ec2cfe58aa65bccc7a9701f1c729f9991f60e",
+      "size": 94675,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/f78ec2cfe58aa65bccc7a9701f1c729f9991f60e"
+    },
+    {
+      "path": "design/shots/13-rules-ovr-settings.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c93a3da4ba6908c06d869520ad8e86b74301ea2b",
+      "size": 95557,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/c93a3da4ba6908c06d869520ad8e86b74301ea2b"
+    },
+    {
+      "path": "design/shots/13-rules-settings.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "25b28aecf80645646906574b5241899c41b6b789",
+      "size": 69169,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/25b28aecf80645646906574b5241899c41b6b789"
+    },
+    {
+      "path": "design/shots/14-M6-deep-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4cdf97fc9ebab8358ab644a83c0013bce33bc75f",
+      "size": 108288,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/4cdf97fc9ebab8358ab644a83c0013bce33bc75f"
+    },
+    {
+      "path": "design/shots/14-M6-sys-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0a7c5257e433877573297b47b04a9dc15e6a901a",
+      "size": 82813,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/0a7c5257e433877573297b47b04a9dc15e6a901a"
+    },
+    {
+      "path": "design/shots/14-start-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bc750134834e16f91481e3ce57a3591786cfb307",
+      "size": 60655,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/bc750134834e16f91481e3ce57a3591786cfb307"
+    },
+    {
+      "path": "design/shots/15-M7-exe.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ddae27155f4682617e22bca88e735f69a2727429",
+      "size": 79405,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/ddae27155f4682617e22bca88e735f69a2727429"
+    },
+    {
+      "path": "design/shots/17-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "12a800186c98d38eb4aa33d57a18cdfa6f1c0e08",
+      "size": 92169,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/12a800186c98d38eb4aa33d57a18cdfa6f1c0e08"
+    },
+    {
+      "path": "design/shots/18-settings.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5a301033e79ce09ab12593824a5ad878c1b5203c",
+      "size": 84823,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/5a301033e79ce09ab12593824a5ad878c1b5203c"
+    },
+    {
+      "path": "design/shots/19-tools.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "13f9b18f30f32803d0d9e1ef039baddb368645d6",
+      "size": 93988,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/13f9b18f30f32803d0d9e1ef039baddb368645d6"
+    },
+    {
+      "path": "design/shots/20-tools.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "57d9ef22af47febac72d78d706517d629f0d8604",
+      "size": 103340,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/57d9ef22af47febac72d78d706517d629f0d8604"
+    },
+    {
+      "path": "design/shots/21-aj-01-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "56b5fefb31c981d66a176246806ce306a6612d1c",
+      "size": 76592,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/56b5fefb31c981d66a176246806ce306a6612d1c"
+    },
+    {
+      "path": "design/shots/21-aj-02-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6560257bb3b56fe56dedac6cc88c28b15ffdf9c9",
+      "size": 113389,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/6560257bb3b56fe56dedac6cc88c28b15ffdf9c9"
+    },
+    {
+      "path": "design/shots/21-aj-03-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f49b4ece1f3181d7c1bc112f802be949ad1812a8",
+      "size": 102460,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/f49b4ece1f3181d7c1bc112f802be949ad1812a8"
+    },
+    {
+      "path": "design/shots/21-aj-04-tools.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a4ce3be1953201643cabae89b30e104039bc43a6",
+      "size": 104124,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/a4ce3be1953201643cabae89b30e104039bc43a6"
+    },
+    {
+      "path": "design/shots/21-aj-05-settings.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c5580dca1d6f10a23d8ba622dfa5dfba1d95f09d",
+      "size": 92157,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/c5580dca1d6f10a23d8ba622dfa5dfba1d95f09d"
+    },
+    {
+      "path": "design/shots/22-aj-dark-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "962fa6f0bf2011c0e1a1e04a4ae6de799f6c3f5a",
+      "size": 101379,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/962fa6f0bf2011c0e1a1e04a4ae6de799f6c3f5a"
+    },
+    {
+      "path": "design/shots/22-aj-dark-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "838fc6801ee63baf1b8397c37db732df6fa20379",
+      "size": 75691,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/838fc6801ee63baf1b8397c37db732df6fa20379"
+    },
+    {
+      "path": "design/shots/33-exe-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ea7afd6c38fc9ddc7c44a3f6b7049a3ab11a271",
+      "size": 77222,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/8ea7afd6c38fc9ddc7c44a3f6b7049a3ab11a271"
+    },
+    {
+      "path": "design/shots/34-zap-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4a09c38c9e62493c2cd358274d84b856f2bb763b",
+      "size": 6894,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/4a09c38c9e62493c2cd358274d84b856f2bb763b"
+    },
+    {
+      "path": "design/shots/34b-zap-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f69a1727e4282ce542973ec6f6fd2689513f2a28",
+      "size": 77190,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/f69a1727e4282ce542973ec6f6fd2689513f2a28"
+    },
+    {
+      "path": "design/shots/34c-zap-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4c70eb5fe595881a8f89a02f3bc9cc7332506273",
+      "size": 100925,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/4c70eb5fe595881a8f89a02f3bc9cc7332506273"
+    },
+    {
+      "path": "design/shots/34c-zap-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d6387d01153bfdc984a33145abe66eca61b2c92d",
+      "size": 104806,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/d6387d01153bfdc984a33145abe66eca61b2c92d"
+    },
+    {
+      "path": "design/shots/34c-zap-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e5d5b129080e3e205952be6f92151f14281a718f",
+      "size": 76918,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/e5d5b129080e3e205952be6f92151f14281a718f"
+    },
+    {
+      "path": "design/shots/34c-zap-settings.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1bd6d444425d92dc64f572feb24c9e762e59c45e",
+      "size": 72276,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/1bd6d444425d92dc64f572feb24c9e762e59c45e"
+    },
+    {
+      "path": "design/shots/34c-zap-tools.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cd10023aa18bfad6eec1edf24b0ee71ebbe255d1",
+      "size": 103036,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/cd10023aa18bfad6eec1edf24b0ee71ebbe255d1"
+    },
+    {
+      "path": "design/shots/35c-g2-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c896638a7c5d2ffa7ae05af25d40751ec7222bda",
+      "size": 128980,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/c896638a7c5d2ffa7ae05af25d40751ec7222bda"
+    },
+    {
+      "path": "design/shots/35c-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b41ad746f9220edd955ca855dcbbd76c1b49677f",
+      "size": 98596,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/b41ad746f9220edd955ca855dcbbd76c1b49677f"
+    },
+    {
+      "path": "design/shots/36c-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "31173aefcae00557e111d2ee87f3250c827121e2",
+      "size": 116423,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/31173aefcae00557e111d2ee87f3250c827121e2"
+    },
+    {
+      "path": "design/shots/37c-ios-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "60071f594d28cd3e38645f493094b4ad58503768",
+      "size": 116817,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/60071f594d28cd3e38645f493094b4ad58503768"
+    },
+    {
+      "path": "design/shots/37c-ios-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e45b334bb27d9bd9283c2954e70d32ae5ddae803",
+      "size": 94873,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/e45b334bb27d9bd9283c2954e70d32ae5ddae803"
+    },
+    {
+      "path": "design/shots/38c-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e7bdffcf14cc481718fbbf468315d4359859a308",
+      "size": 119568,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/e7bdffcf14cc481718fbbf468315d4359859a308"
+    },
+    {
+      "path": "design/shots/39c-sw-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fee5cbbf1f554ebb0a3c0f93d4e951ac51a97df6",
+      "size": 118248,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/fee5cbbf1f554ebb0a3c0f93d4e951ac51a97df6"
+    },
+    {
+      "path": "design/shots/39c-sw-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7444ba80e383834cdf1e7bbcb630f42593f82f27",
+      "size": 95289,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/7444ba80e383834cdf1e7bbcb630f42593f82f27"
+    },
+    {
+      "path": "design/shots/40-off-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "388524343d6be1bc8be949f3f561414a620a45fc",
+      "size": 117365,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/388524343d6be1bc8be949f3f561414a620a45fc"
+    },
+    {
+      "path": "design/shots/41-fix-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "388524343d6be1bc8be949f3f561414a620a45fc",
+      "size": 117365,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/388524343d6be1bc8be949f3f561414a620a45fc"
+    },
+    {
+      "path": "design/shots/41a-tab-mid-tools.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cad678e57c99e33cac49ed146c089ab4ee177756",
+      "size": 71902,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/cad678e57c99e33cac49ed146c089ab4ee177756"
+    },
+    {
+      "path": "design/shots/41b-tab-rest-tools.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aa09c3bc453937cdad225b83e0f6c0456a9e96d7",
+      "size": 72359,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/aa09c3bc453937cdad225b83e0f6c0456a9e96d7"
+    },
+    {
+      "path": "design/shots/41c-tick-mid-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c86472aacb84c9bffa1821a0367c26e38baf3c1f",
+      "size": 100490,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/c86472aacb84c9bffa1821a0367c26e38baf3c1f"
+    },
+    {
+      "path": "design/shots/41d-focus-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8152e8553821047f3471fe5cba91e0f44caf4a8a",
+      "size": 76761,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/8152e8553821047f3471fe5cba91e0f44caf4a8a"
+    },
+    {
+      "path": "design/shots/42-fix2-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "388524343d6be1bc8be949f3f561414a620a45fc",
+      "size": 117365,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/388524343d6be1bc8be949f3f561414a620a45fc"
+    },
+    {
+      "path": "design/shots/43-ev-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "388524343d6be1bc8be949f3f561414a620a45fc",
+      "size": 117365,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/388524343d6be1bc8be949f3f561414a620a45fc"
+    },
+    {
+      "path": "design/shots/44-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "808820fdcb609ba963bfa16016061f055c84862d",
+      "size": 115331,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/808820fdcb609ba963bfa16016061f055c84862d"
+    },
+    {
+      "path": "design/shots/44-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cc26c00a56d4b45e9825d516475ea4d954acced6",
+      "size": 94031,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/cc26c00a56d4b45e9825d516475ea4d954acced6"
+    },
+    {
+      "path": "design/shots/44-probe-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "388524343d6be1bc8be949f3f561414a620a45fc",
+      "size": 117365,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/388524343d6be1bc8be949f3f561414a620a45fc"
+    },
+    {
+      "path": "design/shots/45-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9c54d699eb9991a1eda691a51371b1a790a92199",
+      "size": 116183,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/9c54d699eb9991a1eda691a51371b1a790a92199"
+    },
+    {
+      "path": "design/shots/45-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f873f2fd3291f1c5280f47c7a66bd8b60d8318cc",
+      "size": 95954,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/f873f2fd3291f1c5280f47c7a66bd8b60d8318cc"
+    },
+    {
+      "path": "design/shots/45-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1389281a8f5c84e71f486f1553b3f2882ff19ba2",
+      "size": 96272,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/1389281a8f5c84e71f486f1553b3f2882ff19ba2"
+    },
+    {
+      "path": "design/shots/45-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "12a84ec6bab240b89f5859395f8671b897f1b999",
+      "size": 79685,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/12a84ec6bab240b89f5859395f8671b897f1b999"
+    },
+    {
+      "path": "design/shots/45-settings.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "825f9bfd3ca68d80e4a4af73137db255359033b2",
+      "size": 36036,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/825f9bfd3ca68d80e4a4af73137db255359033b2"
+    },
+    {
+      "path": "design/shots/46-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f16e42bd6bc3f45f03824c10f58a5294556f2daa",
+      "size": 116854,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/f16e42bd6bc3f45f03824c10f58a5294556f2daa"
+    },
+    {
+      "path": "design/shots/46-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1ddbbefd9e8707abdd00c4085bf3a7feb3f02827",
+      "size": 96468,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/1ddbbefd9e8707abdd00c4085bf3a7feb3f02827"
+    },
+    {
+      "path": "design/shots/46-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0abf92d4d365009e989d400135e1fc2341e27bb5",
+      "size": 97157,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/0abf92d4d365009e989d400135e1fc2341e27bb5"
+    },
+    {
+      "path": "design/shots/46-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bd2381150f890491745784cbfc3e7610d7250df4",
+      "size": 80188,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/bd2381150f890491745784cbfc3e7610d7250df4"
+    },
+    {
+      "path": "design/shots/47-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7cfa42b9d3737c9d3855b86563e802dc5ae6f573",
+      "size": 286209,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/7cfa42b9d3737c9d3855b86563e802dc5ae6f573"
+    },
+    {
+      "path": "design/shots/47-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a15e307a4b931ae73a627f2684a4ddac3fd1f0a3",
+      "size": 271257,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/a15e307a4b931ae73a627f2684a4ddac3fd1f0a3"
+    },
+    {
+      "path": "design/shots/47-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ab797253c05627568614743b003cf1c48219abe8",
+      "size": 272527,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/ab797253c05627568614743b003cf1c48219abe8"
+    },
+    {
+      "path": "design/shots/47-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "575dd8d36824090b0c4794b9f7bc33bdf8eaaed2",
+      "size": 239423,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/575dd8d36824090b0c4794b9f7bc33bdf8eaaed2"
+    },
+    {
+      "path": "design/shots/48-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "92a86ea77ccb98c90ac83c63a71bb94e9c2f6c1f",
+      "size": 239828,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/92a86ea77ccb98c90ac83c63a71bb94e9c2f6c1f"
+    },
+    {
+      "path": "design/shots/48-settings.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5fa15ca63e359596b146a95084f3e7eb0e84bea2",
+      "size": 47696,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/5fa15ca63e359596b146a95084f3e7eb0e84bea2"
+    },
+    {
+      "path": "design/shots/49-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ed8eb6a27a5a552707d911fc8bfdabf1caefdefa",
+      "size": 259499,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/ed8eb6a27a5a552707d911fc8bfdabf1caefdefa"
+    },
+    {
+      "path": "design/shots/49-settings.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3506b6ed210026ab37c4715860fbbc57de9055a1",
+      "size": 57034,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/3506b6ed210026ab37c4715860fbbc57de9055a1"
+    },
+    {
+      "path": "design/shots/50-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "89ed52229a26bf9c253834cf252fc3b4345b83e9",
+      "size": 285291,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/89ed52229a26bf9c253834cf252fc3b4345b83e9"
+    },
+    {
+      "path": "design/shots/50-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f6daf77cf76f616ec40df010985eda461cc5b5d4",
+      "size": 271565,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/f6daf77cf76f616ec40df010985eda461cc5b5d4"
+    },
+    {
+      "path": "design/shots/50-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ab797253c05627568614743b003cf1c48219abe8",
+      "size": 272527,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/ab797253c05627568614743b003cf1c48219abe8"
+    },
+    {
+      "path": "design/shots/50-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a572ea1604abd3f9265f37fdeb3d69ec634cbd4b",
+      "size": 257545,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/a572ea1604abd3f9265f37fdeb3d69ec634cbd4b"
+    },
+    {
+      "path": "design/shots/51-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9647daac011658d1f4470b65f22dcf1c4920ad10",
+      "size": 274152,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/9647daac011658d1f4470b65f22dcf1c4920ad10"
+    },
+    {
+      "path": "design/shots/51-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8c8d00e940fbe74f3e88ec1026c7c005424e9584",
+      "size": 258325,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/8c8d00e940fbe74f3e88ec1026c7c005424e9584"
+    },
+    {
+      "path": "design/shots/52-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "15a74a49a526ac9136f69ea730050dfdba4d87bc",
+      "size": 274027,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/15a74a49a526ac9136f69ea730050dfdba4d87bc"
+    },
+    {
+      "path": "design/shots/52-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9c584fdfecdd7f43cc68c1a2c47d966a09b458c2",
+      "size": 267010,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/9c584fdfecdd7f43cc68c1a2c47d966a09b458c2"
+    },
+    {
+      "path": "design/shots/53-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3398e4367050ef09352fc06b3b16a17e01eb6673",
+      "size": 271245,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/3398e4367050ef09352fc06b3b16a17e01eb6673"
+    },
+    {
+      "path": "design/shots/55-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3398e4367050ef09352fc06b3b16a17e01eb6673",
+      "size": 271245,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/3398e4367050ef09352fc06b3b16a17e01eb6673"
+    },
+    {
+      "path": "design/shots/60-01-overview.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8726f3e924f4ec6adc1038e3b2bffa413e01d91b",
+      "size": 257325,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/8726f3e924f4ec6adc1038e3b2bffa413e01d91b"
+    },
+    {
+      "path": "design/shots/60-02-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ab797253c05627568614743b003cf1c48219abe8",
+      "size": 272527,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/ab797253c05627568614743b003cf1c48219abe8"
+    },
+    {
+      "path": "design/shots/60-03-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a15e307a4b931ae73a627f2684a4ddac3fd1f0a3",
+      "size": 271257,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/a15e307a4b931ae73a627f2684a4ddac3fd1f0a3"
+    },
+    {
+      "path": "design/shots/60-04-gaming.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "75a3c79efb47e90155b6dcfcb32b31715c997308",
+      "size": 285284,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/75a3c79efb47e90155b6dcfcb32b31715c997308"
+    },
+    {
+      "path": "design/shots/60-05-settings.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7a822ebdd7d839a8385f9c331709e2112c5a24ad",
+      "size": 227885,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/7a822ebdd7d839a8385f9c331709e2112c5a24ad"
+    },
+    {
+      "path": "design/shots/61-junk.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5b795a5bda0082234c5992ce1713278c35cf5aee",
+      "size": 274052,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/5b795a5bda0082234c5992ce1713278c35cf5aee"
+    },
+    {
+      "path": "design/shots/61-memory.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "22a816e4b02c18477c07a7cab8e37d7701a2d529",
+      "size": 268826,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/22a816e4b02c18477c07a7cab8e37d7701a2d529"
+    },
+    {
+      "path": "design/shots/62-settings.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e45a4e8b27b1aaf58586a7135a33d76f340a810d",
+      "size": 289831,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/e45a4e8b27b1aaf58586a7135a33d76f340a810d"
+    },
+    {
+      "path": "design/shots/63-settings.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e45a4e8b27b1aaf58586a7135a33d76f340a810d",
+      "size": 289831,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/e45a4e8b27b1aaf58586a7135a33d76f340a810d"
+    },
+    {
+      "path": "design/styles.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8253c3e271baff1aa583df6e90979b2ca42df3c3",
+      "size": 14047,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/8253c3e271baff1aa583df6e90979b2ca42df3c3"
+    },
+    {
+      "path": "lightc-rules.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "74e71bc18afaaaed173f1d2a584a4426ac9e588e",
+      "size": 12677,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/74e71bc18afaaaed173f1d2a584a4426ac9e588e"
+    },
+    {
+      "path": "run.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fcbe454842eba545ab8706f649578c7a2c526e79",
+      "size": 2917,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/fcbe454842eba545ab8706f649578c7a2c526e79"
+    },
+    {
+      "path": "tools",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "82a22a4efd3b8e556012c6254476bc94728bfea6",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/82a22a4efd3b8e556012c6254476bc94728bfea6"
+    },
+    {
+      "path": "tools/build.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7a58b9d7899eab0c6523d8bd1115b5fd753209c7",
+      "size": 6534,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/7a58b9d7899eab0c6523d8bd1115b5fd753209c7"
+    },
+    {
+      "path": "tools/check_ui_wiring.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "13d3bdc7bb7fef95ac0ef9b521bde43bd71f7724",
+      "size": 4298,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/13d3bdc7bb7fef95ac0ef9b521bde43bd71f7724"
+    },
+    {
+      "path": "tools/check_webview.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8c9a44fea56b8e2c383327573f76c995f7784f98",
+      "size": 3166,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/8c9a44fea56b8e2c383327573f76c995f7784f98"
+    },
+    {
+      "path": "tools/diag_windows.ps1",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "372df399ab08907c9e451891ad4dd36708510c2c",
+      "size": 3131,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/372df399ab08907c9e451891ad4dd36708510c2c"
+    },
+    {
+      "path": "tools/gen_lightc_rules.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "74d4773df802d58db925a0ccc20db07b63143150",
+      "size": 11063,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/74d4773df802d58db925a0ccc20db07b63143150"
+    },
+    {
+      "path": "tools/gen_winhance_tunes.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "15d55db99860344d6c39e5cb9401a9a076226ee8",
+      "size": 26545,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/15d55db99860344d6c39e5cb9401a9a076226ee8"
+    },
+    {
+      "path": "tools/git_push_api.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d011b89cc8856b9b6de2f9422f430346e9ceb6b1",
+      "size": 7546,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/d011b89cc8856b9b6de2f9422f430346e9ceb6b1"
+    },
+    {
+      "path": "tools/measure_start.ps1",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2591e2d3b4b27b9517a4816efddce6a1453461fe",
+      "size": 3326,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/2591e2d3b4b27b9517a4816efddce6a1453461fe"
+    },
+    {
+      "path": "tools/release.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a7304320de8fbaeff70bce672da7acbd2fc45b41",
+      "size": 3680,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/a7304320de8fbaeff70bce672da7acbd2fc45b41"
+    },
+    {
+      "path": "tools/run_checks.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ba50cc380d4dc7ea1fe2c81251fa7273bbe215e8",
+      "size": 4291,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/ba50cc380d4dc7ea1fe2c81251fa7273bbe215e8"
+    },
+    {
+      "path": "tools/shot_app.ps1",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0558bc2cfc1eb320ee02a3ee7c4b77315cfdd52a",
+      "size": 5275,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/0558bc2cfc1eb320ee02a3ee7c4b77315cfdd52a"
+    },
+    {
+      "path": "tools/shot_exe.ps1",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "33f879e4747411b882f2a21e4064b2881af712d9",
+      "size": 3694,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/33f879e4747411b882f2a21e4064b2881af712d9"
+    },
+    {
+      "path": "tools/shot_pages.ps1",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9b306607aae2328c9ec8872afd84b9d769bf3245",
+      "size": 9145,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/9b306607aae2328c9ec8872afd84b9d769bf3245"
+    },
+    {
+      "path": "tools/show_mockup.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3db3ff7f090cd2151b03110bd74622fb03c9a962",
+      "size": 1633,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/3db3ff7f090cd2151b03110bd74622fb03c9a962"
+    },
+    {
+      "path": "tools/split_core.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "92fd6de857e5610ce8eae6c7bc17d459c225233d",
+      "size": 9962,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/92fd6de857e5610ce8eae6c7bc17d459c225233d"
+    },
+    {
+      "path": "tools/update_rules.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ed6a91d88a48a9e13f817b35bda963e6d2081c97",
+      "size": 3925,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/ed6a91d88a48a9e13f817b35bda963e6d2081c97"
+    },
+    {
+      "path": "tools/verify",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "9cc7854d279ed52eca293bc87ebb3c5458299201",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/9cc7854d279ed52eca293bc87ebb3c5458299201"
+    },
+    {
+      "path": "tools/verify/verify_css_tokens.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "09cb33de9563b65f82b4550799ad27e1360f6384",
+      "size": 7649,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/09cb33de9563b65f82b4550799ad27e1360f6384"
+    },
+    {
+      "path": "tools/verify/verify_excludekey.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7d9f82abd06830a9d05fb9b793b69e5350c1d4be",
+      "size": 4644,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/7d9f82abd06830a9d05fb9b793b69e5350c1d4be"
+    },
+    {
+      "path": "tools/verify/verify_filechain.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "51853ebd629518a1d86b8470144d7ec0d6762c24",
+      "size": 3949,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/51853ebd629518a1d86b8470144d7ec0d6762c24"
+    },
+    {
+      "path": "tools/verify/verify_junk.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "92a0b5650431cc933a5966345a6c6ee633b4c5da",
+      "size": 4197,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/92a0b5650431cc933a5966345a6c6ee633b4c5da"
+    },
+    {
+      "path": "tools/verify/verify_lightc.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8fbfdfc69fc86bbf5f641117ec170c853e7e21f7",
+      "size": 5392,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/8fbfdfc69fc86bbf5f641117ec170c853e7e21f7"
+    },
+    {
+      "path": "tools/verify/verify_multron.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3df45415f93781abcfa86edf8e8a823712419a8d",
+      "size": 4433,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/3df45415f93781abcfa86edf8e8a823712419a8d"
+    },
+    {
+      "path": "tools/verify/verify_multron_real.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "365a14636ee4bbcee01bb4fa829b85830c016a52",
+      "size": 1577,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/365a14636ee4bbcee01bb4fa829b85830c016a52"
+    },
+    {
+      "path": "tools/verify/verify_openconfig.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "69e08a281e262bf9ae0a7ca597985e886d86410a",
+      "size": 1703,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/69e08a281e262bf9ae0a7ca597985e886d86410a"
+    },
+    {
+      "path": "tools/verify/verify_recycle.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84a2f10af9de27d2924434c1fbb54083fe81ba45",
+      "size": 7618,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/84a2f10af9de27d2924434c1fbb54083fe81ba45"
+    },
+    {
+      "path": "tools/verify/verify_recycle_cfg.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d159f4b99cbcfc4fb7eab6a29003df38ea8d45a0",
+      "size": 5167,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/d159f4b99cbcfc4fb7eab6a29003df38ea8d45a0"
+    },
+    {
+      "path": "tools/verify/verify_recycle_e2e.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "93b8c70dcb943e32e2a2ea319c3b67701bd3048d",
+      "size": 8246,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/93b8c70dcb943e32e2a2ea319c3b67701bd3048d"
+    },
+    {
+      "path": "tools/verify/verify_recycle_guard.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "255799abbb0aadd2bc7948a99e9227df554968f1",
+      "size": 8266,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/255799abbb0aadd2bc7948a99e9227df554968f1"
+    },
+    {
+      "path": "tools/verify/verify_rulebuild.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "133518de6b0f8f54fec660ecfa279b140316e7f0",
+      "size": 1749,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/133518de6b0f8f54fec660ecfa279b140316e7f0"
+    },
+    {
+      "path": "tools/verify/verify_startup.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c9906a45d70c647280e46e194594e8999c03fbab",
+      "size": 7461,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/c9906a45d70c647280e46e194594e8999c03fbab"
+    },
+    {
+      "path": "tools/verify/verify_winreg.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6508cc9556829e570cfa6dde6985374f0f780ced",
+      "size": 5416,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/6508cc9556829e570cfa6dde6985374f0f780ced"
+    },
+    {
+      "path": "tools/verify_rules_ui.py",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d00147357ed5b904039b39e8f147575b1f928bd9",
+      "size": 8962,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/d00147357ed5b904039b39e8f147575b1f928bd9"
+    },
+    {
+      "path": "web",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "4b64dc1b8fc5e12d95753f1906409fc8d9fdfb80",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/4b64dc1b8fc5e12d95753f1906409fc8d9fdfb80"
+    },
+    {
+      "path": "web/assets",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "caaa5dfe7804558bb60390c4e19b8bbabc704d00",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/caaa5dfe7804558bb60390c4e19b8bbabc704d00"
+    },
+    {
+      "path": "web/assets/brand-mark.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f4a2441230f92c0cd3809801462ccf72e7ca108a",
+      "size": 5216,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/f4a2441230f92c0cd3809801462ccf72e7ca108a"
+    },
+    {
+      "path": "web/assets/brand-mark@2x.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "15baacf188e8ea2e09171ab0e6bdbb61027d833c",
+      "size": 17908,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/15baacf188e8ea2e09171ab0e6bdbb61027d833c"
+    },
+    {
+      "path": "web/assets/fonts",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "05a795111793d69908aa2be75e89b233575a045a",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/05a795111793d69908aa2be75e89b233575a045a"
+    },
+    {
+      "path": "web/assets/fonts/OFL.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9b2ca37b3ffc77391d8b2ebef4a974ef32bf46ea",
+      "size": 4380,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/9b2ca37b3ffc77391d8b2ebef4a974ef32bf46ea"
+    },
+    {
+      "path": "web/assets/fonts/inter-latin-ext.woff2",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "479d010d2902fa3a5b48e84a973db1978b2e9949",
+      "size": 85068,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/479d010d2902fa3a5b48e84a973db1978b2e9949"
+    },
+    {
+      "path": "web/assets/fonts/inter-latin.woff2",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d15208de03cd1ad7c5199f0a0ce915fe841e4722",
+      "size": 48256,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/d15208de03cd1ad7c5199f0a0ce915fe841e4722"
+    },
+    {
+      "path": "web/assets/github-avatar.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e80542c66384293d4bff13332442471db5ebeee8",
+      "size": 94163,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/e80542c66384293d4bff13332442471db5ebeee8"
+    },
+    {
+      "path": "web/assets/mahiru",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b6cacb2972a74a31454c80e169e28743a01ed0ea",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/b6cacb2972a74a31454c80e169e28743a01ed0ea"
+    },
+    {
+      "path": "web/assets/mahiru/excited.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5ae33088db186ea216fe3256a1962ff640644653",
+      "size": 88755,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/5ae33088db186ea216fe3256a1962ff640644653"
+    },
+    {
+      "path": "web/assets/mahiru/happy.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cb59702eacc5aa5831cd9a58a3ba748ac77f0c4c",
+      "size": 102662,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/cb59702eacc5aa5831cd9a58a3ba748ac77f0c4c"
+    },
+    {
+      "path": "web/assets/mahiru/happy2.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bc181dc1ebc69584f1fcd3ac2afcda4504ad9498",
+      "size": 130935,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/bc181dc1ebc69584f1fcd3ac2afcda4504ad9498"
+    },
+    {
+      "path": "web/assets/mahiru/sidebar.jpg",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "76c96e858bb7af3e434d545a61bf7952b601cb39",
+      "size": 117521,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/76c96e858bb7af3e434d545a61bf7952b601cb39"
+    },
+    {
+      "path": "web/assets/mahiru/sleepy.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c56f217c8d87d7a5fcb48558ecf136393071a7bf",
+      "size": 128498,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/c56f217c8d87d7a5fcb48558ecf136393071a7bf"
+    },
+    {
+      "path": "web/assets/mahiru/success.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5bce6d4786782ddcdf7bcf6c79c9ba3545da86d5",
+      "size": 110964,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/5bce6d4786782ddcdf7bcf6c79c9ba3545da86d5"
+    },
+    {
+      "path": "web/assets/mahiru/waiting.png",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "42dee8e5e505f219815ccd7c072f697d8d0e615d",
+      "size": 120968,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/42dee8e5e505f219815ccd7c072f697d8d0e615d"
+    },
+    {
+      "path": "web/css",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "db50a9e4fe0b2bfd6e72092700c7663f2456b2fe",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/db50a9e4fe0b2bfd6e72092700c7663f2456b2fe"
+    },
+    {
+      "path": "web/css/app.css",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2c983b7b8e8413e3fe4993e286e3d3e07a2334f9",
+      "size": 50399,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/2c983b7b8e8413e3fe4993e286e3d3e07a2334f9"
+    },
+    {
+      "path": "web/css/tokens.css",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "602c9084359bc0bf59fa78d9f56f39ea78ad6367",
+      "size": 8991,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/602c9084359bc0bf59fa78d9f56f39ea78ad6367"
+    },
+    {
+      "path": "web/index.html",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "49a685c343d9c7d1fbafb20e3c5f66f231bb9920",
+      "size": 28316,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/49a685c343d9c7d1fbafb20e3c5f66f231bb9920"
+    },
+    {
+      "path": "web/js",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "f53c65264134d4986aa7c537fc6534c83e4fbeca",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/f53c65264134d4986aa7c537fc6534c83e4fbeca"
+    },
+    {
+      "path": "web/js/app.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3696619b991a1af4d0f9a59641e5086d5ed3ebd1",
+      "size": 2212,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/3696619b991a1af4d0f9a59641e5086d5ed3ebd1"
+    },
+    {
+      "path": "web/js/bridge.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1328f9bac41b8408c057592f35db1885ca61f0ea",
+      "size": 5694,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/1328f9bac41b8408c057592f35db1885ca61f0ea"
+    },
+    {
+      "path": "web/js/pages",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "bf10e518e07a2bfa81aad98070fd4d5c41e811ef",
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/trees/bf10e518e07a2bfa81aad98070fd4d5c41e811ef"
+    },
+    {
+      "path": "web/js/pages/gaming.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3aafc879c03b7c91c36fe3aabab7e9e4a7486e2c",
+      "size": 7452,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/3aafc879c03b7c91c36fe3aabab7e9e4a7486e2c"
+    },
+    {
+      "path": "web/js/pages/junk.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2dbd7c849c411d234ba4001a36fc7911264a242b",
+      "size": 19834,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/2dbd7c849c411d234ba4001a36fc7911264a242b"
+    },
+    {
+      "path": "web/js/pages/memory.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c268940596984aaf101380dfffaf85cbbe508c49",
+      "size": 19573,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/c268940596984aaf101380dfffaf85cbbe508c49"
+    },
+    {
+      "path": "web/js/pages/overview.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "31c39799addabc4bcfc390b1662ed3f368f252e4",
+      "size": 5035,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/31c39799addabc4bcfc390b1662ed3f368f252e4"
+    },
+    {
+      "path": "web/js/pages/settings.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "38846ae3d0f50ca112dca4b954ce6b6f0ff60961",
+      "size": 3933,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/38846ae3d0f50ca112dca4b954ce6b6f0ff60961"
+    },
+    {
+      "path": "web/js/router.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "07c7ed20527d958fb67a3e93c1f1331c2185bb5a",
+      "size": 4175,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/07c7ed20527d958fb67a3e93c1f1331c2185bb5a"
+    },
+    {
+      "path": "web/js/store.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "30c821f806b026d6d1a6b39039fc5d31d34eca45",
+      "size": 1591,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/30c821f806b026d6d1a6b39039fc5d31d34eca45"
+    },
+    {
+      "path": "web/js/ui.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b3b8c0b6bd8148b3c386bf017265f35d22e3b60f",
+      "size": 4977,
+      "url": "https://api.github.com/repos/Decaycc/mahiru-assistant/git/blobs/b3b8c0b6bd8148b3c386bf017265f35d22e3b60f"
+    }
+  ],
+  "truncated": false
+}

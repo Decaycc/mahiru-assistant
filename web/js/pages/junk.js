@@ -40,9 +40,12 @@ Pages.junk = (() => {
       right = `<span class="jfiles">${r.targets} 个目标</span>`;
     }
 
+    // 「安全」不再出徽章：一屏六行灰药丸等于没有信息，而且 4.26:1 的小字本身读不清。
+    // 只在真的需要注意的时候上色 —— 谨慎（亚麻底）/ 风险（墨框）/ 系统托管。
     const badge = locked
       ? '<span class="badge badge-mute">系统托管</span>'
-      : `<span class="badge ${lv.cls}">${lv.text}</span>`;
+      : (r.level === 'safe' ? ''
+        : `<span class="badge ${lv.cls}">${lv.text}</span>`);
 
     return `
       <label class="jrow lv-${r.level}${locked ? ' is-locked' : ''}"
@@ -81,6 +84,9 @@ Pages.junk = (() => {
       ? `已选 ${n} 项 · 预计释放 ${UI.bytes(selectedSize())}`
       : `已选 ${n} 项`;
     UI.$('#junk-apply').disabled = n === 0 || busy();
+    // 底栏同时只留一个橙色：没扫描时「开始扫描」是这一屏的主操作，
+    // 扫描完它退回白描边，把主位让给「开始清理」。
+    UI.$('#junk-apply').classList.toggle('btn-primary', !j.scanned);
     // 清理按钮只在扫描之后出现 —— 没扫过就不知道会释放多少
     UI.$('#junk-clean').classList.toggle('hide', !j.scanned);
     UI.$('#junk-clean').disabled = n === 0 || busy();

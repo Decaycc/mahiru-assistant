@@ -7,7 +7,7 @@ localization ``zh-Hans.json``, then emits a pure-data Python module (a single li
 
 Run from the repo root with the project venv:
 
-    D:\\Envs\\mahiru-assistant\\Scripts\\python.exe tools\\gen_winhance_tunes.py
+    D:\\DevKit\\toolchains\\python-envs\\mahiru-assistant\\Scripts\\python.exe tools\\gen_winhance_tunes.py
 
 The output is byte-for-byte deterministic and idempotent for identical inputs and
 requires no network access.  Uses only the standard library (regex/text parsing;
@@ -26,14 +26,15 @@ from collections import Counter
 # Input / output paths
 # ---------------------------------------------------------------------------
 
-CS_PATH = (
-    r"C:\Users\陈耿峰\Documents\deepseek-harness\default-workspace\winhance-repo"
-    r"\Winhance-main\src\Winhance.Core\Features\Optimize\Models"
-    r"\GamingAndPerformanceOptimizations.cs"
+CS_PATH = os.environ.get(
+    "WINHANCE_CS_PATH",
+    r"D:\dshworkplace\winhance\Winhance-main\src\Winhance.Core"
+    r"\Features\Optimize\Models\GamingAndPerformanceOptimizations.cs",
 )
-JSON_PATH = (
-    r"C:\Users\陈耿峰\Documents\deepseek-harness\default-workspace\winhance-repo"
-    r"\Winhance-main\src\Winhance.UI\Features\Common\Localization\zh-Hans.json"
+JSON_PATH = os.environ.get(
+    "WINHANCE_JSON_PATH",
+    r"D:\dshworkplace\winhance\Winhance-main\src\Winhance.UI"
+    r"\Features\Common\Localization\zh-Hans.json",
 )
 OUT_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -311,6 +312,7 @@ def extract_registry_settings(content):
             "per_interface": False,
             "per_monitor": False,
             "group_policy": False,
+            "composite_string_key": None,
         }
         vn = re.search(r"\bValueName\s*=\s*", rb)
         if vn:
@@ -334,6 +336,10 @@ def extract_registry_settings(content):
         reg["per_interface"] = extract_bool_field(rb, "ApplyPerNetworkInterface") is True
         reg["per_monitor"] = extract_bool_field(rb, "ApplyPerMonitor") is True
         reg["group_policy"] = extract_bool_field(rb, "IsGroupPolicy") is True
+        # CompositeStringKey：这条设置写的是单个字符串值里的哪一个 "Key=Value;"
+        # 子键（DirectXUserGlobalSettings 就是这种）。缺了它，同一个 ValueName
+        # 下的多条设置会互相把整串覆盖掉。
+        reg["composite_string_key"] = extract_string_field(rb, "CompositeStringKey")
         regs.append(reg)
     return regs
 
@@ -648,6 +654,7 @@ def build_tunes(raw_settings, issues, loc):
                 "per_interface": r["per_interface"],
                 "per_monitor": r["per_monitor"],
                 "group_policy": r["group_policy"],
+                "composite_string_key": r["composite_string_key"],
             })
 
         options = []

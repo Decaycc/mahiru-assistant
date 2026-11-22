@@ -21,6 +21,7 @@ mahiru 里。这里做四件事：
 import base64
 import json
 import os
+import re
 import subprocess
 
 import winreg
@@ -268,6 +269,103 @@ def _modify_binary_byte(key_path: str, value_name: str, byte_index: int,
         return False
 
 
+# ---------------------------------------------------------------------------
+# 复合字符串（composite string）值
+#
+# ``HKCU\Software\Microsoft\DirectX\UserGpuPreferences`` 的
+# ``DirectXUserGlobalSettings`` 是一条 ``Key=Value;Key=Value;`` 的多段字符串，
+# 三条游戏设置（SwapEffectUpgradeEnable / VRROptimizeEnable / AutoHDREnable）
+# 共用它。若不按子键拆开读写的后果：点一个开关会把整串改写成 "1"/"0"，
+# 另外两条设置跟着一起变，而且用户原有的其它子键（GpuPreference 等）会被抹掉。
+#
+# 语义与 Winhance 的 ``WindowsRegistryService.ParseCompositeString`` /
+# ``BuildCompositeString`` / ``ApplySetting`` 逐行对齐。
+# ---------------------------------------------------------------------------
+
+def _parse_composite(text):
+    """``"a=1;b=2;"`` -> ``{"a": "1", "b": "2"}``（键大小写不敏感）。"""
+    pairs = {}
+    if not text:
+        return pairs
+    for entry in str(text).split(";"):
+        if not entry:
+            continue
+        eq = entry.find("=")
+        if eq > 0:
+            key = entry[:eq].strip()
+            if key:
+                pairs[key.lower()] = (key, entry[eq + 1:])
+    # 统一返回 {小写键: (原始键名, 值)}
+    return pairs
+
+
+def _build_composite(pairs):
+    """``{"a": "1"}`` -> ``"a=1;"``（保留传入顺序，末尾带分号）。"""
+    if not pairs:
+        return ""
+    return "".join(f"{k}={v};" for k, v in pairs.items())
+
+
+def _composite_get(text, sub_key):
+    """取子键值；不存在返回 ``None``（与「值为空串」区分开）。"""
+    hit = _parse_composite(text).get((sub_key or "").lower())
+    return None if hit is None else hit[1]
+
+
+def _composite_set(text, sub_key, value):
+    """设置子键值；``value`` 为 None 时删除该子键。其余子键原样保留。"""
+    parsed = _parse_composite(text)
+    low = (sub_key or "").lower()
+    if value is None:
+        parsed.pop(low, None)
+    else:
+        # 已存在就沿用原来的键名大小写，避免无意义的大小写抖动
+        orig = parsed[low][0] if low in parsed else sub_key
+        parsed[low] = (orig, str(value))
+    return _build_composite({orig: val for _low, (orig, val) in parsed.items()})
+
+
+def _apply_composite(reg: dict, enable: bool, specific_value=_UNSET,
+                     use_default: bool = False) -> bool:
+    """只改写自己那一段子键，整串其它内容原样写回。"""
+    sub = reg["composite_string_key"]
+    current, _typ = _read_raw(reg["key_path"], reg["value_name"])
+    current = current if isinstance(current, str) else ""
+
+    if use_default:
+        new = reg.get("default")
+    elif specific_value is not _UNSET:
+        new = specific_value
+    else:
+        new = _first_non_null(reg.get("enabled") if enable else reg.get("disabled"))
+
+    merged = _composite_set(current, sub, new)
+    return _write_value(reg["key_path"], reg["value_name"], merged, "string")
+
+
+def _read_composite_state(tune: dict, reg: dict):
+    """读一条 composite 设置的真实开/关，返回 ``True/False/None``。
+
+    子键缺失时**不能当成「关」**：VRR 的 DefaultValue 是 "1"（默认开），
+    按 Winhance 的 ``IsRegistryValueInEnabledState``，缺失时拿 DefaultValue
+    去和 EnabledValue 比；没有 DefaultValue 就是 "None == 1" → 关。
+    只有整条注册表值读不出来（键/值不存在）才返回 None。
+    """
+    sub = reg["composite_string_key"]
+    current, _typ = _read_raw(reg["key_path"], reg["value_name"])
+    if current is None:
+        return None
+    val = _composite_get(current if isinstance(current, str) else "", sub)
+    if val is None:
+        val = reg.get("default")
+    enabled = _first_non_null(reg.get("enabled"))
+    if enabled is None:
+        return None
+    if val is None:
+        return False
+    return _values_equal(val, enabled)
+
+
 def _apply_reg(reg: dict, enable: bool, specific_value=_UNSET,
                use_default: bool = False) -> bool:
     """复刻 ``ApplySetting`` 的分支顺序，返回是否成功。
@@ -298,6 +396,10 @@ def _apply_reg(reg: dict, enable: bool, specific_value=_UNSET,
                    else enable)
         return _modify_binary_bit(reg["key_path"], reg["value_name"],
                                   byte_index, bitmask, set_bit)
+
+    # 复合字符串（DirectXUserGlobalSettings）：只改自己那一段子键
+    if reg.get("composite_string_key"):
+        return _apply_composite(reg, enable, specific_value, use_default)
 
     if reg.get("modify_byte_only") and byte_index is not None:
         new_value = (int(specific_value) if specific_value is not _UNSET
@@ -332,6 +434,28 @@ def _run_schtasks(task_path: str, enable: bool) -> bool:
         return r.returncode == 0
     except Exception:                                       # noqa: BLE001
         return False
+
+
+# 计划任务的定义文件放在这里，含 <Enabled>false</Enabled>。
+# 直接读 XML 比 `schtasks /Query` 稳：不受系统语言影响，也不用为 17 条任务
+# 各开一个进程。
+_TASKS_DIR = os.path.join(os.environ.get("SystemRoot", r"C:\Windows"),
+                          "System32", "Tasks")
+
+
+def _read_task_enabled(task_path: str):
+    """读计划任务是否启用，返回 ``True/False/None``（读不到给 None）。"""
+    try:
+        full = os.path.join(_TASKS_DIR, task_path.lstrip("\\"))
+        with open(full, "r", encoding="utf-16", errors="ignore") as f:
+            xml = f.read()
+    except Exception:                                       # noqa: BLE001
+        return None
+    # <Settings><Enabled>false</Enabled></Settings>；缺省即为启用
+    m = re.search(r"<Enabled>\s*(true|false)\s*</Enabled>", xml, re.IGNORECASE)
+    if not m:
+        return True
+    return m.group(1).lower() == "true"
 
 
 def _run_powershell(script: str) -> bool:
@@ -451,10 +575,34 @@ def _values_equal(a, b) -> bool:
 def _read_toggle_state(tune: dict, reg: dict):
     """读一个 toggle 的真实开/关，返回 ``True/False/None``。
 
-    对齐 ``ToggleTargetState`` 的逆运算：把当前值拿去和 enabled/disabled
-    数组比较；键不存在（读到 None）时用数组里的 None 哨兵判归属。
+    分三种写法，缺一不可（否则界面上的开关永远停在"关"，看不出真实状态）：
+      * 复合字符串子键（DirectXUserGlobalSettings）→ 只比对自己那一段
+      * 按位掩码（UserPreferencesMask）→ 看对应字节的那一位
+      * 常规整值 → 拿当前值和 enabled/disabled 数组比较
+
+    对齐 ``IsRegistryValueInEnabledState``：值不存在时不能一律当"关"，
+    而是拿 DefaultValue 去和 EnabledValue 比（VRR 默认就是开的）。
+    只有「读不到注册表」（如需要管理员权限的 HKLM 项）才返回 None，
+    让界面显示"未知"而不是谎报成"关"。
     """
-    val, _ = _read_raw(reg["key_path"], reg["value_name"])
+    # 复合字符串：只读自己那一段
+    if reg.get("composite_string_key"):
+        return _read_composite_state(tune, reg)
+
+    # 键存在性开关（ValueName 为空）：开=键存在
+    if not reg.get("value_name"):
+        return None
+
+    val, typ = _read_raw(reg["key_path"], reg["value_name"])
+
+    # 按位掩码：值是否存在 == 这一位是否置位
+    bitmask = reg.get("bitmask")
+    byte_index = reg.get("binary_byte_index")
+    if bitmask is not None and byte_index is not None:
+        if not isinstance(val, bytes) or len(val) <= byte_index:
+            return False
+        return (val[byte_index] & int(bitmask)) == int(bitmask)
+
     enabled = reg.get("enabled") or []
     disabled = reg.get("disabled") or []
 
@@ -471,22 +619,51 @@ def _read_toggle_state(tune: dict, reg: dict):
         return True
     if matches(disabled):
         return False
-    return None
+
+    # 值不存在：按默认值推断（对齐 C# 的 valueExists 分支）
+    if val is None:
+        default = reg.get("default")
+        enabled_vals = [c for c in enabled if c is not None]
+        if default is not None and enabled_vals:
+            return any(_values_equal(default, c) for c in enabled_vals)
+        # 显式 None 哨兵表示"键缺失 = 开"
+        if None in enabled:
+            return True
+        return False
+
+    # 值存在但既不是开也不是关（例如辅助功能的多位标志组合）：按"非开即关"，
+    # 与上游一致，避免界面留下永远不动的开关。
+    return False
 
 
 def _read_selection_state(tune: dict, reg: dict):
-    """读一个 selection 的当前选中项，返回选项序号或 None。"""
-    val, _ = _read_raw(reg["key_path"], reg["value_name"])
-    name = reg.get("value_name")
-    for i, o in enumerate(tune.get("options") or []):
-        mappings = o.get("value_mappings") or {}
-        if name not in mappings:
+    """读一个 selection 的当前选中项，返回选项序号或 None。
+
+    对齐 ``ComboBoxResolver.ResolveRawValuesToIndex``：
+      * 逐个选项比对**全部**映射键（原来只比第一个键就 return，多键项会误判）
+      * 值缺失时用该项的 ``default`` 兜底参与比对，而不是直接放弃
+      * 全都匹配不上时退回 ``is_default`` 选项，界面不会留下空白下拉
+    """
+    options = tune.get("options") or []
+
+    current = {}
+    for r in tune.get("reg") or []:
+        name = r.get("value_name")
+        if not name or name in current:
             continue
-        target = mappings[name]
-        if target is None:
-            if val is None:
-                return i
-        elif val is not None and _values_equal(val, target):
+        val, _typ = _read_raw(r["key_path"], name)
+        current[name] = val if val is not None else r.get("default")
+
+    for i, o in enumerate(options):
+        mappings = o.get("value_mappings") or {}
+        if not mappings:
+            continue
+        if all(_values_equal(current.get(k), v) for k, v in mappings.items()):
+            return i
+
+    # 全部注册表值都不存在 = 系统原始默认状态
+    for i, o in enumerate(options):
+        if o.get("is_default"):
             return i
     return None
 
@@ -495,19 +672,23 @@ def read_states() -> dict:
     """批量读 116 条的当前真实状态。
 
     返回 ``{id: {state, label}}``：toggle 的 state 是 bool（可能 None=无法判定），
-    selection 的 state 是选项序号（可能 None）。计划任务/脚本类设置读不到
-    具体值，state 为 None。任何异常都不抛，缺失即 None。
+    selection 的 state 是选项序号（可能 None）。计划任务按定义文件里的
+    ``<Enabled>`` 读，PowerShell 类（DNS / 系统还原）读不到，state 为 None。
+    任何异常都不抛，缺失即 None。
     """
     out = {}
     for t in tunes.TUNES:
         reg = _primary_reg(t)
         entry = {"state": None, "label": None}
         try:
-            if reg is not None and t["input_type"] == "toggle":
-                st = _read_toggle_state(t, reg)
+            if t["input_type"] == "toggle":
+                if reg is not None:
+                    st = _read_toggle_state(t, reg)
+                else:
+                    st = _read_scheduled_state(t)
                 entry["state"] = st
                 entry["label"] = None if st is None else ("开" if st else "关")
-            elif reg is not None and t["input_type"] == "selection":
+            elif t["input_type"] == "selection" and reg is not None:
                 idx = _read_selection_state(t, reg)
                 entry["state"] = idx
                 if idx is not None:
@@ -519,6 +700,24 @@ def read_states() -> dict:
             pass
         out[t["id"]] = entry
     return out
+
+
+def _read_scheduled_state(tune: dict):
+    """纯计划任务类 toggle：任一条任务被禁用即视为"已优化"。
+
+    这是这批设置唯一的可观测状态（它们没有注册表项）。
+    """
+    tasks = tune.get("scheduled") or []
+    if not tasks:
+        return None
+    vals = []
+    for task in tasks:
+        en = _read_task_enabled(task.get("task_path") or "")
+        if en is not None:
+            vals.append(en)
+    if not vals:
+        return None
+    return not all(vals)
 
 
 def _apply_toggle(tune: dict, enable: bool) -> tuple[bool, str]:

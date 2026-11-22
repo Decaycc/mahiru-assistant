@@ -152,7 +152,6 @@
                 </span>
                 <span class="quick-body">
                   <b>内存优化</b>
-                  <i>查看进程占用，选择要整理或关闭的</i>
                 </span>
                 <span class="chev">›</span>
               </button>
@@ -165,7 +164,6 @@
                 </span>
                 <span class="quick-body">
                   <b>垃圾清理</b>
-                  <i>清理应用缓存与系统残留</i>
                 </span>
                 <span class="chev">›</span>
               </button>
@@ -174,20 +172,6 @@
               <button class="btn" id="ov-refresh">刷新</button>
             </div>
           </div>
-        </div>
-
-        <!-- 环境自检：设置页的「环境自检」按钮也会触发这里 -->
-        <div class="card" id="diag-card">
-          <div class="row-between">
-            <h2 class="section-h">环境自检</h2>
-            <div style="display:flex;align-items:center;gap:10px">
-              <span class="muted" id="diag-progress"
-                    style="font-size:11.5px">未运行</span>
-              <span class="badge badge-mute" id="diag-state">未运行</span>
-              <button class="btn btn-sm" id="diag-btn">运行</button>
-            </div>
-          </div>
-          <div class="log" id="diag-log"><span class="muted">点「运行」会在后台线程里跑一遍本机环境，日志实时回传。整个过程只读，不修改任何东西。</span></div>
         </div>
       </section>
 
@@ -203,8 +187,7 @@
             <path d="M12 9v4M12 16h.01"/>
           </svg>
           <div>
-            <b>当前是普通权限</b> —— 「清空待机内存列表」需要管理员，
-            关闭系统级进程也会失败。其余功能正常。
+            <b>普通权限</b> · 部分功能需提权
           </div>
           <button class="btn btn-sm" id="mem-relaunch">以管理员重启</button>
         </div>
@@ -262,53 +245,63 @@
           <div class="row-between" style="margin-bottom:12px">
             <h2 class="section-h">一键加速选项</h2>
             <span class="muted" style="font-size:var(--fs-small)"
-                  id="mem-opts-note">勾选项会在点「一键加速」时一起执行</span>
+                  id="mem-opts-note">点「一键加速」时一起执行</span>
           </div>
           <div class="opts" id="mem-opts">
-            <label class="opt">
+            <label class="opt opt-compact">
               <input type="checkbox" class="switch" data-opt="kill_safe" checked>
-              <span><b>关闭安全级后台应用</b>
-                <i>常见可关的常驻程序（如各类助手、更新器）</i></span>
+              <span><b>关闭安全级后台应用</b></span>
             </label>
-            <label class="opt">
+            <label class="opt opt-compact">
+              <input type="checkbox" class="switch" data-opt="kill_killable" checked>
+              <span><b>关闭托盘类常驻程序</b></span>
+            </label>
+            <label class="opt opt-compact">
               <input type="checkbox" class="switch" data-opt="kill_optional">
-              <span><b>关闭可选级后台应用</b>
-                <i>你自己装的软件，关了可能影响正在做的事</i></span>
+              <span><b>关闭可选级后台应用</b></span>
             </label>
-            <label class="opt">
+            <label class="opt opt-compact" id="opt-services-row">
+              <input type="checkbox" class="switch" data-opt="kill_services">
+              <span><b>停止游戏系统服务</b>
+                <span class="badge badge-mute opt-need-admin hide">需管理员</span></span>
+            </label>
+            <label class="opt opt-compact">
               <input type="checkbox" class="switch" data-opt="trim" checked>
-              <span><b>清理进程工作集</b>
-                <i>把闲置内存还给系统，不关闭进程</i></span>
+              <span><b>清理进程工作集</b></span>
             </label>
-            <label class="opt" id="opt-standby-row">
+            <label class="opt opt-compact" id="opt-standby-row">
               <input type="checkbox" class="switch" data-opt="standby" checked>
               <span><b>清空待机内存列表</b>
-                <i>释放文件缓存；需要管理员。清理后首次打开软件会略慢，属正常</i></span>
+                <span class="badge badge-mute opt-need-admin hide">需管理员</span></span>
             </label>
-            <label class="opt">
+            <label class="opt opt-compact">
               <input type="checkbox" class="switch" data-opt="gamedvr">
-              <span><b>关闭 Xbox 后台录制 / 开启游戏模式</b>
-                <i>可还原</i></span>
+              <span><b>关闭 Xbox 后台录制</b></span>
             </label>
-            <label class="opt">
+            <label class="opt opt-compact">
               <input type="checkbox" class="switch" data-opt="power">
-              <span><b>切换到高性能电源计划</b>
-                <i>可还原</i></span>
+              <span><b>高性能电源计划</b></span>
             </label>
           </div>
-          <div class="opt-actions">
-            <button class="btn" id="mem-boost">一键加速</button>
-            <button class="btn" id="mem-relaunch-closed">重启已关闭的应用</button>
-            <button class="btn" id="mem-revert">还原系统设置</button>
+          <div class="opt-actions act-split">
+            <div class="act-group">
+              <button class="btn btn-secondary" id="mem-relaunch-closed">重启已关闭的应用</button>
+              <button class="btn" id="mem-revert">还原系统设置</button>
+            </div>
+            <div class="act-group act-right">
+              <button class="btn btn-primary" id="mem-svc-stop">停止游戏服务</button>
+              <button class="btn btn-sm" id="mem-svc-restore">还原服务</button>
+            </div>
           </div>
+          <div class="svc-note" id="mem-svc-list"></div>
         </div>
 
-        <!-- 深度内存优化：默认折叠，避免误触 -->
-        <details class="card deep" id="mem-deep">
+        <!-- 深度内存优化：默认展开显示，避免有人没留意到这一块 -->
+        <details class="card deep" id="mem-deep" open>
           <summary>
             <span class="deep-title">深度内存优化（高级）</span>
             <span class="badge badge-mute" id="mem-deep-count">7 项内核接口</span>
-            <span class="muted deep-hint">直接调用内核，降数字更猛；展开查看</span>
+            <span class="muted deep-hint">直接调内核</span>
           </summary>
           <div class="deep-body">
             <div class="note" style="margin-bottom:12px">
@@ -317,9 +310,7 @@
                 <circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>
               </svg>
               <div>
-                这些是直接调内核的接口，效果比「整理内存」更猛，但<b>不区分进程</b>。
-                想要逐进程整理（会跳过受保护与反作弊进程），请用上面的
-                <b>一键加速 → 清理进程工作集</b>。
+                直接调内核，力度更大但不区分进程。逐进程整理请用上方「清理进程工作集」。
               </div>
             </div>
             <div class="opts" id="mem-deep-opts"></div>
@@ -426,19 +417,15 @@
                 <b>回收站</b>
                 <i id="junk-rb-info">读取中…</i>
               </div>
-              <button class="btn btn-sm" id="junk-rb-empty">清空回收站</button>
+              <button class="btn btn-sm btn-secondary" id="junk-rb-empty">清空回收站</button>
             </div>
             <div class="sys-item">
               <div class="sys-info">
                 <b>WinSxS 组件清理（DISM）</b>
-                <i>移除被取代的旧组件。耗时可能十几分钟，期间可取消</i>
+                <span class="badge badge-mute">耗时较长</span>
               </div>
-              <button class="btn btn-sm" id="junk-dism">开始 DISM</button>
+              <button class="btn btn-sm btn-secondary" id="junk-dism">开始 DISM</button>
             </div>
-          </div>
-          <div class="stat-foot" style="margin-top:12px">
-            WinSxS 不能手删 —— 系统用它来修复和更新自身。只能由 DISM 判断哪些
-            组件已被取代，所以这一步交给微软自己的工具。
           </div>
         </div>
       </section>
@@ -474,7 +461,7 @@
           <!-- 左栏：大标题 + 副标题 + 立绘（下方留白处放大图，不挤压右栏控件） -->
           <aside class="settings-hero">
             <h1 class="settings-title">设置</h1>
-            <p class="settings-sub">了解这个工具能做什么，查看当前版本，检查是否有更新。</p>
+            <p class="settings-sub">版本、更新与关于。</p>
             <div class="settings-mascot">
               <img src="assets/mahiru/happy2.png" alt=""
                    onerror="this.classList.add('missing')">
@@ -523,7 +510,7 @@
                 </div>
                 <div>
                   <h2 class="feature-title">游戏与性能</h2>
-                  <p class="feature-desc">游戏进程优先级 + 116 项系统调校，每项可还原默认。</p>
+                  <p class="feature-desc">进程优先级 + 116 项系统调校。</p>
                 </div>
               </div>
             </section>
@@ -532,7 +519,7 @@
               <p class="settings-block-label">关于 Mahiru</p>
               <div class="about-name-row">
                 <h2 class="about-name">Mahiru</h2>
-                <span class="version-tag" id="settings-version">v1.0.2</span>
+                <span class="version-tag" id="settings-version">v1.1.0</span>
               </div>
               <div class="about-meta">
                 <span class="about-author">
@@ -582,7 +569,7 @@
       <button class="btn" id="mem-close" data-on="memory" disabled>关闭进程</button>
       <button class="btn" id="junk-apply" data-on="junk" disabled>开始扫描</button>
       <button class="btn btn-primary hide" id="junk-clean" data-on="junk" disabled>开始清理</button>
-      <button class="btn btn-primary hide" id="action-primary" data-on="memory">一键加速</button>
+      <button class="btn btn-primary" id="action-primary" data-on="memory">一键加速</button>
     </footer>
   </div>
 </div>
@@ -601,3 +588,5 @@
 <script src="js/app.js"></script>
 </body>
 </html>
+
+

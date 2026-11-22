@@ -13,7 +13,8 @@ Pages.memory = (() => {
 
   /* 一键加速的选项，默认值与后端保持一致 */
   const DEFAULT_OPTS = {
-    kill_safe: true, kill_optional: false, trim: true,
+    kill_safe: true, kill_killable: true, kill_optional: false,
+    kill_services: false, trim: true,
     standby: true, gamedvr: false, power: false,
   };
 
@@ -124,9 +125,8 @@ Pages.memory = (() => {
     if (p.protected) {
       tags.push(`<span class="badge badge-mute" title="${UI.esc(p.why || '受保护')}">受保护</span>`);
     } else if (p.closable) {
-      tags.push('<span class="badge badge-warn">可关闭</span>');
-    }
-    if (p.trimmable && !p.protected) tags.push('<span class="badge badge-ok">可整理</span>');
+      tags.push(`<span class="badge badge-warn"${p.why ? ` title="${UI.esc(p.why)}"` : ''}>可关闭</span>`);
+    }    if (p.trimmable && !p.protected) tags.push('<span class="badge badge-ok">可整理</span>');
 
     const box = p.protected
       ? '<span class="tick-empty" title="受保护，不会关闭"></span>'
@@ -181,10 +181,25 @@ Pages.memory = (() => {
   }
 
   /* ------------------------------------------------------------ 加载 */
+  /* 进程列表骨架屏：真实数据要枚举 180+ 进程，通常 1~2 秒。
+     先画等高的占位行，数据回来再替换，避免"文字 -> 列表"的跳变。 */
+  function showProcSkeleton(n = 8) {
+    UI.$('#mem-list').innerHTML =
+      `<div class="skeleton proc-skel" aria-hidden="true">${
+        Array.from({ length: n }, () =>
+          '<div class="prow skel-row">' +
+          '<div class="skel-bar w-tick"></div>' +
+          '<div class="skel-bar w-name"></div>' +
+          '<div class="skel-bar w-tag"></div>' +
+          '<div class="skel-bar w-mem"></div>' +
+          '</div>').join('')
+      }</div>`;
+  }
+
   async function load(force) {
     const m = S();
     if (m.loaded && !force) return;
-    UI.$('#mem-list').innerHTML = '<div class="empty">正在枚举进程…</div>';
+    showProcSkeleton();
 
     const [d, caps] = await Promise.all([
       Bridge.call('list_processes'),
@@ -209,7 +224,10 @@ Pages.memory = (() => {
   }
 
   /* 权限决定哪些选项可用，不能用的直接禁用并说明原因，
-     而不是让用户勾了之后执行失败 */
+     而不是让用户勾了之后执行失败。
+
+     已是管理员时，把"需要管理员"的提示全部收起来 —— 留着只会让人困惑：
+     已经拿到权限了还一直提示要点「以管理员重启」。 */
   function applyCapabilities(caps) {
     if (!caps || caps.ok === false) return;
     const admin = !!caps.admin;
@@ -219,9 +237,21 @@ Pages.memory = (() => {
     const standbyBox = standbyRow.querySelector('input');
     standbyBox.disabled = !caps.can_standby;
     standbyRow.classList.toggle('is-locked', !caps.can_standby);
-    standbyRow.querySelector('i').textContent = caps.can_standby
-      ? '释放文件缓存；清理后首次打开软件会略慢，属正常'
-      : '需要管理员权限（点上方「以管理员重启」后可用）';
+
+    /* "需管理员"改为徽标：只在真的没权限时出现，
+       不再用一整行浅色说明文字占位。 */
+    UI.$$('.opt-need-admin').forEach((el) => {
+      const row = el.closest('.opt');
+      const box = row && row.querySelector('input');
+      const needs = box && (box.dataset.opt === 'standby'
+        || box.dataset.opt === 'kill_services');
+      el.classList.toggle('hide', admin || !needs);
+    });
+
+    // 深度优化各项上的"需管理员 / 当前会失败"角标：有权限时全部撤掉。
+    // 角标由 loadDeepOps 渲染、applyCapabilities 可能在它之前跑完，
+    // 所以两处都调用这个函数（幂等），无论谁先谁后都能对齐。
+    syncDeepAdminBadges(admin);
 
     UI.$('#mem-relaunch-closed').disabled = !caps.closed_apps;
     UI.$('#mem-relaunch-closed').textContent = caps.closed_apps
@@ -251,7 +281,9 @@ Pages.memory = (() => {
 
   function setBusy(on, title) {
     UI.$('#mem-log-card').classList.toggle('hide', !on);
-    UI.$('#mem-boost').disabled = on;
+    // 一键加速的主 CTA 在粘性底栏（#action-primary），卡片里那个同名按钮已移除
+    const ap = UI.$('#action-primary');
+    if (ap) ap.disabled = on;
     UI.$('#mem-apply').disabled = on || S().selected.size === 0;
     UI.$('#mem-close').disabled = on || S().selected.size === 0;
     if (on) {
@@ -325,7 +357,9 @@ Pages.memory = (() => {
     if (result.opts) {
       items.push(['执行项', Object.entries(result.opts)
         .filter(([, v]) => v).map(([k]) => ({
-          kill_safe: '关安全级', kill_optional: '关可选级', trim: '整理工作集',
+          kill_safe: '关安全级', kill_killable: '关托盘类',
+          kill_optional: '关可选级', kill_services: '停系统服务',
+          trim: '整理工作集',
           standby: '清待机', gamedvr: 'GameDVR', power: '电源计划',
         }[k] || k)).join(' · ') || '（全部关闭）']);
     }
@@ -357,26 +391,55 @@ Pages.memory = (() => {
   /* ------------------------------------------------------------ 深度优化 */
   let deepOps = [];
 
+  /* 已经是管理员时，把所有"需管理员"的痕迹收掉：
+     - 角标（需管理员 / 当前会失败）
+     - 项目的 is-locked 灰态
+     幂等：渲染前后都能安全重复调用。 */
+  function syncDeepAdminBadges(admin) {
+    const isAdmin = (admin === undefined) ? !!Store.state.ui.admin : !!admin;
+    UI.$$('#mem-deep-opts .needs-admin-badge').forEach((el) => {
+      el.classList.toggle('hide', isAdmin);
+    });
+    if (isAdmin) {
+      UI.$$('#mem-deep-opts .opt').forEach((el) => el.classList.remove('is-locked'));
+    }
+  }
+
   async function loadDeepOps() {
     const d = await Bridge.call('deep_ops_info');
     if (!d || d.ok === false) return;
     deepOps = d.ops || [];
     UI.$('#mem-deep-count').textContent = `${deepOps.length} 项内核接口`;
-    UI.$('#mem-deep-opts').innerHTML = deepOps.map((o) => `
-      <label class="opt${o.blocked ? ' is-locked' : ''}">
+    /* 深度优化项的排版原则：默认只显示名称 + 一句说明。
+       徽标只在"当前会失败"时出现（免管理员是常态，不必逐个标注）；
+       警告只在勾选后才展开，避免一屏堆满同色提示块。 */
+    UI.$('#mem-deep-opts').innerHTML = deepOps.map((o) => {
+      const admin = !!Store.state.ui.admin;
+      const needBadge = o.needs_admin && !admin && o.blocked;
+      return `
+      <label class="opt${o.blocked && !admin ? ' is-locked' : ''}">
         <input type="checkbox" class="switch" data-deep="${o.key}"
                ${o.default ? 'checked' : ''}>
         <span>
-          <b>${UI.esc(o.name)}
-            ${o.needs_admin
-              ? `<span class="badge ${o.blocked ? 'badge-warn' : 'badge-mute'}">`
-                + `${o.blocked ? '当前会失败 · 需管理员' : '需管理员'}</span>`
-              : '<span class="badge badge-ok">免管理员</span>'}
-          </b>
-          <i>${UI.esc(o.desc || '')}</i>
-          ${o.warning ? `<i class="warn-note">⚠ ${UI.esc(o.warning)}</i>` : ''}
+          <b>${UI.esc(o.name)}${needBadge
+            ? '<span class="badge needs-admin-badge badge-warn">需管理员</span>'
+            : ''}</b>
+          ${o.warning ? `<i class="warn-note deep-warn">${UI.esc(o.warning)}</i>` : ''}
         </span>
-      </label>`).join('');
+      </label>`;
+    }).join('');
+    // 警告文字默认收着，勾选该项时才显示
+    UI.$$('#mem-deep-opts input[data-deep]').forEach((el) => {
+      const sync = () => {
+        const lab = el.closest('.opt');
+        const w = lab && lab.querySelector('.deep-warn');
+        if (w) w.classList.toggle('show', el.checked);
+      };
+      el.addEventListener('change', sync);
+      sync();
+    });
+    // 渲染完再对齐一次：此时才知道有没有已经是管理员的项
+    syncDeepAdminBadges();
   }
 
   function readDeepOpts() {
@@ -457,7 +520,8 @@ Pages.memory = (() => {
 
     const boost = () => runJob(() => Bridge.call('start_boost', readOpts()),
                                '一键加速');
-    UI.$('#mem-boost').addEventListener('click', boost);
+    // 一键加速的主 CTA 只在粘性底栏（#action-primary）：卡片里那个同名按钮已移除，
+    // 一屏两个同名按钮，用户不知道该点哪个。
     UI.$('#action-primary').addEventListener('click', boost);
 
     UI.$('#mem-relaunch').addEventListener('click', () => Pages.settings.relaunch());
@@ -467,6 +531,21 @@ Pages.memory = (() => {
 
     UI.$('#mem-revert').addEventListener('click', () =>
       runJob(() => Bridge.call('revert_system'), '还原系统设置'));
+
+    /* --- 系统服务 --- */
+    UI.$('#mem-svc-stop').addEventListener('click', async () => {
+      const ok = await UI.confirm(
+        '将停止 16 项打游戏时可牺牲的系统服务'
+        + '（搜索索引、遥测、Xbox、打印后台等）。\n\n'
+        + '停止后这些功能暂时不可用，可在「还原服务」里一键恢复。\n'
+        + '需要管理员权限。继续吗？');
+      if (!ok) return;
+      runJob(() => Bridge.call('start_stop_services', null, false),
+             '停止系统服务');
+    });
+
+    UI.$('#mem-svc-restore').addEventListener('click', () =>
+      runJob(() => Bridge.call('restart_services'), '还原系统服务'));
 
     UI.$('#mem-log-cancel').addEventListener('click', async () => {
       if (!tracker) return;
@@ -500,10 +579,26 @@ Pages.memory = (() => {
     });
   }
 
+  async function loadServices() {
+    const d = await Bridge.call('list_gaming_services');
+    if (!d || d.ok === false) return;
+    const list = d.services || [];
+    const running = list.filter((s) => s.running).length;
+    const box = UI.$('#mem-svc-list');
+    if (!box) return;
+    if (!list.length) {
+      box.textContent = '没有可管理的服务';
+      return;
+    }
+    box.innerHTML = `可停 <b>${list.length}</b> 项 · 运行中 <b>${running}</b> 项`
+      + (d.admin ? '' : ' · <b>需管理员</b>');
+  }
+
   async function enter() {
     await load(false);
     await loadGames();
     await loadPowerPlans();
+    loadServices();
     if (!deepOps.length) await loadDeepOps();
   }
 
@@ -512,3 +607,4 @@ Pages.memory = (() => {
   return { init, enter, load, loadGames,
            get running() { return busy(); } };
 })();
+

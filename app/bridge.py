@@ -21,7 +21,7 @@ from .core import junk, mem, winhance
 
 APP_TITLE = "Mahiru"
 APP_AUTHOR = "decaycc"
-APP_VERSION = "1.0.2"
+APP_VERSION = "1.1.0"
 
 
 def _guard(fn):
@@ -188,26 +188,23 @@ class Api:
         for p in procs:
             name = p.get("name") or ""
             try:
-                protected = opt.is_protected(p)
+                v = opt.verdict(p)
             except Exception:                               # noqa: BLE001
-                protected = True
-            try:
-                closable = opt.is_closable(p)
-            except Exception:                               # noqa: BLE001
-                closable = False
-            try:
-                trimmable = opt.is_trimmable(p)
-            except Exception:                               # noqa: BLE001
-                trimmable = False
+                v = {"protected": True, "closable": False,
+                     "why": "判定失败（保守跳过）", "reason": ""}
+            lname = name.lower()
             rows.append({
                 "pid": p.get("pid"),
                 "name": name,
                 "title": (p.get("title") or "")[:120],
                 "mem": p.get("mem") or 0,
-                "protected": bool(protected),
-                "closable": bool(closable),
-                "trimmable": bool(trimmable),
-                "why": mem.describe(name) if protected else "",
+                "protected": bool(v["protected"]),
+                "closable": bool(v["closable"] and not v["protected"]),
+                "killable": bool(v["closable"] and not v["protected"]
+                                 and not p.get("has_window")),
+                "trimmable": bool(opt.is_trimmable(p)),
+                # 受保护写原因，可关闭写归类，其它留空
+                "why": v.get("why") or "",
             })
         rows.sort(key=lambda r: -(r["mem"] or 0))
         return {
@@ -215,6 +212,7 @@ class Api:
             "total": len(rows),
             "shown": min(limit, len(rows)),
             "closable": sum(1 for r in rows if r["closable"]),
+            "killable": sum(1 for r in rows if r["killable"]),
             "trimmable": sum(1 for r in rows if r["trimmable"]),
             "reclaimable": sum(r["mem"] for r in rows if r["trimmable"]),
             "processes": rows[:limit],
@@ -304,16 +302,19 @@ class Api:
         """一键加速：按 opts 组合执行完整优化流程。
 
         opts 可用键（缺省值见下）：
-            kill_safe     关闭安全级后台应用   默认 True
-            kill_optional 关闭可选级后台应用   默认 False
-            trim          清理工作集           默认 True
-            standby       清空待机内存列表     默认 True（需管理员）
-            gamedvr       关闭 Xbox 后台录制   默认 False
-            power         切到高性能电源计划   默认 False
+            kill_safe      关闭安全级后台应用   默认 True
+            kill_killable  关闭用户态托盘程序   默认 True（向日葵/WorkBuddy 等）
+            kill_optional  关闭可选级后台应用   默认 False
+            kill_services  停止游戏时可牺牲的系统服务  默认 False
+            trim           清理工作集           默认 True
+            standby        清空待机内存列表     默认 True（需管理员）
+            gamedvr        关闭 Xbox 后台录制   默认 False
+            power          切到高性能电源计划   默认 False
         """
         o = {
-            "kill_safe": True, "kill_optional": False, "trim": True,
-            "standby": True, "gamedvr": False, "power": False,
+            "kill_safe": True, "kill_killable": True, "kill_optional": False,
+            "kill_services": False,
+            "trim": True, "standby": True, "gamedvr": False, "power": False,
         }
         if isinstance(opts, dict):
             for k in list(o):
@@ -352,9 +353,53 @@ class Api:
 
     @_guard
     def relaunch_closed(self) -> dict:
-        """重启之前被本工具关闭的应用（记录在配置里）。"""
+        """重启之前被本工具关闭的应用，并还原被停掉的服务（记录在配置里）。"""
         jid = self.jobs.start("relaunch", "重启已关闭的应用",
                               lambda job: _relaunch_worker(job))
+        return {"ok": True, "job_id": jid}
+
+    @_guard
+    def list_gaming_services(self) -> dict:
+        """打游戏时可停的服务清单 + 每个服务当前的真实状态。"""
+        from .core import services as _svc
+        rows = []
+        try:
+            live = {s["name"]: s for s in _svc.enum_services()}
+        except Exception:                                   # noqa: BLE001
+            live = {}
+        for name, desc in _svc.GAMING_SERVICES.items():
+            cur = live.get(name) or {}
+            rows.append({
+                "name": name,
+                "desc": desc,
+                "state": cur.get("state_text", "未安装"),
+                "running": cur.get("state") == _svc.SERVICE_RUNNING,
+                "start_mode": _svc.START_TEXT.get(
+                    cur.get("start_mode"), "未知"),
+            })
+        return {"ok": True, "admin": elevation.is_admin(), "services": rows}
+
+    @_guard
+    def start_stop_services(self, names: list[str] | None = None,
+                            disable: bool = False) -> dict:
+        """停止指定的系统服务（只停，不改启动类型除非 disable=True）。"""
+        if not elevation.is_admin():
+            return {"ok": False,
+                    "error": "停止服务需要管理员权限，请用「以管理员重启」"}
+        safe = [str(n) for n in (names or []) if str(n)]
+        jid = self.jobs.start(
+            "stopsvc", f"停止 {len(safe) or '推荐'} 个系统服务",
+            lambda job: _stop_services_worker(job, safe, bool(disable)))
+        return {"ok": True, "job_id": jid}
+
+    @_guard
+    def restart_services(self) -> dict:
+        """还原之前停掉的系统服务。"""
+        if not elevation.is_admin():
+            return {"ok": False,
+                    "error": "启动服务需要管理员权限，请用「以管理员重启」"}
+        jid = self.jobs.start("startsvc", "还原系统服务",
+                              lambda job: _restart_services_worker(job))
         return {"ok": True, "job_id": jid}
 
     @_guard
@@ -478,7 +523,7 @@ class Api:
 
     @_guard
     def gaming_recommended(self, tune_id: str) -> dict:
-        """把一条调校设为 Winhance 的「推荐值」。"""
+        """把一条调校设为推荐值。"""
         ok, msg = winhance.apply_recommended(str(tune_id))
         return {"ok": ok, "message": msg}
 
@@ -690,72 +735,6 @@ class Api:
 
         total = _reload_third_party_rules()
         return {"ok": True, "matched_total": total, "kept_at": kept}
-
-    # ==================================================== 小功能
-    @_guard
-    def startup_items(self) -> dict:
-        """启动项列表（注册表 Run 键 + 启动文件夹）。只读。"""
-        from .core import tools
-        d = tools.list_startup_items()
-        d["admin"] = elevation.is_admin()
-        return {"ok": True, **d}
-
-    @_guard
-    def set_startup(self, item_id: str, enabled: bool) -> dict:
-        """启用/禁用启动项。**不删除**，只做移动或改名，可还原。"""
-        from .core import tools
-        ok, msg = tools.set_startup_enabled(str(item_id), bool(enabled))
-        return {"ok": ok, "message": msg}
-
-    @_guard
-    def hardware(self) -> dict:
-        """CPU / 内存条 / 显卡 / 主板 / 系统。只读。"""
-        from .core import tools
-        return {"ok": True, **tools.hardware_info()}
-
-    @_guard
-    def disk_health(self) -> dict:
-        """物理磁盘状态 + 分区占用 + SMART 失败预测。只读。"""
-        from .core import tools
-        d = tools.disk_health()
-        d["admin"] = elevation.is_admin()
-        return {"ok": True, **d}
-
-    @_guard
-    def tools_roots(self) -> dict:
-        """可选的扫描根目录。"""
-        from .core import tools
-        return {"ok": True, "roots": tools.default_roots()}
-
-    @_guard
-    def start_large_files(self, roots=None, min_mb: float = 200,
-                          limit: int = 300) -> dict:
-        """找大文件。**只列出来，不删除任何东西。**
-
-        传进来的 roots 一律先用 tools_roots() 过滤一遍再信 ——
-        界面同样不可信，不能让前端指定任意路径。
-        """
-        from .core import tools
-        safe = _sanitize_roots(roots)
-        if not safe:
-            return {"ok": False, "error": "没有可扫描的磁盘"}
-        jid = self.jobs.start(
-            "large", f"查找 {min_mb:.0f} MB 以上的文件",
-            lambda job: _large_files_worker(job, safe, min_mb, limit))
-        return {"ok": True, "job_id": jid}
-
-    @_guard
-    def start_duplicates(self, roots=None, min_mb: float = 1,
-                         limit: int = 200) -> dict:
-        """找重复文件。**只列出来，不删除任何东西。**"""
-        from .core import tools
-        safe = _sanitize_roots(roots)
-        if not safe:
-            return {"ok": False, "error": "没有可扫描的磁盘"}
-        jid = self.jobs.start(
-            "dup", f"查找重复文件（≥{min_mb:.0f} MB）",
-            lambda job: _dup_worker(job, safe, min_mb, limit))
-        return {"ok": True, "job_id": jid}
 
     # ==================================================== 配置
     @_guard
@@ -983,7 +962,26 @@ def _boost_worker(job, opts: dict) -> dict:
 def _relaunch_worker(job) -> dict:
     opt = mem.Optimizer(_logger(job))
     opt.relaunch_closed()
+    # 应用关掉的服务也一起还原，否则"重启已关闭的应用"只回来一半
+    opt.restart_stopped_services()
     return {"ok": True}
+
+
+def _stop_services_worker(job, names: list[str], disable: bool) -> dict:
+    opt = mem.Optimizer(_logger(job))
+    ok_n, fail_n = opt.stop_gaming_services(names or None, disable=disable)
+    job.log(f"完成：成功 {ok_n} 个，失败 {fail_n} 个")
+    if not disable:
+        job.log("提示：这些服务重启后仍会照常启动；"
+                "想让它们持续不启动可勾「同时禁用开机自启」")
+    return {"ok": True, "stopped": ok_n, "failed": fail_n}
+
+
+def _restart_services_worker(job) -> dict:
+    opt = mem.Optimizer(_logger(job))
+    ok_n, fail_n = opt.restart_stopped_services()
+    job.log(f"完成：还原 {ok_n} 个，失败 {fail_n} 个")
+    return {"ok": True, "started": ok_n, "failed": fail_n}
 
 
 def _revert_worker(job) -> dict:
@@ -1111,61 +1109,6 @@ def _rule_update_worker(job, offline: bool, refresh: bool = False) -> dict:
     }
 
 
-def _sanitize_roots(roots) -> list[str]:
-    """只保留「确实是本机固定磁盘根目录」的项。
-
-    界面传进来的东西一律不可信：不能让前端指定任意路径去遍历
-    （哪怕只是读，也没必要给它这个能力）。所以拿 tools 自己的探测结果
-    做白名单，只认完全匹配的盘符根。
-    """
-    from .core import tools
-    allowed = {r.lower() for r in tools.default_roots()}
-    if not roots:
-        return sorted(r.upper() for r in allowed)
-    out = []
-    for r in roots:
-        s = str(r).strip().lower()
-        if not s:
-            continue
-        if not s.endswith("\\"):
-            s += "\\"
-        if s in allowed:
-            out.append(s.upper())
-    return out or sorted(r.upper() for r in allowed)
-
-
-def _large_files_worker(job, roots, min_mb, limit) -> dict:
-    from .core import tools
-    job.log(f"扫描范围：{'、'.join(roots)}")
-    job.log(f"阈值：{min_mb:.0f} MB —— 只列出，不会删除任何文件")
-    r = tools.find_large_files(
-        roots, min_mb=min_mb, limit=limit, cancel=job.cancel,
-        progress=lambda m: job.log(m))
-    job.log(f"完成：{r['count']} 个文件，合计 {r['total'] / 1048576:.1f} MB")
-    if r["truncated"]:
-        job.log(f"（只显示最大的 {limit} 个）")
-    return {"files": r["files"], "count": r["count"], "total": r["total"],
-            "truncated": r["truncated"], "roots": roots,
-            "min_mb": r["min_mb"]}
-
-
-def _dup_worker(job, roots, min_mb, limit) -> dict:
-    from .core import tools
-    job.log(f"扫描范围：{'、'.join(roots)}")
-    job.log("先按大小分组，再对同尺寸的算哈希 —— 不会一上来就全盘哈希")
-    job.log("只列出，不会删除任何文件")
-    r = tools.find_duplicates(
-        roots, min_mb=min_mb, limit=limit, cancel=job.cancel,
-        progress=lambda m: job.log(m))
-    job.log(f"完成：{r['group_count']} 组重复，"
-            f"可省 {r['wasted'] / 1048576:.1f} MB")
-    if r["truncated"]:
-        job.log(f"（只显示最占空间的 {limit} 组）")
-    return {"groups": r["groups"], "group_count": r["group_count"],
-            "wasted": r["wasted"], "truncated": r["truncated"],
-            "roots": roots, "min_mb": r["min_mb"]}
-
-
 def _apply_saved_worker(job) -> dict:
     cfg = mem.load_config() or {}
     m = {str(k).lower(): v for k, v in (cfg.get("priority_map") or {}).items()}
@@ -1206,11 +1149,9 @@ _DEEP_NEEDS_ADMIN = {
 # 这里要的是**界面上能一眼看到的风险**。
 _DEEP_WARN = {
     "empty_working_sets":
-        "它不区分进程：受保护程序与反作弊的工作集也会被清。"
-        "如果正在游戏、或反作弊已启动，建议改用「整理内存」——"
-        "那条路径是逐进程的，会跳过受保护与反作弊进程。",
+        "不区分进程，反作弊的内存也会被清。正在游戏时建议改用「清理进程工作集」。",
     "combine":
-        "收益中等，但极少数老驱动 / 虚拟化环境下兼容性较差，默认不勾选。",
+        "极少数老驱动或虚拟机下可能不兼容，默认不勾。",
     "flush_modified": "会产生一次磁盘写入。",
 }
 

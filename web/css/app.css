@@ -75,6 +75,18 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 }
 .nav-item.active { background: transparent; color: var(--on-primary); font-weight: 600; }
 .nav-item:active { transform: scale(.98); }
+
+/* 侧边栏激活项：图标"点一下"的轻微弹动。
+   只在变成激活态的瞬间播一次，不是持续动画，不抢注意力。 */
+.nav-item.active svg { animation: navPop 320ms var(--ease-out) both; }
+@keyframes navPop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-item.active svg { animation: none; }
+}
 .nav-item:disabled { opacity: .45; cursor: default; }
 .nav-item:disabled:hover { background: transparent; color: rgba(32, 21, 21, .78); }
 
@@ -120,6 +132,16 @@ input, textarea { user-select: text; -webkit-user-select: text; }
   font-size: 27px; font-weight: 600; margin: 0 0 6px;
   letter-spacing: 0;
 }
+/* 标题与首张卡片之间要有呼吸感：6px 太挤，20px 才让标题"立"得住。
+   统一的 h1 -> 内容间距，避免每个页面各写一行 inline style。 */
+.page-title { margin-bottom: 20px; }
+.page-title + .card,
+.page-title + .grid-2,
+.page-title + .banner { margin-top: 0; }
+
+/* 中文标题加一点点字距（0.01em）会让 27px 的字重画得不那么"糊"，
+   但不超过 0.02em，否则像加粗的英文标语，反而更 AI 味。 */
+.page-title, .section-h { letter-spacing: .01em; }
 .page-desc  { font-size: var(--fs-body); color: var(--text-2); margin: 0 0 18px; line-height: 1.6; }
 
 /* ------------------------------------------------------------- 通用组件 */
@@ -131,6 +153,17 @@ input, textarea { user-select: text; -webkit-user-select: text; }
   box-shadow: var(--shadow-1);
   padding: 20px;
   position: relative;   /* 让卡片内 absolute 定位的表情包以卡片为锚 */
+  transition: box-shadow var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out);
+}
+/* 悬停时阴影略加深，卡片"浮"起来一点点。
+   只动阴影和边框，不做位移 —— 位移会让整页文字跟着抖。 */
+.card:hover {
+  box-shadow: 0 2px 6px rgba(32, 21, 21, .07), 0 10px 26px rgba(32, 21, 21, .06);
+  border-color: var(--border-strong, var(--border));
+}
+@media (prefers-reduced-motion: reduce) {
+  .card { transition: none; }
 }
 .card.pad0 { padding: 0; overflow: hidden; }
 
@@ -174,12 +207,25 @@ input, textarea { user-select: text; -webkit-user-select: text; }
    占用高低由百分比数字 + 文本表达，不上红黄。
    8px 圆角替代原 7px 直角：细节更柔，不显得生硬。 */
 .bar { height: 8px; border-radius: 4px; background: var(--surface-hover); overflow: hidden; margin-top: 12px; }
+/* 进度条填充：数据到位时从 0 长到目标宽度，比直接"跳到位"更有反馈感。
+   transform: scaleX 走合成层，不触发重排，长列表里也不掉帧。 */
 .bar > i {
   display: block; height: 100%; border-radius: inherit; background: var(--ink);
-  transition: width var(--dur-row) var(--ease);
+  transform-origin: left center;
+  transition: width var(--dur-row) var(--ease),
+              transform var(--dur-row) var(--ease-out);
+}
+.bar > i.animate-in { animation: barGrow var(--dur-row) var(--ease-out) both; }
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
 }
 .bar.warn > i   { background: var(--ink); }
 .bar.danger > i { background: var(--ink); }
+@media (prefers-reduced-motion: reduce) {
+  .bar > i.animate-in { animation: none; }
+  .bar > i { transition: none; }
+}
 
 .disk-list { display: flex; flex-direction: column; gap: 13px; margin-top: 4px; }
 .disk-head { display: flex; justify-content: space-between; font-size: var(--fs-small); margin-bottom: 5px; }
@@ -214,7 +260,28 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 .btn-primary:hover { background: var(--primary-ink); border-color: var(--primary-ink); }
 /* 平面世界没有投影可以「陷下去」，按下用橙色变深代替。 */
 .btn-primary:active { background: var(--primary-ink); border-color: var(--primary-ink); }
-.btn-sm { padding: 4px 13px; font-size: var(--fs-small); }
+
+/* 次级按钮 = 墨色实底。页面里「带后果但不是唯一转换动作」的操作走这一档：
+   清空回收站、开始 DISM、开始扫描、重启已关闭的应用。
+   以前全站只有 primary 和 tertiary，这类操作和「刷新」「取消」长得一模一样。 */
+.btn-secondary {
+  background: var(--ink); border-color: var(--ink); color: var(--on-primary);
+  font-weight: 600;
+}
+.btn-secondary:hover { background: var(--ink-soft); border-color: var(--ink-soft); }
+.btn-secondary:active { background: var(--ink-soft); border-color: var(--ink-soft); }
+.btn-secondary:disabled { background: var(--ink); border-color: var(--ink); }
+
+/* 危险按钮 = 砖红实底，只在二次确认框里给不可恢复的那个动作。
+   不进正文、不做普通列表操作按钮 —— 它一出现就必须意味着「删了就没了」。 */
+.btn-danger {
+  background: var(--danger-ink); border-color: var(--danger-ink); color: var(--on-primary);
+  font-weight: 600;
+}
+.btn-danger:hover { background: #662626; border-color: #662626; }
+.btn-danger:active { background: #662626; border-color: #662626; }
+
+.btn-sm { padding: 6px 13px; font-size: var(--fs-small); }
 
 /* 键盘焦点：2px ink 实线，无动画（延迟出现等于延迟可用）。 */
 :where(a, button, summary, [tabindex]):focus-visible,
@@ -228,13 +295,13 @@ input.switch:focus-visible {
    柔化版梯度：safe 灰衬底 / caution 亚麻暖衬底 / risky 白底墨描边 / mute 浅灰。
    文字本身（安全·谨慎·风险）仍然是第一信号，颜色只做次级提示。 */
 .badge {
-  font-size: var(--fs-small); padding: 2px 10px; border-radius: var(--r-pill);
+  font-size: 12px; padding: 1px 9px; border-radius: var(--r-pill);
   font-weight: 600; white-space: nowrap; letter-spacing: .2px;
   background: var(--surface-sunken); color: var(--body);
-  border: 1px solid transparent;
+  border: 1px solid transparent; line-height: 1.7;
 }
 .badge-ok     { background: var(--canvas-soft); color: var(--body-mid); font-weight: 500; }
-.badge-warn   { background: var(--caution-tint); border-color: #ead9b8; color: var(--caution-ink); font-weight: 600; }
+.badge-warn   { background: var(--caution-tint); border-color: var(--caution-border); color: var(--caution-ink); font-weight: 600; }
 .badge-danger { background: var(--surface); border-color: var(--ink); color: var(--ink); font-weight: 700; }
 .badge-mute   { background: var(--canvas-soft); color: var(--body-mid); font-weight: 400; }
 
@@ -284,14 +351,24 @@ button, input, select, textarea { color: var(--text-1); }
   color: var(--text-1); outline: none; min-width: 180px;
   transition: border-color var(--dur-fast) var(--ease);
 }
-/* 聚焦不加彩色光环 —— 只把描边换成 ink。 */
-.search:focus { border-color: var(--text-1); }
+/* 聚焦统一走与按钮同一套 2px 墨描边：1px 边框变色在灰底上几乎看不见，
+   键盘用户会直接找不到自己在哪。 */
+.search:focus,
+.select:focus {
+  border-color: var(--text-1);
+  outline: 2px solid var(--ink); outline-offset: 1px;
+}
 
 .select {
   font-family: inherit; font-size: var(--fs-small);
-  padding: 8px 13px; border-radius: var(--r-sm);
-  border: 1px solid var(--border-strong); background: var(--surface);
-  color: var(--text-1); outline: none; cursor: pointer;
+  padding: 8px 34px 8px 13px; border-radius: var(--r-sm);
+  border: 1px solid var(--border-strong); background-color: var(--surface);
+  color: var(--text-1); cursor: pointer;
+  /* 原生下拉箭头和 6px 圆角的自定义框不搭，改自绘 chevron（内联 SVG 免额外请求） */
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23201515' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
   transition: border-color var(--dur-fast) var(--ease);
 }
 .select:hover { border-color: var(--text-1); }
@@ -384,7 +461,6 @@ input.switch:checked:active::after {
   transform: translate(var(--toggle-travel), -50%) scale(.96);
   transition: transform 80ms var(--ease-state);
 }
-input.switch:focus-visible { box-shadow: var(--toggle-focus); }
 
 /* ------------------------------------------------------------- 进程列表 */
 /* 高度常量与 .jlist 同理：要留够列表之外的页头、加速选项卡片、
@@ -396,12 +472,40 @@ input.switch:focus-visible { box-shadow: var(--toggle-focus); }
   align-items: center; gap: 10px;
   padding: 8px 14px; border-bottom: 1px solid var(--border);
   cursor: pointer;
-  transition: background var(--dur-fast) var(--ease);
+  transition: background var(--dur-fast) var(--ease),
+              transform var(--dur-fast) var(--ease);
 }
 .prow:last-child { border-bottom: 0; }
 .prow:hover { background: var(--surface-hover); }
+/* 指针悬停时整行轻微右移，给出"这一行可以点"的暗示 */
+.prow:active { transform: scale(.995); }
 .prow.is-protected { cursor: default; opacity: .62; }
 .prow.is-protected:hover { background: transparent; }
+.prow.is-protected:active { transform: none; }
+
+/* 列表数据到位后逐行淡入：只对首屏前 12 行做错峰，
+   再多会让人等太久，也会在长列表上掉帧。 */
+.plist .prow { animation: rowIn var(--dur-row) var(--ease-out) both; }
+@keyframes rowIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+.plist .prow:nth-child(1)  { animation-delay:   0ms; }
+.plist .prow:nth-child(2)  { animation-delay:  18ms; }
+.plist .prow:nth-child(3)  { animation-delay:  36ms; }
+.plist .prow:nth-child(4)  { animation-delay:  54ms; }
+.plist .prow:nth-child(5)  { animation-delay:  72ms; }
+.plist .prow:nth-child(6)  { animation-delay:  90ms; }
+.plist .prow:nth-child(7)  { animation-delay: 108ms; }
+.plist .prow:nth-child(8)  { animation-delay: 126ms; }
+.plist .prow:nth-child(9)  { animation-delay: 144ms; }
+.plist .prow:nth-child(10) { animation-delay: 162ms; }
+.plist .prow:nth-child(11) { animation-delay: 180ms; }
+.plist .prow:nth-child(n+12) { animation-delay: 198ms; }
+@media (prefers-reduced-motion: reduce) {
+  .plist .prow { animation: none; }
+  .prow:active { transform: none; }
+}
 .pcell-tick { display: flex; justify-content: center; }
 .tick-empty {
   width: 15px; height: 15px; border-radius: var(--r-sm);
@@ -508,6 +612,36 @@ input.switch:focus-visible { box-shadow: var(--toggle-focus); }
   .skel-bar { animation: none; }
 }
 
+/* 进程列表骨架屏：与真实 .prow 同高同列，数据回来时不跳变 */
+.proc-skel { gap: 0; }
+.skel-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 96px 72px;
+  align-items: center; gap: 12px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  pointer-events: none;
+}
+.skel-row:last-child { border-bottom: 0; }
+.skel-bar.w-tick { width: 16px; height: 16px; border-radius: 4px; }
+.skel-bar.w-name { width: 42%; height: 13px; }
+.skel-bar.w-tag  { width: 100%; height: 11px; opacity: .7; }
+.skel-bar.w-mem  { width: 60px; height: 12px; justify-self: end; }
+
+/* 骨架屏之间做轻微错峰，看起来像"正在逐行加载"而不是整块闪烁 */
+.skel-row:nth-child(1) .skel-bar { animation-delay: 0ms; }
+.skel-row:nth-child(2) .skel-bar { animation-delay: 60ms; }
+.skel-row:nth-child(3) .skel-bar { animation-delay: 120ms; }
+.skel-row:nth-child(4) .skel-bar { animation-delay: 180ms; }
+.skel-row:nth-child(5) .skel-bar { animation-delay: 240ms; }
+.skel-row:nth-child(6) .skel-bar { animation-delay: 300ms; }
+.skel-row:nth-child(7) .skel-bar { animation-delay: 360ms; }
+.skel-row:nth-child(8) .skel-bar { animation-delay: 420ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .skel-row:nth-child(n) .skel-bar { animation-delay: 0ms; }
+}
+
 /* ------------------------------------------------------------- 权限提示条
    借 card-feature-dark 的极性翻转：一条 ink 实心带（不是淡底卡片）。
    咖啡墨是中性注意度，不是「正在出事」的红色。 */
@@ -524,18 +658,39 @@ input.switch:focus-visible { box-shadow: var(--toggle-focus); }
 .banner svg { flex: none; color: var(--primary); width: 18px; height: 18px; }
 .banner > div { flex: 1; }
 .banner b { color: var(--ink); font-weight: 700; }
-/* 横幅内嵌按钮：绿底白字（去授权是「放行」动作）。 */
+/* 横幅内嵌按钮：跟主按钮同款（去授权 = 这一屏唯一要做的事）。
+   以前单独给了一个绿色，结果绿色在本产品里同时表示"已完成/安全"，
+   同一行里出现橙底 + 绿钮 + 黑字三种色彩语言，语义互相打架。 */
 .banner .btn {
-  border-color: transparent;
-  background: var(--go); color: #fff;
+  border-color: var(--primary);
+  background: var(--primary); color: var(--on-primary);
   padding: 6px 14px;
 }
-.banner .btn:hover { background: var(--go-ink); border-color: transparent; }
-.banner .btn:active { background: var(--go-ink); border-color: transparent; }
+.banner .btn:hover { background: var(--primary-ink); border-color: var(--primary-ink); }
+.banner .btn:active { background: var(--primary-ink); border-color: var(--primary-ink); }
 .hide { display: none !important; }
 
 /* ------------------------------------------------------------- 结果卡片 */
 .result-card { margin-bottom: 14px; }
+/* 结果卡片出现时从上方滑入：它总是在一次操作之后冒出来，
+   给个方向性提示（"从上面掉下来的结果"）比突然出现更自然。 */
+.result-card:not(.hide) {
+  animation: resultIn var(--dur-base) var(--ease-out) both;
+}
+@keyframes resultIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+/* 结果里的数值做一次"闪一下"，提示这是刚算出来的新数 */
+.result-item .v { animation: valFlash 520ms var(--ease-out) both; }
+@keyframes valFlash {
+  0%   { opacity: .35; }
+  100% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .result-card:not(.hide) { animation: none; }
+  .result-item .v { animation: none; }
+}
 .result-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 14px;
@@ -557,6 +712,14 @@ input.switch:focus-visible { box-shadow: var(--toggle-focus); }
   display: flex; align-items: center; gap: 10px;
   padding: 7px 0; cursor: pointer;
 }
+/* 无说明文字的单行项：和带说明的项在同一网格里对齐。
+   用 min-height 撑到两行的高度，避免右列短项把整行拉歪。 */
+.opt-compact { min-height: 48px; }
+/* 全部改为单行后，48px 的留白反而显得松散 —— 收紧到一行半的高度，
+   让 8 个选项在一屏内排得开。 */
+.opt-compact { min-height: 40px; padding: 6px 0; }
+.opt-compact b { display: inline; }
+.opt-compact .badge { margin-left: 8px; vertical-align: 1px; }
 .opt .switch { flex: none; }
 .opt > span { display: block; min-width: 0; }
 .opt b { font-size: var(--fs-small); font-weight: 600; display: block; }
@@ -570,11 +733,46 @@ input.switch:focus-visible { box-shadow: var(--toggle-focus); }
   padding-left: 9px; border-left: 2px solid var(--ink);
   line-height: 1.6;
 }
+/* 深度优化的风险提示：默认收起，勾选该项才展开。
+   一屏 7 项如果都挂着警告框，等于什么都没强调。 */
+.opt i.deep-warn {
+  display: none;
+  font-size: 13px; opacity: .85;
+}
+.opt i.deep-warn.show {
+  display: block;
+  animation: warnIn var(--dur-fast) var(--ease-out) both;
+}
+@keyframes warnIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .opt i.deep-warn.show { animation: none; }
+}
 .opt-actions {
   display: flex; gap: 9px; flex-wrap: wrap;
   margin-top: 14px; padding-top: 13px;
   border-top: 1px solid var(--border);
 }
+
+/* 操作区分组：左边"还原类"、右边"执行类"，靠两端对齐拉开层级，
+   避免四个同等权重的按钮挤成一行、看不出主次 */
+.act-split {
+  justify-content: space-between; align-items: center;
+}
+.act-split .act-group { display: flex; gap: 9px; flex-wrap: wrap; }
+.act-split .act-right { margin-left: auto; }
+
+/* 服务状态摘要：一行小字，弱化为辅助信息 */
+.svc-note {
+  margin-top: 10px; padding: 7px 10px;
+  font-size: var(--fs-small); color: var(--body-mid);
+  background: var(--canvas-soft); border-radius: var(--r-sm);
+  line-height: 1.5;
+}
+.svc-note:empty { display: none; }
+.svc-note b { color: var(--ink); font-weight: 600; }
 
 /* 规则行的右侧（尺寸 / 目标数 / 详情入口） */
 .jcell-right {
@@ -984,8 +1182,8 @@ input.switch:focus-visible { box-shadow: var(--toggle-focus); }
 /* 确定按钮：墨色实底；取消：浅灰实底 —— 两个按钮同形但颜色一深一浅（用户选变体 A） */
 .dlg .dlg-ok { background: var(--ink); border-color: var(--ink); color: var(--on-primary); }
 .dlg .dlg-ok:hover { background: var(--ink-soft); border-color: var(--ink-soft); }
-.dlg .dlg-no { background: #f0ece4; border-color: #e0d8ca; color: var(--ink); }
-.dlg .dlg-no:hover { background: #e9e3d8; border-color: #d6d0c2; }
+.dlg .dlg-no { background: var(--linen-soft); border-color: var(--linen-line); color: var(--ink); }
+.dlg .dlg-no:hover { background: var(--linen-soft-hover); border-color: var(--linen-line); }
 
 /* 表情包点缀：个性签名 + 状态反馈，克制小尺寸。
    未加载/加载失败时显示中性占位块（文字 + 浅底），绝不裂图；
@@ -1074,7 +1272,7 @@ input.switch:focus-visible { box-shadow: var(--toggle-focus); }
   transition: background var(--ease) 160ms, padding-left var(--ease) 160ms;
 }
 .feature-row:last-child { border-bottom: 0; }
-.feature-row:hover { background: #f5f3ec; padding-left: 16px; }
+.feature-row:hover { background: var(--canvas-soft); padding-left: 16px; }
 .feature-row.f-memory:hover { background: rgba(46, 125, 62, .07); }
 .feature-row.f-junk:hover   { background: rgba(184, 120, 42, .08); }
 .feature-row.f-gaming:hover { background: rgba(194, 24, 91, .07); }
@@ -1084,9 +1282,9 @@ input.switch:focus-visible { box-shadow: var(--toggle-focus); }
   stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
 }
 .feature-row:hover .feature-ico { color: var(--ink); }
-.feature-row.f-memory:hover .feature-ico { color: #2e7d3e; }
-.feature-row.f-junk:hover   .feature-ico { color: #b8782a; }
-.feature-row.f-gaming:hover .feature-ico { color: #c2185b; }
+.feature-row.f-memory:hover .feature-ico { color: var(--ink); }
+.feature-row.f-junk:hover   .feature-ico { color: var(--ink); }
+.feature-row.f-gaming:hover .feature-ico { color: var(--ink); }
 .feature-title { margin: 0; font-size: 15px; font-weight: 600; color: var(--ink); line-height: 1.4; }
 .feature-desc { margin: 3px 0 0; font-size: 13px; color: var(--text-3); line-height: 1.55; }
 
@@ -1095,7 +1293,7 @@ input.switch:focus-visible { box-shadow: var(--toggle-focus); }
 .about-name { margin: 0; font-size: 20px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
 .version-tag {
   font-family: var(--font-mono); font-size: 12px; line-height: 1;
-  padding: 5px 8px; background: #eceae3; color: var(--text-2);
+  padding: 5px 8px; background: var(--canvas-soft); color: var(--text-2);
   border-radius: var(--r-sm); letter-spacing: .02em;
 }
 .about-meta {
@@ -1113,14 +1311,14 @@ input.switch:focus-visible { box-shadow: var(--toggle-focus); }
 
 .ghost-link {
   display: inline-flex; align-items: center; gap: 8px; margin-top: 18px;
-  padding: 9px 16px; background: transparent; border: 1px solid #d9d2c2;
+  padding: 9px 16px; background: transparent; border: 1px solid var(--border-strong);
   border-radius: var(--r-sm); color: var(--text-2); font-size: 14px; font-weight: 500;
   cursor: pointer;
   transition: border-color var(--ease) 160ms, background var(--ease) 160ms,
               color var(--ease) 160ms, transform var(--ease-out) 160ms;
 }
 .ghost-link svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.ghost-link:hover { border-color: var(--primary); background: #f5f3ec; color: var(--primary); }
+.ghost-link:hover { border-color: var(--primary); background: var(--canvas-soft); color: var(--primary); }
 .ghost-link:active { transform: scale(.98); }
 
 /* 更新 */
@@ -1160,7 +1358,7 @@ input.switch:focus-visible { box-shadow: var(--toggle-focus); }
 .status.show { display: inline-flex; opacity: 1; }
 .status .dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
 .status-latest { color: var(--text-2); }
-.status-latest .dot { background: #3a9d5d; }
+.status-latest .dot { background: var(--ok-ink); }
 .status-new { color: var(--primary); font-weight: 600; }
 .status-new .dot { background: var(--primary); }
 
@@ -1177,3 +1375,4 @@ input.switch:focus-visible { box-shadow: var(--toggle-focus); }
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
 ::-webkit-scrollbar-track { background: transparent; }
+

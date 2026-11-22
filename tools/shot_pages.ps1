@@ -95,7 +95,7 @@ Add-Type -MemberDefinition '[DllImport("user32.dll")] public static extern bool 
 
 $next   = Split-Path $PSScriptRoot -Parent
 # The venv does not necessarily live next to the repo: this machine keeps it in
-# D:\Envs\<project>. Probe the known spots instead of guessing one, so a stale
+# D:\DevKit\toolchains\python-envs\<project>. Probe the known spots instead of guessing one, so a stale
 # hardcoded path fails loudly with the list it tried rather than as an opaque
 # "cannot find the file specified" from Start-Process.
 $venvCandidates = @(
@@ -103,7 +103,7 @@ $venvCandidates = @(
   (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) ".venv\Scripts\python.exe"),
   (Join-Path $next ".venv\Scripts\python.exe"),
   (Join-Path $next "venv\Scripts\python.exe"),
-  "D:\Envs\mahiru-assistant\Scripts\python.exe"
+  "D:\DevKit\toolchains\python-envs\mahiru-assistant\Scripts\python.exe"
 )
 $venvpy = $null
 foreach ($cand in $venvCandidates) {
@@ -147,7 +147,7 @@ Write-Host "pages=$($pages.Count) only='$Only' theme='$Theme'"
 
 function Kill-App {
   Get-Process -Name python -ErrorAction SilentlyContinue |
-    Where-Object { $_.Path -like "D:\Envs\mahiru-assistant\Scripts\*" } |
+    Where-Object { $_.Path -like "D:\DevKit\toolchains\python-envs\mahiru-assistant\Scripts\*" } |
     ForEach-Object { Stop-Process -Id $_.Id -Force }
 }
 

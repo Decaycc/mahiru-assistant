@@ -35,6 +35,10 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 
+# 产物与源码分离：EXE 统一输出到 D:\Projects\builds\mahiru-assistant，
+# 不堆在仓库里的 dist\。可用 --out 覆盖。
+DEFAULT_OUT = r"D:\Projects\builds\mahiru-assistant"
+
 APP_NAME = "Mahiru"
 # 入口必须是**包外**的脚本：PyInstaller 把入口当顶层模块执行，
 # 包内的 app/__main__.py 含相对导入，会直接报
@@ -73,6 +77,9 @@ def main() -> int:
     ap.add_argument("--name", default=APP_NAME,
                     help="产物名（默认 GameBoostNext）。"
                          "旧版本正在运行时 EXE 会被锁住，换个名字就能先出一版")
+    ap.add_argument("--out", default=DEFAULT_OUT,
+                    help="产物输出目录（默认 D:\\Projects\\builds\\mahiru-assistant）；"
+                         "传空字符串则回到仓库内 dist\\")
     ap.add_argument("--skip-checks", action="store_true",
                     help="跳过出包前的验证脚本。默认一定会跑，失败就不出包 —— "
                          "只有明知有问题还要出个临时包时才该用它")
@@ -98,7 +105,9 @@ def main() -> int:
             return 3
         print()
 
-    dist = os.path.join(ROOT, "dist")
+    # 产物目录：默认仓库外的 D:\Projects\builds\mahiru-assistant
+    dist = args.out.strip() if args.out and args.out.strip() else os.path.join(ROOT, "dist")
+    os.makedirs(dist, exist_ok=True)
     build = os.path.join(ROOT, "build")
     spec = os.path.join(ROOT, f"{app_name}.spec")
 

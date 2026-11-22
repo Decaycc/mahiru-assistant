@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-"""创建 GitHub Release 并上传 exe 资产（v1.0.2）。
+"""创建 GitHub Release 并上传 exe 资产。
 
 用法：
   $env:GH_TOKEN = "<PAT>"
-  python tools/_release.py --dry-run
-  python tools/_release.py --execute
+  python tools/release.py --dry-run
+  python tools/release.py --execute
+
+版本号从 --tag 读取，默认 v1.1.0；资产与说明按版本号自动拼接。
 """
 import base64
 import json
@@ -17,9 +19,16 @@ API = "https://api.github.com"
 REPO = "Decaycc/mahiru-assistant"
 TOKEN = os.environ.get("GH_TOKEN", "")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TAG = "v1.0.2"
-ASSET = os.path.join(ROOT, "dist", "mahiru-assistant-v1.0.2.exe")
-NOTES = os.path.join(ROOT, "design", "release-notes-1.0.2.md")
+import argparse
+
+_ap = argparse.ArgumentParser(add_help=False)
+_ap.add_argument("--tag", default="v1.1.0")
+_known, _ = _ap.parse_known_args()
+TAG = _known.tag
+# 产物统一放在仓库外的 builds 目录（见 tools\build.py 的 DEFAULT_OUT）
+ASSET = os.environ.get("MAHIRU_ASSET") or os.path.join(
+    os.path.expanduser("~"), "Desktop", "mahiru-assistant-%s.exe" % TAG)
+NOTES = os.path.join(ROOT, "design", "release-notes-%s.md" % TAG.lstrip("v"))
 
 
 def api_req(method, url, body=None, headers=None, raw_ok=False):
@@ -61,7 +70,7 @@ def main():
         release = api_req("POST", "%s/repos/%s/releases" % (API, REPO), {
             "tag_name": TAG,
             "target_commitish": "main",
-            "name": "Mahiru v1.0.2 — 全新界面 + 游戏与性能模块 + LightC 清理规则",
+            "name": "Mahiru %s" % TAG,
             "body": notes,
             "draft": False,
             "prerelease": False,

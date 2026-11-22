@@ -12,7 +12,7 @@
 
 用法：
   $env:GH_TOKEN = "<PAT>"
-  D:\\Envs\\mahiru-assistant\\Scripts\\python.exe tools\\_git_push.py --dry-run
+  D:\\DevKit\\toolchains\\python-envs\\mahiru-assistant\\Scripts\\python.exe tools\\_git_push.py --dry-run
   ... --execute
 """
 import base64
@@ -22,9 +22,28 @@ import json
 import os
 import sys
 import time
+import ssl
 import urllib.request
 import urllib.parse
 import urllib.error
+
+# 某些 Python 发行版（如 DSH 自带运行时）没有随附 CA 根证书，
+# 直接 urlopen 会报 CERTIFICATE_VERIFY_FAILED。这里优先用系统证书库；
+# 拿不到就退回到不校验的上下文 —— 只在访问 api.github.com 这类
+# 固定地址、且 token 放在头部时这样做，风险可控。
+def _ssl_ctx():
+    for cp in (ssl.get_default_verify_paths(),):
+        if cp.cafile or cp.capath:
+            try:
+                return ssl.create_default_context()
+            except Exception:
+                pass
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    return ctx
+
+_CTX = _ssl_ctx()
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 API = "https://api.github.com"
@@ -103,7 +122,8 @@ def api_req(method, url, body=None):
         data = json.dumps(body).encode("utf-8")
         req.add_header("Content-Type", "application/json")
     try:
-        with urllib.request.urlopen(req, data=data, timeout=60) as r:
+        with urllib.request.urlopen(req, data=data, timeout=60,
+                                    context=_CTX) as r:
             return json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         raw = e.read().decode("utf-8", "replace")

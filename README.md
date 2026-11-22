@@ -1,163 +1,119 @@
 # Mahiru
 
-Windows 上的游戏加速与清理工具。把「打游戏前腾一下内存、清一下垃圾」这件事
-做成点几下就完的界面。
+Windows 上的内存优化与垃圾清理工具。打游戏前腾一下内存、清掉攒下来的缓存，
+点几下就完事。
 
-> 作者：**decaycc**
+作者 [decaycc](https://github.com/Decaycc)。
 
 ## 下载
 
-**不用装、不用编译，直接下这个单文件 EXE 双击运行：**
+单文件 EXE，解压即用，不需要安装：
 
-### ⬇️ [mahiru-assistant-v1.0.2.exe](https://github.com/Decaycc/mahiru-assistant/releases/latest/download/mahiru-assistant-v1.0.2.exe)
+**[mahiru-assistant-v1.1.0.exe](https://github.com/Decaycc/mahiru-assistant/releases/latest/download/mahiru-assistant-v1.1.0.exe)**
 
-14.4 MB · Windows 10/11 · 单文件绿色版
+Windows 10 / 11 · 约 14 MB · 绿色版
 
-想先看版本说明或校验哈希：[Releases 页面](https://github.com/Decaycc/mahiru-assistant/releases)
+第一次运行 Windows 可能弹「已保护你的电脑」，点「更多信息」→「仍要运行」即可。
+这是因为 EXE 没有代码签名证书，不是病毒。Release 页附了 SHA256，可以自行校验。
 
-> 文件叫 `mahiru-assistant-v1.0.2.exe` 而不是中文名，是因为 GitHub 的
-> Release 资产用非 ASCII 文件名会上传失败（踩过，报 422）。下载后随便改回
-> `Mahiru.exe` 都不影响运行。
+## 功能
 
-### 第一次运行时 Windows 会拦一下，这是正常的
+**内存优化** — 关闭后台常驻程序、清理进程工作集、清空待机内存列表。
+带保护名单，杀软、反作弊、输入法、驱动配套进程不会被结束。
 
-双击之后如果弹出蓝色的「**Windows 已保护你的电脑**」，那**不是**查出了病毒 ——
-SmartScreen 只是在说「这个 EXE 没有数字签名，我头一次见」。代码签名证书要按年
-买，个人项目没买，所以每个没签名的独立软件都会有这一步。
+**游戏优先级** — 从运行中的程序里挑出游戏设优先级，可记住配置，下次一键应用。
 
-做法：点「**更多信息**」→「**仍要运行**」。只需要做一次。
+**垃圾清理** — 内置规则 + 从开源规则库衍生的路径模板，覆盖系统缓存、浏览器、
+开发工具、游戏平台，以及微信/QQ/钉钉/飞书/WPS 等国内常用软件。
+支持「移入回收站」代替直接删除。
 
-少数杀软还会因为「这个程序会删文件」这个**行为**报毒 —— 那是启发式误报。
-想自己核对的话有两条路：
+**规则更新** — 设置页可拉取规则库最新版本，也能一键退回内置版。
 
-- Release 页面里附了 SHA256，下完先比对一下
-- 源码全在这个仓库里，可以照着 `python tools\build.py` 自己打一份，
-  对比是不是同一个东西
+**系统服务** — 打游戏时可选停掉搜索索引、遥测、Xbox 等服务，用完一键还原。
 
-## 它做什么
+## 安全
 
-| 功能 | 说明 |
-|---|---|
-| **内存优化** | 关闭后台常驻程序、清理进程工作集、清空待机内存列表；带保护名单，杀软/反作弊/自身进程不会被碰 |
-| **游戏优先级** | 列表里挑出正在跑的游戏设优先级，可记住，下次一键应用 |
-| **垃圾清理** | 50 条内置规则 + 从开源规则库衍生的 3000+ 条路径模板；清理时可以选「移入回收站」而不是直接删 |
-| **规则更新** | 设置页里一键拉取 Winapp2 / Winapp3 / BleachBit / MultronWcleaner 的最新规则，也能一键退回内置版 |
-| **小功能** | 启动项管理、硬件与磁盘健康、大文件查找、重复文件查找 |
+这个工具会删文件，所以几个关键约束写在代码里：
 
-## 安全设计
+- 保护路径永不删除：`Windows\Installer`、`WinSxS`、`System32`、`DriverStore`、页面文件
+- 隐私数据永不匹配：Cookie、历史、密码、书签、表单、会话、IndexedDB
+- 凭据目录永不触碰：`.ssh`、`.aws`、`id_rsa` 等按路径段判定
+- 不跟随重解析点，不会绕出扫描范围
+- 正在被占用的文件跳过，不强删
+- 回收站不可用时（卷被禁用、容量为 0、单条目超限）跳过并说明原因，不会降级成永久删除
+- 界面传入的路径不可信，扫描根走白名单，进程保护状态在核心层再校验一次
+- 启动项禁用是搬移而非删除，随时可还原
+- 出包前强制跑验证脚本，任何一项不过就停止出包
 
-这个工具会**删文件**，所以安全相关的取舍都写在代码注释和 `PLAN.md` 里：
-
-- **保护路径永不删除**：`Windows\Installer`、`WinSxS`、`System32`、`DriverStore`、页面文件等
-- **隐私数据永不匹配**：Cookie / 历史 / 密码 / 书签 / 表单 / 会话 / IndexedDB
-- **凭据永不触碰**：`.ssh`、`.aws`、`id_rsa` 等按段判定拒绝
-- **不跟随重解析点**，不会绕出扫描范围
-- **占用中的文件跳过，不强删**
-- **界面传入的路径一律不可信**：扫描根走白名单，进程在核心层重新校验一次保护状态
-- **启动项禁用是搬移不是删除**：值在活动键与禁用区之间移动，随时还原
-- **两个查找功能全程只列不删**
-- **回收站不可用时拒绝删除**：卷的回收站被关掉、容量为 0、或单个条目超过上限时，
-  操作会被**跳过**并说明原因 —— 绝不悄悄降级成永久删除
-- **出包前强制跑验证**：`tools\build.py` 会先跑 `tools\run_checks.py`，任何一项
-  不过就停止出包（`--skip-checks` 是逃生口）
+删除路径上的这些保证由 `tools\run_checks.py` 覆盖。
 
 ## 运行
 
-需要 Windows 10/11 和 WebView2 运行时。Win11 自带；Win10 一般由系统更新装上。
+需要 Windows 10/11 和 WebView2。Win11 自带，Win10 一般随系统更新装上。
+没有的话程序会提示你去装，而不是开一个白窗口。
 
-> 万一没有：程序会在开窗前**明确告诉你**去装，而不是开一个白屏的窗口。
-> 界面用的是 ES6，而缺少 WebView2 时 pywebview 会静默降级到 IE 内核，
-> 那种情况下白屏是必然的 —— 所以这里宁可拦住。
-
-### 直接用
-
-下载 `dist/Mahiru.exe`，双击。**单文件、免安装**，配置写在 EXE 同级的
-`config/` 里（那个目录不可写时退回 `%APPDATA%\mahiru`）。
-
-### 从源码跑
+### 从源码
 
 ```bat
 pip install pywebview pythonnet
 python run.py
 ```
 
-### 自己打包
+### 打包
 
 ```bat
 pip install pyinstaller
-python tools\build.py            :: 产出 dist\Mahiru.exe
-python tools\build.py --console  :: 保留控制台，排查启动问题
+python tools\build.py
+python tools\build.py --console   :: 保留控制台，方便看启动错误
 ```
 
-## 自检与验证
-
-GUI 不好靠人眼在自动化里验证，所以内置了两套：
+## 验证
 
 ```bat
-python app\core\selftest.py             :: 6 项回归（含真实注册表夹具）
-python run.py --smoke 6                 :: 开窗跑 6 阶段冒烟并读回 DOM
-Mahiru.exe --smoke 6              :: 打包版同样能跑，报告落在 config\
-Mahiru.exe --update-rules         :: 无界面更新清理规则
+python app\core\selftest.py         :: 底层接口自检
+python run.py --smoke 6             :: 开窗跑冒烟测试，读回 DOM 断言
+Mahiru.exe --update-rules           :: 无界面更新清理规则
+python tools\run_checks.py          :: 跑删除路径上的全部回归
 ```
 
-删除路径上的安全保证（保护清单、回收站降级、规则构建、界面接线）由
-`tools\run_checks.py` 统一跑一遍：
+`run_checks.py` 的脚本会真造夹具、真走删除流程，但只动
+`%USERPROFILE%\.mahiru_fixture`，跑前跑后都清理，不碰真实文件。
 
-```bat
-python tools\run_checks.py              :: 跑完 tools\verify\ 下全部脚本
-python tools\run_checks.py --list       :: 只列出来
-python tools\run_checks.py --only recycle   :: 只跑名字含 recycle 的
-```
-
-这些脚本会真造夹具、真走删除流程，但**只动
-`%USERPROFILE%\.mahiru_fixture`**（跑前跑后都会清），不会碰你的真实文件。
-
-冒烟报告会写到 `config/smoke_report.txt` —— windowed 打包版没有控制台，
-报告必须落盘，这也让「在别人机器上跑一遍验证」成为可能。
-
-## 目录结构
+## 目录
 
 ```
-run.py                  打包入口（必须在包外，见 PLAN.md）
+run.py                 打包入口
 app/
-  main.py               窗口、DPI、崩溃处理、WebView2 检查、--smoke / --update-rules
-  bridge.py             唯一对 JS 暴露的 Api 类
-  paths.py              只读资源 / 可写数据分离（onefile 关键）
-  elevation.py          UAC 检测与提权重启
+  main.py              窗口、DPI、崩溃处理、WebView2 检查
+  bridge.py            对 JS 暴露的 Api 类
+  paths.py             只读资源 / 可写数据分离
+  elevation.py         UAC 检测与提权重启
   core/
-    mem.py              内存优化核心（切分器生成）
-    junk.py             垃圾清理核心（切分器生成）
-    tools.py            小功能（手写）
-    rule_update.py      规则下载与生成（手写）
-    selftest.py         回归测试
-web/                    界面（原生 HTML/CSS/JS，无框架）
-tools/                  构建、截图、规则更新等开发工具
-  verify/               删除路径上的安全回归脚本（run_checks.py 调用）
-design/                 图标管线与界面风格对比
-DESIGN.md               界面设计规范（Al Jazeera 编辑部语言；令牌以它为准）
-PLAN.md                 完整方案与每个里程碑的实测记录
+    mem.py             内存优化
+    junk.py            垃圾清理
+    services.py        系统服务控制
+    tools.py           小工具
+    rule_update.py     规则下载与生成
+    selftest.py        回归测试
+web/                   界面（原生 HTML/CSS/JS，无框架）
+tools/                 构建与验证
+design/                图标、界面规范、发版说明
 ```
-
-> `app/core/mem.py` 与 `junk.py` **就是源文件，直接改即可**。
-> `tools/split_core.py` 是重构期一次性用过的切分器（把早期的 `gameboost.py` /
-> `junkclean.py` 拆成现在这两个模块），**已经不在工作流里**：它依赖的
-> `GameBoost/` 目录在本仓库不存在，重跑它不会覆盖任何东西。
-> 要改行为就直接改 `app/core/` 下的文件，然后跑一遍 `app/core/selftest.py`。
 
 ## 已知限制
 
-- **仅 Windows**。内存接口走的是 NT 原生调用，换平台要重写。
-- **清空待机内存列表是唯一的例外**：内核接口不区分进程，所以它**也会清掉
-  反作弊进程的工作集**。游戏或反作弊在跑时，界面会建议改用逐个整理。
-- **SMART 失败预测需要管理员权限**，普通权限下读不到，界面会如实说明。
-- 打包版冷启动约 2.3 秒（onefile 每次都要解压，这是单文件形态的代价）。
+- 仅支持 Windows。内存部分走 NT 原生接口，换平台要重写。
+- 清空待机内存列表不区分进程，反作弊的工作集也会被清。正在游戏时建议改用
+  逐个整理，界面会给出提示。
+- SMART 失败预测需要管理员权限，普通权限下读不到。
+- 单文件打包版冷启动约 2 秒，每次启动都要解压，这是 onefile 的代价。
 
 ## 第三方资源
 
-清理规则衍生自开源规则库，图标使用了第三方插画 ——
-详见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。
+清理规则衍生自开源规则库，图标使用第三方插画。
+具体来源与许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ## 许可
 
-本仓库代码：见 [`LICENSE`](LICENSE)。
-第三方派生数据的许可以 `THIRD_PARTY_NOTICES.md` 为准。
+代码许可见 [LICENSE](LICENSE)。
+第三方派生数据以其自身许可证为准，详见 THIRD_PARTY_NOTICES.md。

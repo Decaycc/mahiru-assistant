@@ -50,9 +50,12 @@
   --sidebar-accent: #c2185b; /* 侧栏选中胶囊（莓果玫瑰）：粉色立绘上的同色系深一档，用户选定 */
   --on-primary:   #fffefb;   /* 橙底/墨底上的字 */
 
-  /* ── 确认色（绿色按钮专用）─────────────────────────────────── */
-  --go:           #2e7d3e;   /* 权限横幅里的「以管理员重启」：去授权动作 */
-  --go-ink:       #276b36;   /* 绿按钮 hover / 按下压深 */
+  /* ── 成功色（只剩「清理完成 / 已是最新」这一处语义）─────────── */
+  --ok-ink:       #2e7d3e;   /* 结果卡的「已释放」、更新检查的「已是最新」 */
+  --ok-ink-soft:  #276b36;
+
+  /* ── 危险（仅二次确认框里那个不可恢复的确认按钮）───────────── */
+  --danger-ink:   #7a2e2e;   /* 白字 9.3:1；只在确认框，不进正文 */
 
   /* ── 咖啡墨（文字与描边）───────────────────────────────────── */
   --ink:          #201515;   /* 标题、主文字、1px 描边、secondary 按钮填充 */
@@ -78,37 +81,43 @@
   --border:        #e9e9e6;   /* 中性发丝分隔线 */
   --border-strong: #d6d6d2;   /* 强调描边：输入框、outline 按钮 */
   --linen:         #ecd9c0;   /* 亚麻色：椎名真昼发色（立绘采样 #e4b490 附近的柔化版），确认对话框专用 */
+  --linen-soft:       #f0ece4;   /* 对话框里「取消」按钮的浅亚麻 */
+  --linen-soft-hover: #e9e3d8;   /* 同上 hover */
+  --linen-line:       #e0d8ca;   /* 对话框内浅亚麻的 1px 边 */
 
   /* ── 柔化改版新增：衬底 / 语义徽章梯度（不用红绿黄，靠暖衬底 + 深字 + 字重）── */
   --banner-tint:   #fdf0e6;   /* 权限横幅浅橙衬底（--primary 8% 色度） */
   --banner-border: #f6ddc8;   /* 权限横幅 1px 边 */
   --caution-tint:  #f7ecd9;   /* 「谨慎」徽章亚麻暖衬底 */
+  --caution-border:#e7d4b2;   /* 「谨慎」徽章 1px 边 */
   --caution-ink:   #6b5423;   /* 「谨慎」徽章字（亚麻底上深咖，对比充足） */
 
   /* ── 阴影：预览 v2 用极浅投影抬升白卡（替代此前的纯温差抬升）── */
   --shadow-1: 0 1px 3px rgba(32, 21, 21, .05), 0 6px 18px rgba(32, 21, 21, .04);
 
-  /* ── 开关（用户 m08690 参考实现的独立令牌组）──────────────── */
-  --toggle-track-off:        rgba(32, 21, 21, .15);       /* 关态轨道：半透明墨，区别于奶油卡 */
-  --toggle-track-off-hover:  rgba(32, 21, 21, .20);       /* 关态 hover：加深一档 */
-  --toggle-track-on:         #ff4f00;                     /* 开态轨道：品牌橙（字面量，不引 --primary，免触发身份色检查） */
-  --toggle-track-on-hover:   #ff5a1a;                     /* 开态 hover */
-  --toggle-track-border-off: rgba(197, 192, 177, .4);     /* 关态描边：米灰 */
-  --toggle-track-border-on:  rgba(255, 79, 0, .3);        /* 开态描边：橙 */
+  /* ── 开关：40×22 惯例尺寸，开态走墨色 ──────────────────────────
+     橙色在这个产品里只表示「转换动作」（按钮）。开关是「状态」，
+     状态交给墨色，跟复选框的勾是同一套语言；否则一屏六个开关全橙，
+     主按钮就被淹掉了。 */
+  --toggle-track-off:        rgba(32, 21, 21, .15);       /* 关态轨道：半透明墨 */
+  --toggle-track-off-hover:  rgba(32, 21, 21, .22);       /* 关态 hover：加深一档 */
+  --toggle-track-on:         #201515;                     /* 开态轨道：墨 */
+  --toggle-track-on-hover:   #2f2a26;                     /* 开态 hover */
+  --toggle-track-border-off: rgba(197, 192, 177, .45);    /* 关态描边：米灰 */
+  --toggle-track-border-on:  #201515;                     /* 开态描边：墨 */
   --toggle-thumb:            #ffffff;                     /* 滑块：纯白 */
-  --toggle-thumb-shadow:     0 2px 4px rgba(0, 0, 6, .2);
-  --toggle-thumb-shadow-hover: 0 2px 6px rgba(0, 0, 6, .25);
-  --toggle-thumb-shadow-on:  0 2px 6px rgba(255, 79, 0, .3);
+  --toggle-thumb-shadow:     0 1px 3px rgba(0, 0, 6, .22);
+  --toggle-thumb-shadow-hover: 0 1px 5px rgba(0, 0, 6, .26);
+  --toggle-thumb-shadow-on:  0 1px 4px rgba(32, 21, 21, .28);
   --toggle-halo-off:         0 0 0 4px rgba(32, 21, 21, .06);   /* 悬停晕圈 */
-  --toggle-halo-on:          0 0 0 4px rgba(255, 79, 0, .08);
-  --toggle-focus:            0 0 0 3px rgba(255, 79, 0, .15);   /* 焦点外发光 */
+  --toggle-halo-on:          0 0 0 4px rgba(32, 21, 21, .08);
   --ease-state:              cubic-bezier(.4, 0, .2, 1);        /* 状态过渡 */
   --ease-slide:              cubic-bezier(.2, .8, .4, 1);       /* 滑块位移（轻过冲） */
-  --toggle-w:                46px;
-  --toggle-h:                26px;
-  --toggle-pad:              3px;
-  --toggle-thumb-size:       20px;
-  --toggle-travel:           20px;
+  --toggle-w:                40px;
+  --toggle-h:                22px;
+  --toggle-pad:              2px;
+  --toggle-thumb-size:       18px;
+  --toggle-travel:           18px;
 
   --font: "Inter", "Noto Sans SC", system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;

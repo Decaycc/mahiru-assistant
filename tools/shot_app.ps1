@@ -110,6 +110,6 @@ Write-Host "saved $out"
 if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
 Start-Sleep -Milliseconds 600
 Get-Process -Name python -ErrorAction SilentlyContinue |
-  Where-Object { $_.Path -like "D:\Envs\mahiru-assistant\Scripts\*" } |
+  Where-Object { $_.Path -like "D:\DevKit\toolchains\python-envs\mahiru-assistant\Scripts\*" } |
   ForEach-Object { Stop-Process -Id $_.Id -Force; Write-Host "cleaned pid $($_.Id)" }
 Write-Host "done"

@@ -63,62 +63,6 @@ CONFIG_PATH = os.path.join(SCRIPT_DIR, "gameboost_config.json")
 # 名单定义
 # ---------------------------------------------------------------------------
 
-# 硬保护：绝不允许结束 / 绝不清理工作集
-PROTECTED: dict[str, str] = {
-    # 内核与系统
-    "system": "系统内核", "registry": "注册表", "memory compression": "内存压缩",
-    "idle": "空闲进程", "secure system": "安全系统",
-    "smss.exe": "会话管理器", "csrss.exe": "客户端服务", "wininit.exe": "Windows 初始化",
-    "winlogon.exe": "登录管理", "services.exe": "服务控制", "lsass.exe": "本地安全认证",
-    "svchost.exe": "系统服务宿主", "fontdrvhost.exe": "字体驱动宿主",
-    "dwm.exe": "桌面窗口管理器(合成/垂直同步)", "conhost.exe": "控制台宿主",
-    "wudfhost.exe": "驱动宿主", "spoolsv.exe": "打印后台", "audiodg.exe": "音频引擎",
-    "sihost.exe": "外壳基础结构", "startmenuexperiencehost.exe": "开始菜单",
-    "shellexperiencehost.exe": "外壳体验", "searchhost.exe": "搜索宿主", "dllhost.exe": "COM 代理",
-    "taskhostw.exe": "任务宿主", "runtimebroker.exe": "运行时代理",
-    "ctfmon.exe": "输入法框架", "textinputhost.exe": "输入法(触摸键盘)",
-    "chsime.exe": "微软拼音", "msctfime.exe": "输入法", "sogoucloud.exe": "搜狗输入法云",
-    # 安全软件（杀掉会导致机器失去防护，甚至蓝屏）
-    "msmpeng.exe": "Windows Defender 反恶意软件", "nissrv.exe": "Defender 扫描",
-    "securityhealthservice.exe": "Windows 安全中心", "securityhealthsystray.exe": "安全中心托盘",
-    "hipsdaemon.exe": "火绒安全-主程序", "hipstray.exe": "火绒安全-托盘",
-    "usysdiag.exe": "火绒-安全诊断",
-    "360tray.exe": "360 安全卫士", "zhudongfangyu.exe": "360 主动防御", "360sd.exe": "360 杀毒",
-    "qqpctray.exe": "腾讯电脑管家", "qqpcmgr.exe": "腾讯电脑管家",
-    "kxetray.exe": "金山毒霸", "kwsprotect64.exe": "金山毒霸",
-    "avp.exe": "卡巴斯基", "avastui.exe": "Avast", "avgui.exe": "AVG",
-    # 音频 / 显卡 / 触控板等硬件驱动配套（关掉会没声音或掉帧）
-    "rtkauduservice64.exe": "Realtek 音频服务", "rtkngui64.exe": "Realtek 音频面板",
-    "nvcontainer.exe": "NVIDIA 容器服务", "nvsphelper64.exe": "NVIDIA 捕捉助手",
-    "nvidia share.exe": "NVIDIA 覆盖", "nvdisplay.container.exe": "NVIDIA 显示容器",
-    "igfxtray.exe": "Intel 显卡托盘", "hkcmd.exe": "Intel 热键", "igfxpers.exe": "Intel 持久化",
-    "radeonsoftware.exe": "AMD 显卡软件", "amdow.exe": "AMD 覆盖",
-    "etdctl.exe": "触控板", "synaptics.exe": "触控板",
-    # 远程控制（关掉可能导致你再也连不上这台机器）
-    "awesun.exe": "向日葵远程控制", "sunloginclient.exe": "向日葵远程控制",
-    "todesk.exe": "ToDesk", "rustdesk.exe": "RustDesk", "teamviewer.exe": "TeamViewer",
-    "anydesk.exe": "AnyDesk", "mstsc.exe": "远程桌面",
-    # 游戏平台（关掉游戏就启动不了）
-    "steam.exe": "Steam", "steamwebhelper.exe": "Steam 内嵌浏览器",
-    "epicgameslauncher.exe": "Epic 启动器", "battle.net.exe": "战网",
-    "galaxyclient.exe": "GOG Galaxy", "riotclientservices.exe": "拳头客户端",
-    "eadesktop.exe": "EA App", "origin.exe": "Origin", "ubisoftconnect.exe": "Ubisoft Connect",
-    "wegame.exe": "WeGame", "tgp.exe": "WeGame",
-    # 反作弊（绝对不能结束，也不能动它的内存）
-    "easyanticheat.exe": "EasyAntiCheat", "easyanticheat_eos.exe": "EasyAntiCheat EOS",
-    "beservice.exe": "BattlEye", "beservice64.exe": "BattlEye", "battleye.exe": "BattlEye",
-    "vgc.exe": "Vanguard 反作弊", "vgtray.exe": "Vanguard 托盘",
-    "anticheatexpert.exe": "ACE 反作弊", "ace-guard client.exe": "ACE 反作弊",
-    "sguard64.exe": "ACE 反作弊", "sguard.exe": "ACE 反作弊",
-    "tp3helper.exe": "腾讯反作弊", "tenprotect.exe": "腾讯反作弊",
-    "mssec.exe": "反作弊", "bservice.exe": "反作弊",
-    # 本工具与宿主环境（结束它们会导致本工具/当前会话崩掉）
-    "node.exe": "DSH 运行环境(本工具宿主)", "python.exe": "Python 宿主(本工具自身)",
-    "pythonw.exe": "Python 宿主(本工具自身)",
-    "deepseek harness.exe": "DeepSeek Harness 本体",
-    "workbuddy.exe": "WorkBuddy",
-    "explorer.exe": "资源管理器(桌面/任务栏)",
-}
 
 # 默认勾选：纯后台，关掉没有任何数据风险
 TIER_SAFE: dict[str, str] = {
@@ -239,11 +183,165 @@ TIER_OPTIONAL: dict[str, str] = {
     "typora.exe": "Typora",
 }
 
-# 绝不清理工作集的进程（反作弊 + 系统 + 硬件相关）——
-# 清理反作弊的内存可能被判定为篡改而封号；清理音频/显示驱动配套进程会卡顿
-NEVER_TRIM = {
-    "audiodg.exe", "dwm.exe", "csrss.exe", "winlogon.exe", "lsass.exe", "services.exe",
-    "smss.exe", "wininit.exe", "svchost.exe", "msmpeng.exe", "nissrv.exe",
+# 旧的 PROTECTED / NEVER_TRIM / ALL_CLOSABLE 定义已合并到下面的
+# 「安全分级（重构）」段落里，避免同一份名单出现两处、改一处不生效。
+
+
+# ---------------------------------------------------------------------------
+# 安全分级（重构）
+#
+# 原来的三档名单有个结构性问题：PROTECTED 既是"绝不结束"又是"绝不清理工作集"，
+# 于是一个**托盘程序**（向日葵、WorkBuddy）一旦进了 PROTECTED，
+#   1) 它永远关不掉（用户抱怨"没关全"），
+#   2) 它的内存也永远不能释放 —— 白白占着几十上百 MB。
+#
+# 现在把「绝不结束」与「绝不清理工作集」拆开，并引入三档：
+#   NEVER_CLOSE    系统/安全/反作弊/输入法/驱动/宿主：绝不动
+#   TIER_KILLABLE  用户态托盘程序：默认关（用户明确要求"能关的都关"），
+#                  但**保留工作集清理** —— 万一关失败也不至于白占内存
+#   TIER_OPTIONAL  可能正在用的（浏览器、微信、正在直播）：默认不关
+#
+# 远程控制类（向日葵/ToDesk/AnyDesk…）从「绝不结束」移到「可关」：
+# 只在用户手动勾选时关闭，因为它可能正是用户远程接入本机的通道。
+# ---------------------------------------------------------------------------
+
+# 绝不结束：动了会损坏系统、丢防护、丢存档，或把本工具自己干掉
+NEVER_CLOSE: dict[str, str] = {
+    # 内核与系统
+    "system": "系统内核", "registry": "注册表", "memory compression": "内存压缩",
+    "idle": "空闲进程", "secure system": "安全系统",
+    "smss.exe": "会话管理器", "csrss.exe": "客户端服务", "wininit.exe": "Windows 初始化",
+    "winlogon.exe": "登录管理", "services.exe": "服务控制", "lsass.exe": "本地安全认证",
+    "svchost.exe": "系统服务宿主", "fontdrvhost.exe": "字体驱动宿主",
+    "dwm.exe": "桌面窗口管理器(合成/垂直同步)", "conhost.exe": "控制台宿主",
+    "wudfhost.exe": "驱动宿主", "spoolsv.exe": "打印后台", "audiodg.exe": "音频引擎",
+    "sihost.exe": "外壳基础结构", "startmenuexperiencehost.exe": "开始菜单",
+    "shellexperiencehost.exe": "外壳体验", "searchhost.exe": "搜索宿主", "dllhost.exe": "COM 代理",
+    "taskhostw.exe": "任务宿主", "runtimebroker.exe": "运行时代理",
+    "ctfmon.exe": "输入法框架", "textinputhost.exe": "输入法(触摸键盘)",
+    "chsime.exe": "微软拼音", "msctfime.exe": "输入法", "sogoucloud.exe": "搜狗输入法云",
+    "explorer.exe": "资源管理器(桌面/任务栏)",
+    # 安全软件（杀掉会导致机器失去防护，甚至蓝屏）
+    "msmpeng.exe": "Windows Defender 反恶意软件", "nissrv.exe": "Defender 扫描",
+    "securityhealthservice.exe": "Windows 安全中心", "securityhealthsystray.exe": "安全中心托盘",
+    "hipsdaemon.exe": "火绒安全-主程序", "hipstray.exe": "火绒安全-托盘",
+    "usysdiag.exe": "火绒-安全诊断",
+    "360tray.exe": "360 安全卫士", "zhudongfangyu.exe": "360 主动防御", "360sd.exe": "360 杀毒",
+    "qqpctray.exe": "腾讯电脑管家", "qqpcmgr.exe": "腾讯电脑管家",
+    "kxetray.exe": "金山毒霸", "kwsprotect64.exe": "金山毒霸",
+    "avp.exe": "卡巴斯基", "avastui.exe": "Avast", "avgui.exe": "AVG",
+    # 音频 / 显卡 / 触控板等硬件驱动配套（关掉会没声音或掉帧）
+    "rtkauduservice64.exe": "Realtek 音频服务", "rtkngui64.exe": "Realtek 音频面板",
+    "nvcontainer.exe": "NVIDIA 容器服务", "nvsphelper64.exe": "NVIDIA 捕捉助手",
+    "nvidia share.exe": "NVIDIA 覆盖", "nvdisplay.container.exe": "NVIDIA 显示容器",
+    "igfxtray.exe": "Intel 显卡托盘", "hkcmd.exe": "Intel 热键", "igfxpers.exe": "Intel 持久化",
+    "radeonsoftware.exe": "AMD 显卡软件", "amdow.exe": "AMD 覆盖",
+    "etdctl.exe": "触控板", "synaptics.exe": "触控板",
+    # 游戏平台（关掉游戏就启动不了）
+    "steam.exe": "Steam", "steamwebhelper.exe": "Steam 内嵌浏览器",
+    "epicgameslauncher.exe": "Epic 启动器", "battle.net.exe": "战网",
+    "galaxyclient.exe": "GOG Galaxy", "riotclientservices.exe": "拳头客户端",
+    "eadesktop.exe": "EA App", "origin.exe": "Origin", "ubisoftconnect.exe": "Ubisoft Connect",
+    "wegame.exe": "WeGame", "tgp.exe": "WeGame",
+    # 反作弊（绝对不能结束，也不能动它的内存）
+    "easyanticheat.exe": "EasyAntiCheat", "easyanticheat_eos.exe": "EasyAntiCheat EOS",
+    "beservice.exe": "BattlEye", "beservice64.exe": "BattlEye", "battleye.exe": "BattlEye",
+    "vgc.exe": "Vanguard 反作弊", "vgtray.exe": "Vanguard 托盘",
+    "anticheatexpert.exe": "ACE 反作弊", "ace-guard client.exe": "ACE 反作弊",
+    "sguard64.exe": "ACE 反作弊", "sguard.exe": "ACE 反作弊",
+    "tp3helper.exe": "腾讯反作弊", "tenprotect.exe": "腾讯反作弊",
+    "mssec.exe": "反作弊", "bservice.exe": "反作弊",
+}
+
+# 通用运行时宿主（node.exe / python.exe / 各 Electron 外壳…）**不**进硬名单。
+#
+# 为什么必须拿掉：这些进程名太常见，同一个名字既可能是本工具的宿主，
+# 也可能是用户想关掉的任何 node/Electron 应用。
+# 早先按名字保护 node.exe，等于"装了 DSH 之后所有 node 应用都关不掉"。
+#
+# 正确做法是**按归属**判断：只有"本程序自己在用的那条进程链"才保护，
+# 依据是 collect_processes() 的 _owned_by_self（顺 parent 链能不能走到自己）。
+# 这样：
+#   · 本工具的宿主进程 —— 仍然受保护（关掉会把自己带走）
+#   · 用户自己开的 DSH / 其它 node 应用 —— 正常出现在可关闭列表
+_HINT_HOSTS = {
+    "node.exe", "nodejs.exe", "python.exe", "pythonw.exe", "python3.exe",
+}
+
+# 运行壳：这些进程本身是"某个应用的宿主"，它下面挂的 node/python 子进程
+# 就是那个应用正在用的运行时。杀掉子进程会直接中断该应用的会话。
+# 名单只用来"识别并降级为可选"，不是用来禁止关闭。
+_RUNTIME_SHELLS = {
+    "deepseek harness.exe", "electron.exe", "code.exe", "cursor.exe",
+    "codebuddy.exe", "workbuddy.exe", "cherry studio.exe",
+    "chatgpt.exe", "claude.exe", "obsidian.exe", "notion.exe",
+}
+
+
+def _hosted_by_runtime(proc: dict) -> bool:
+    """该进程是否是某个运行壳（DSH/Electron 应用）正在使用的运行时。
+
+    判断方式：它自己是 node/python 这类通用宿主，且 ``_owner``
+    （往上找到的非 explorer 祖先）是已知运行壳。
+    """
+    name = (proc.get("name") or "").lower()
+    if name not in _HINT_HOSTS:
+        return False
+    owner = (proc.get("_owner") or "").lower()
+    return bool(owner) and owner in _RUNTIME_SHELLS
+
+# 用户态托盘程序：**默认关闭**（用户要求"能关的都关"），但只关"应用层"，
+# 绝不碰系统服务/驱动。这类进程关错了最多是重开一次应用，不会坏系统，
+# 所以放在比 TIER_OPTIONAL 更靠前、默认勾选的位置。
+TIER_KILLABLE: dict[str, str] = {
+    # 远程控制 / 远控服务 —— 可能正是用户远程连进本机的通道，只在勾选时关
+    "sunloginclient.exe": "向日葵远程控制", "awesun.exe": "向日葵远程控制",
+    "sunloginclient_desktop.exe": "向日葵主界面",
+    "oray_sunlogin.exe": "向日葵组件",
+    "awesun_guard.exe": "向日葵守护进程（会拉起主程序）",
+    "todesk.exe": "ToDesk", "rustdesk.exe": "RustDesk", "teamviewer.exe": "TeamViewer",
+    "anydesk.exe": "AnyDesk",
+    # 办公 / AI 助手类常驻
+    "workbuddy.exe": "WorkBuddy", "codebuddy.exe": "CodeBuddy",
+    "workbuddy-editor-sdk-supervisor.exe": "WorkBuddy 编辑器守护",
+    "workbuddysharetarget.exe": "WorkBuddy 分享组件",
+    # 安卓模拟器常驻（MuMu / 雷电），不用时应关掉，常是内存大户
+    "mumunxmain.exe": "MuMu 模拟器主程序",
+    "mumunxlauncher.exe": "MuMu 启动器",
+    "mumunxservice.exe": "MuMu 后台服务",
+    "mumuremoteservice.exe": "MuMu 远程服务",
+    "mumuremotebackend.exe": "MuMu 远程后端",
+    "dnplayer.exe": "雷电模拟器",
+    "ld9boxheadless.exe": "雷电模拟器",
+    # 游戏加速器（本身就在占内存和网络）
+    "gamebooster.exe": "游戏加速器", "qyclient.exe": "迅游加速器",
+    "uclientservice.exe": "UU 加速器", "uubooster.exe": "UU 加速器",
+    "leigodaccelerator.exe": "雷神加速器",
+    # 常见常驻托盘
+    "qqprotect.exe": "QQ 安全组件", "txplatform.exe": "腾讯平台",
+    "sogouinput.exe": "搜狗输入法主程序",
+    "wechatdevtools.exe": "微信开发者工具",
+    "qqpinyin.exe": "QQ 拼音",
+    "wxwork.exe": "企业微信",
+    "dingtalk.exe": "钉钉",
+}
+
+# 看门狗 / 守护进程：必须**先**关，否则关掉主程序后它会把主程序重新拉起来
+# —— 这正是「关了又回来 / 没关全」的根本原因。
+GUARD_NAMES = {
+    "awesun_guard.exe", "sunlogin_guard.exe", "todesk_guard.exe",
+    "workbuddy-editor-sdk-supervisor.exe",
+}
+TIER_KILLABLE = {k: v for k, v in TIER_KILLABLE.items() if k not in NEVER_CLOSE}
+
+SAFE_NAMES = set(TIER_SAFE)
+OPTIONAL_NAMES = set(TIER_OPTIONAL)
+KILLABLE_NAMES = set(TIER_KILLABLE)
+ALL_CLOSABLE = SAFE_NAMES | OPTIONAL_NAMES | KILLABLE_NAMES
+
+# 兼容旧名字：外部/自检仍在用 PROTECTED / NEVER_TRIM
+PROTECTED = NEVER_CLOSE
+NEVER_TRIM = set(NEVER_CLOSE) | {
     "easyanticheat.exe", "easyanticheat_eos.exe", "beservice.exe", "beservice64.exe",
     "battleye.exe", "vgc.exe", "vgtray.exe", "anticheatexpert.exe", "ace-guard client.exe",
     "sguard64.exe", "sguard.exe", "tp3helper.exe", "tenprotect.exe",
@@ -251,20 +349,160 @@ NEVER_TRIM = {
     "nvcontainer.exe", "nvsphelper64.exe", "nvidia share.exe",
 }
 
-SAFE_NAMES = set(TIER_SAFE)
-OPTIONAL_NAMES = set(TIER_OPTIONAL)
-ALL_CLOSABLE = SAFE_NAMES | OPTIONAL_NAMES
-
 
 def describe(name: str) -> str:
     n = name.lower()
-    if n in PROTECTED:
-        return "受保护：" + PROTECTED[n]
+    if n in NEVER_CLOSE:
+        return "受保护：" + NEVER_CLOSE[n]
+    if n in TIER_KILLABLE:
+        return "可关闭：" + TIER_KILLABLE[n]
     if n in TIER_SAFE:
         return "可安全关闭：" + TIER_SAFE[n]
     if n in TIER_OPTIONAL:
         return "可选关闭：" + TIER_OPTIONAL[n]
     return ""
+
+
+# ---------------------------------------------------------------------------
+# 通用分类（不依赖"这台机器装了什么"）
+#
+# 硬编码名单只解决"我认识的软件"。换台电脑、装个没见过的程序就漏了 ——
+# 所以真正的兜底必须是**按可观测特征判断**，与软件名无关：
+#
+#   系统会话(0)          → 系统服务，绝不动
+#   无窗口 + 系统目录     → 后台服务/驱动配套，绝不动
+#   系统目录里的可执行    → 绝不动（System32 / SysWOW64 / WinSxS …）
+#   有可见窗口           → 用户正在用，默认不关
+#   其余用户目录的进程    → 后台常驻，可关
+# ---------------------------------------------------------------------------
+
+# 这些目录下的东西动了会直接影响系统安全与稳定
+_SYSTEM_DIRS = (
+    "\\windows\\system32\\", "\\windows\\syswow64\\", "\\windows\\winsxs\\",
+    "\\windows\\servicing\\", "\\windows\\systemapps\\", "\\windows\\infusedapps\\",
+    "\\windows\\system32\\driverstore\\", "\\windows\\assembly\\",
+    "\\$windows.~bt\\", "\\windows\\softwaredistribution\\",
+)
+
+# 明确属于"系统安全"的进程名 —— 即便读不到路径也不许关
+_SECURITY_NAMES = {
+    "msmpeng.exe", "nissrv.exe", "mssense.exe", "securityhealthservice.exe",
+    "securityhealthsystray.exe", "smartscreen.exe", "defenderconfig.exe",
+    "hipsdaemon.exe", "hipstray.exe", "usysdiag.exe", "sysdiag.exe",
+    "360tray.exe", "zhudongfangyu.exe", "qqpctray.exe", "kxetray.exe",
+}
+
+# 可关理由的文案
+REASON_CLOSABLE = "后台常驻程序"
+
+
+def classify(proc: dict, protected_pids: set[int] | None = None) -> dict:
+    """给一个进程打判定，返回 ``{protected, closable, why, reason}``。
+
+    ``why`` 是给界面看的说明（为什么受保护 / 为什么可关）。
+    这套判定对**任何**软件都成立，不依赖名单是否覆盖到它。
+    """
+    name = (proc.get("name") or "").lower()
+    pid = proc.get("pid")
+    path = (proc.get("path") or "").lower()
+    sid = proc.get("session")
+    own_sid = proc.get("own_session")
+
+    def out(protected, closable, why, reason):
+        return {"protected": protected, "closable": closable,
+                "why": why, "reason": reason}
+
+    # 1) PID 0/4、自身与上下游
+    if pid in (0, 4):
+        return out(True, False, "系统内核", "")
+    if protected_pids and pid in protected_pids:
+        # explorer.exe 一定在祖先链上，但它不是"本工具的进程"——
+        # 它是桌面外壳，受保护的理由完全不同，文案要分开写，
+        # 否则界面上会出现"资源管理器 = 本工具自身"这种误导。
+        if name == "explorer.exe":
+            return out(True, False, "资源管理器(桌面/任务栏)", "")
+        return out(True, False, "本工具自身/宿主", "")
+
+    # 1.3) 归属优先：**本程序正在用的**一律保护（含 node/python 宿主）。
+    #      必须在"运行时宿主"那条之前判断 —— 自己也是 DSH/Electron 的
+    #      子进程时，_hosted_by_runtime() 同样会为真，先判归属才不会
+    #      把自己的进程判成"可关的可选级"。
+    #      例外：WebView2 / 浏览器内核落到第 6 条，那里文案更准确。
+    _is_browser_core = ("msedgewebview2.exe" in name
+                        or name in ("msedge.exe", "chrome.exe"))
+    if proc.get("_owned_by_self") and not _is_browser_core:
+        return out(True, False, "本工具自身/宿主", "")
+
+    # 1.4) 跨实例的链路保护。
+    #      Mahiru 可能不是 DSH 的子进程（用户从桌面双击启动），
+    #      这时"本工具进程链"只有自己那几个 PID，**不会**包含正在运行
+    #      DSH 会话的 node/host 进程。如果按普通第三方程序处理，
+    #      一键加速就会把用户当前的工作会话连带杀掉 —— 数据直接丢。
+    #      所以对"运行时宿主"类进程，只要它链上出现了运行壳（DSH/Electron
+    #      应用等），就单独标出来：可关，但归到"可选级"，绝不默认关。
+    if _hosted_by_runtime(proc):
+        owner = proc.get("_owner") or "运行时宿主"
+        return out(False, True, f"{owner} 的运行时进程（关掉会中断该应用）",
+                   "运行时宿主（可选）")
+
+    # 2) 硬名单（已知软件的具体说明，优先级最高）
+    if name in NEVER_CLOSE:
+        return out(True, False, NEVER_CLOSE[name], "")
+    if name in _SECURITY_NAMES:
+        return out(True, False, "安全软件", "")
+
+    # 3) 服务会话：不是用户态应用
+    if sid == 0 and own_sid not in (None, 0):
+        return out(True, False, "系统服务（服务会话）", "")
+
+    # 4) 系统目录里的可执行文件
+    if path and any(d in path for d in _SYSTEM_DIRS):
+        return out(True, False, "Windows 系统文件", "")
+
+    # 5) 自身安装目录（打包后释放的辅助进程，属于本程序）
+    own_dirs = proc.get("own_dirs") or set()
+    if path and own_dirs and any(path.startswith(d + os.sep) for d in own_dirs):
+        return out(True, False, "本程序自己的组件", "")
+
+    # 6) 浏览器内核进程：WebView2 / Edge 的渲染进程归属要看**父进程**。
+    #    属于本程序界面的一律保护；属于别的应用的归到"可选"，不默认关 ——
+    #    因为很多桌面应用（微信、Teams、Electron 客户端）内嵌了 WebView2，
+    #    关掉会让对方界面直接白屏。
+    if "msedgewebview2.exe" in name or name in ("msedge.exe", "chrome.exe"):
+        if proc.get("_owned_by_self"):
+            return out(True, False, "本程序界面渲染进程", "")
+        return out(False, True, "其它应用的浏览器内核（关掉会让对方白屏）",
+                   "内嵌浏览器内核")
+
+    # 7) 显式可关闭名单
+    if name in ALL_CLOSABLE:
+        label = (TIER_KILLABLE.get(name) or TIER_SAFE.get(name)
+                 or TIER_OPTIONAL.get(name) or REASON_CLOSABLE)
+        return out(False, True, label, label)
+
+    # 7.5) 通用运行时的友好文案（它们已被移出硬名单，可以关）
+    if name in _HINT_HOSTS:
+        owner = proc.get("_owner") or ""
+        label = (f"{owner} 的运行时进程" if owner and owner.lower() != name
+                 else "运行时宿主进程")
+        if proc.get("has_window"):
+            return out(False, True, label + "（有窗口，可选）", label)
+        return out(False, True, label, label)
+
+    # 8) 通用兜底：用户态 + 非系统目录 → 可关
+    #    有可见窗口说明用户正开着它，归到"可选"，不默认关。
+    if sid is not None and own_sid is not None and sid != own_sid:
+        # 别的登录会话里的进程，不替用户决定
+        return out(False, False, "其它用户会话", "")
+
+    if proc.get("has_window"):
+        return out(False, True, "用户正开着的界面", "有窗口（可选）")
+
+    if path:      # 有路径且不在系统目录 → 第三方软件的后台进程
+        return out(False, True, REASON_CLOSABLE, REASON_CLOSABLE)
+
+    # 路径读不到（多为系统/受保护进程）：保守，不动
+    return out(True, False, "无法识别（保守跳过）", "")
 
 
 # ---------------------------------------------------------------------------
@@ -627,12 +865,13 @@ def self_and_ancestors() -> set[int]:
 
 
 def self_process_tree() -> set[int]:
-    """本进程 + 祖先 + **子孙** PID。
+    """本进程 + 祖先 + **所有子孙** PID。
 
-    为什么必须包含子孙：新版界面是 WebView2 渲染的，而
-    `msedgewebview2.exe` 这个进程名在「可关闭」名单里（TIER_OPTIONAL）。
-    只保护祖先的话，勾上「关闭可选级后台应用」就会把**自己的界面渲染进程**
-    一起关掉 —— 表现是界面白屏或直接崩。
+    为什么必须包含子孙：界面是 WebView2 渲染的，浏览器引擎会拉出
+    ``msedgewebview2.exe`` 的子孙树（渲染进程、GPU 进程、工具进程），
+    这些进程在任务管理器里显示为独立的「WebView2 管理器」条目，
+    **内存合计几百 MB**。如果不按进程树识别，它们会被当成
+    「别的应用的 WebView2」判成可关闭 —— 一点就是自己的界面白屏。
 
     注意：**只从自己往下找**。如果从祖先（比如 explorer.exe）往下找，
     会把用户启动的所有其他程序都算成"自己的子孙"，那就保护过度了。
@@ -661,6 +900,43 @@ def self_process_tree() -> set[int]:
                 out.add(child)
                 queue.append(child)
     return out
+
+
+def owned_install_dirs() -> set[str]:
+    """本程序自己所在目录及其父目录（用来识别"自己的组件"）。
+
+    打包成单文件后，程序目录里还可能有它释放出来的辅助进程；
+    这些都不该被当成"别人家的后台程序"。
+    """
+    out: set[str] = set()
+    try:
+        exe = sys.executable if getattr(sys, "frozen", False) else os.path.abspath(__file__)
+        d = os.path.dirname(exe).lower()
+        for _ in range(2):                     # 自己 + 上一级
+            if d:
+                out.add(d)
+                d = os.path.dirname(d)
+    except Exception:                                       # noqa: BLE001
+        pass
+    return out
+
+
+def own_exe_names() -> set[str]:
+    """本程序的可执行文件名（小写）。
+
+    打包后是 ``mahiru.exe``；从源码跑是 ``python.exe``。
+    界面的 WebView2 渲染进程名字都一样，只能靠"祖先是本程序"来认，
+    而判断"是不是本程序"就要用这个名字。
+    """
+    names = set()
+    try:
+        names.add(os.path.basename(sys.executable).lower())
+    except Exception:                                       # noqa: BLE001
+        pass
+    if getattr(sys, "frozen", False):
+        # 单文件模式下 sys.executable 就是 Mahiru.exe，已覆盖；再兜一层
+        names.add(os.path.basename(sys.argv[0]).lower())
+    return {n for n in names if n}
 
 
 def list_windows_by_pid() -> dict[int, str]:
@@ -700,6 +976,27 @@ def process_path(pid: int) -> str:
         k32.CloseHandle(h)
 
 
+def process_session_id(pid: int) -> int | None:
+    """进程所属的会话 ID；取不到返回 None。
+
+    会话 0 是服务会话，里面的进程一律是系统服务 —— 这是判断
+    「能不能关」最可靠、且与具体软件无关的一条依据。
+    """
+    try:
+        sid = wintypes.DWORD()
+        if k32.ProcessIdToSessionId(pid, ctypes.byref(sid)):
+            return int(sid.value)
+    except Exception:                                       # noqa: BLE001
+        pass
+    return None
+
+
+def current_session_id() -> int:
+    """本进程所在会话（交互式用户会话）。"""
+    sid = process_session_id(os.getpid())
+    return 1 if sid is None else sid
+
+
 def process_memory(pid: int) -> int | None:
     """工作集字节数，失败返回 None。"""
     h = k32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_VM_READ, False, pid)
@@ -718,21 +1015,98 @@ def process_memory(pid: int) -> int | None:
 
 
 def collect_processes() -> list[dict]:
-    """一次性收集全部进程信息，按内存降序。"""
+    """一次性收集全部进程信息，按内存降序。
+
+    除名字/内存外还带上判别用的字段，供**通用规则**分类：
+      ``path``        可执行文件全路径（取不到为空；系统进程常见）
+      ``session``     会话 ID（0 = 服务会话）
+      ``has_window``  是否有可见窗口（用户正开着的界面）
+      ``_owned_by_self`` 是否属于本程序（祖先是本程序）
+
+    ``_owned_by_self`` 是这里算出来的：WebView2 的渲染进程名字都一样，
+    光看进程名分不清是"自己界面的"还是"别的应用的"，只能顺着
+    parent 链往上看，看能不能走到自己头上。
+    """
     titles = list_windows_by_pid()
-    out = []
+    my_session = current_session_id()
+    own_dirs = owned_install_dirs()
+
+    raw = []
     for pid, ppid, name in snapshot_processes():
         if pid == 0:
             continue
+        raw.append((pid, ppid, name))
+
+    parents = {pid: ppid for pid, ppid, _ in raw}
+    names = {pid: n.lower() for pid, _pp, n in raw}
+    own_names = own_exe_names()
+
+    def owned_by_self(pid: int) -> bool:
+        """顺着 parent 链往上找，看能不能走到本程序头上。
+
+        不能只比自己这一个 PID：单文件模式下，祖先链上还有
+        bootloader / 宿主进程，它们同样是 `Mahiru.exe`。
+        所以只要链上出现"本程序的可执行文件名"就算自己的。
+        """
+        seen = set()
+        cur = pid
+        me = os.getpid()
+        for _ in range(16):                    # 防御 parent 链成环
+            if not cur or cur in seen:
+                return False
+            seen.add(cur)
+            if cur == me or names.get(cur) in own_names:
+                return True
+            cur = parents.get(cur, 0)
+        return False
+
+    out = []
+    for pid, ppid, name in raw:
         out.append({
             "pid": pid,
             "ppid": ppid,
             "name": name,
             "mem": process_memory(pid),
             "title": titles.get(pid, ""),
+            "path": process_path(pid),
+            "session": process_session_id(pid),
+            "has_window": pid in titles,
+            "own_session": my_session,
+            "own_dirs": own_dirs,
+            "_owned_by_self": (pid == os.getpid() or owned_by_self(pid)),
+            "_owner": _owner_name(pid, raw_parents=parents, raw_names=names),
         })
     out.sort(key=lambda p: (p["mem"] or 0), reverse=True)
     return out
+
+
+def _owner_name(pid: int, raw_parents: dict | None = None,
+                raw_names: dict | None = None) -> str:
+    """返回该进程往上能找到的应用家族名（用于界面排查归属）。
+
+    走到 explorer.exe 就停 —— 它是所有用户程序的共同祖先，再往上没有意义。
+    ``raw_parents`` / ``raw_names`` 可传入外部已算好的表，避免重复枚举。
+    """
+    parents = raw_parents if raw_parents is not None else \
+        {p: pp for p, pp, _ in snapshot_processes()}
+    names = raw_names if raw_names is not None else \
+        {p: n for p, _pp, n in snapshot_processes()}
+    seen = set()
+    cur = pid
+    last = ""
+    for _ in range(16):
+        if not cur or cur in seen:
+            break
+        seen.add(cur)
+        name = names.get(cur, "")
+        if name:
+            # explorer.exe 是所有用户程序的共同祖先，它本身不算"所属应用"：
+            # 走到它就停，并且不把它记成 owner（否则会显示"explorer.exe 的进程"）。
+            if name.lower() == "explorer.exe":
+                break
+            last = name
+        cur = parents.get(cur, 0)
+    return last
 
 
 def trim_working_set(pid: int) -> tuple[bool, int]:
@@ -833,22 +1207,20 @@ def combine_physical_memory() -> tuple[bool, str]:
 
 
 DEEP_OPS = [
-    ("empty_working_sets", "系统级清空所有进程工作集",
-     "把全系统进程常驻内存的页面一次性踢出去，降数字最猛的一步。\n"
-     "注意：它不区分进程，受保护程序和反作弊的工作集也会被清。"),
-    ("purge_standby", "清空待机内存列表（全量）",
-     "回收 Windows 用来加速二次访问的文件缓存，通常能腾出 1~3 GB。"),
+    ("empty_working_sets", "清空所有进程工作集",
+     "降数字最猛，但不区分进程。"),
+    ("purge_standby", "清空待机内存列表",
+     "回收文件缓存，通常 1~3 GB。"),
     ("purge_low_standby", "清空低优先级待机内存",
-     "比全量清理温和，只回收优先级最低的那部分缓存。"),
+     "比全量温和，只收最冷的那部分。"),
     ("flush_modified", "写回已修改页面",
-     "把「脏页」立即写盘并转入待机列表。会产生一次磁盘写入。"),
+     "把脏页写盘并转入待机列表。"),
     ("file_cache", "刷新系统文件缓存",
-     "游戏启动时读取的 jar/资源包会占住文件缓存，这一步把它收回来。"),
+     "收回游戏资源占住的文件缓存。"),
     ("registry", "整理注册表内存",
-     "让内核回收注册表 hive 的内存副本，通常只有几十 MB。"),
+     "回收注册表 hive 副本，收益小。"),
     ("combine", "合并重复物理页",
-     "把内容完全相同的物理页面合并成一份。收益中等，\n"
-     "极少数老驱动/虚拟化环境下兼容性较差，默认不勾选。"),
+     "内容相同的页合成一份。"),
 ]
 
 DEFAULT_DEEP = {
@@ -1160,6 +1532,7 @@ DEFAULT_CONFIG = {
     "previous_power_plan": "",
     "gamedvr_backup": {},
     "closed_apps": [],
+    "stopped_services": [],
     "deep_opts": {},
 }
 
@@ -1198,32 +1571,124 @@ class Optimizer:
         self.protected_pids = self_process_tree()
 
     # -- 判定 -------------------------------------------------------------
+    def verdict(self, proc: dict) -> dict:
+        """统一判定入口：名单 + 通用特征（会话/路径/窗口）。
+
+        界面和核心都走这一个函数，避免两处规则各写一份而对不上。
+        """
+        return classify(proc, self.protected_pids)
+
     def is_protected(self, proc: dict) -> bool:
-        name = (proc.get("name") or "").lower()
-        if proc["pid"] in (0, 4):
-            return True
-        if name in PROTECTED:
-            return True
-        if proc["pid"] in self.protected_pids:
-            return True
-        return False
+        return bool(self.verdict(proc)["protected"])
 
     def is_closable(self, proc: dict) -> bool:
-        if self.is_protected(proc):
-            return False
-        return (proc.get("name") or "").lower() in ALL_CLOSABLE
+        v = self.verdict(proc)
+        return bool(v["closable"] and not v["protected"])
 
     def is_trimmable(self, proc: dict) -> bool:
         name = (proc.get("name") or "").lower()
+        # 只挡「绝不清理工作集」的进程；可关闭的托盘程序照样能清理内存
+        # （这正是原来的问题：进了 PROTECTED 就既关不掉、内存也不能动）
         if self.is_protected(proc) or name in NEVER_TRIM:
             return False
-        mem = proc.get("mem") or 0
-        return mem >= int(self.cfg.get("trim_min_mb", 50)) * 1024 * 1024
+        mem_bytes = proc.get("mem") or 0
+        return mem_bytes >= int(self.cfg.get("trim_min_mb", 50)) * 1024 * 1024
+
+    # -- 级联：同一安装目录下的所有进程 ------------------------------------
+    def _install_dir(self, path: str) -> str:
+        """取进程所在目录的规范化小写路径；取不到返回空串。"""
+        if not path:
+            return ""
+        return os.path.dirname(path).lower()
+
+    def expand_targets(self, procs: list[dict]) -> list[dict]:
+        """把选中的进程扩展成"同一个应用目录下的全部进程"。
+
+        为什么需要：向日葵、WorkBuddy、ToDesk 这类应用是**多进程**的
+        （主界面 + 后台服务 + 更新器 + 若干辅助 exe），名字各不相同，
+        还可能分布在 ``helper\\`` 之类的子目录里。原来的实现只按名字
+        精确匹配名单，于是用户勾一个只关掉一个，剩下的继续跑 ——
+        这就是「没关全」的直接原因。
+
+        只对**本身可关闭**的进程做扩展（种子判定），扩展出来的进程仍要
+        过一遍 is_protected，系统目录下的进程不会被带出去。
+        """
+        if not procs:
+            return []
+
+        # 1) 收集种子目录：种子的目录 + 其父目录（覆盖 helper 子目录）
+        dirs = set()
+        for p in procs:
+            if self.is_protected(p):
+                continue
+            # 运行时宿主不作为级联种子：它会把自己的运行时一并带走，
+            # 而那条运行时可能正被用户的应用使用（必须显式勾选才能关）。
+            if _hosted_by_runtime(p):
+                continue
+            d = self._install_dir(p.get("path") or process_path(p["pid"]))
+            if not d:
+                continue
+            dirs.add(d)
+            parent = os.path.dirname(d)
+            if parent:
+                dirs.add(parent)
+
+        if not dirs:
+            return list(procs)
+
+        # 2) 把落在这些目录（含其子目录）里的进程一并纳入
+        seen = {p["pid"] for p in procs}
+        out = list(procs)
+        for p in collect_processes():
+            if p["pid"] in seen:
+                continue
+            path = p.get("path") or ""
+            if not path:
+                continue
+            d = self._install_dir(path)
+            if not d or not any(d == t or d.startswith(t + os.sep) for t in dirs):
+                continue
+            if self.is_protected(p):
+                continue
+            out.append(p)
+            seen.add(p["pid"])
+        return out
 
     # -- 动作 -------------------------------------------------------------
+    def _close_order(self, procs: list[dict]) -> list[dict]:
+        """先关守护进程，再关主程序。
+
+        向日葵的 ``awesun_guard.exe``、WorkBuddy 的
+        ``workbuddy-editor-sdk-supervisor.exe`` 会在主进程退出后把它拉回来。
+        先关主程序的话，日志里会显示"已关闭"，几秒后进程又出现了 ——
+        用户看到的就是"没关全"。
+        """
+        guards = [p for p in procs if (p.get("name") or "").lower() in GUARD_NAMES]
+        rest = [p for p in procs if (p.get("name") or "").lower() not in GUARD_NAMES]
+        return guards + rest
+
     def close_processes(self, procs: list[dict], graceful: bool | None = None) -> tuple[int, int]:
         if graceful is None:
             graceful = bool(self.cfg.get("graceful_kill", True))
+        # 级联：勾选一个进程时，把它同目录的兄弟进程一起关掉，
+        # 否则向日葵/WorkBuddy 这类多进程应用会"只关掉一个，剩下还在跑"。
+        procs = self._close_order(self.expand_targets(procs))
+
+        # 服务映射：很多"关不掉"的进程其实是 Windows 服务承载的。
+        # 直接杀进程会让 SCM 判定服务崩溃并重新拉起 —— 必须先停服务。
+        from . import services as _svc
+        svc_map: dict[int, list[dict]] = {}
+        admin = is_admin()
+        if admin:
+            try:
+                svc_map = _svc.service_map()
+            except Exception as e:                          # noqa: BLE001
+                self.log(f"  （读取服务列表失败：{e}）")
+        else:
+            self.log("  ⚠ 非管理员：无法停止 Windows 服务，"
+                     "火绒/MuMu 这类服务型进程会关不掉")
+
+        stopped: list[dict] = []
         closed = failed = 0
         for p in procs:
             if self.is_protected(p):
@@ -1231,6 +1696,25 @@ class Optimizer:
                 continue
             path = process_path(p["pid"])
             mem_mb = (p.get("mem") or 0) / 1048576
+
+            # ---- 1) 先停它背后的服务 ----
+            for si in svc_map.get(p["pid"]) or []:
+                sname = si.get("name") or ""
+                if not sname:
+                    continue
+                if not si.get("accept_stop"):
+                    self.log(f"  [跳过] 服务 {sname} 拒绝停止指令"
+                             f"（自我保护，需在软件自身界面退出）")
+                    continue
+                sok, smsg = _svc.stop_service(sname)
+                if sok:
+                    self.log(f"  [停服务] {sname} — {smsg}")
+                    stopped.append({"name": sname,
+                                    "start_type": si.get("start_mode")})
+                else:
+                    self.log(f"  [失败] 停服务 {sname} — {smsg}")
+
+            # ---- 2) 再处理进程本身（停服务后可能已经退出）----
             ok, msg = kill_process(p["pid"], graceful=graceful)
             if ok:
                 closed += 1
@@ -1250,7 +1734,104 @@ class Optimizer:
             else:
                 failed += 1
                 self.log(f"  [失败] {p['name']} (PID {p['pid']}) — {msg}")
+
+        # ---- 3) 记录停掉的服务（供「重启已关闭的应用」还原）----
+        if stopped:
+            rec = self.cfg.setdefault("stopped_services", [])
+            for s in stopped:
+                if not any(r.get("name") == s["name"] for r in rec):
+                    rec.append(s)
+            save_config(self.cfg)
+            self.log(f"  已停止 {len(stopped)} 个服务（可在「重启已关闭的应用」里还原）")
+
+        # ---- 4) 复查：还有谁活着、为什么 ----
+        survivors = []
+        for p in procs:
+            if self.is_protected(p):
+                continue
+            if process_alive(p["pid"]):
+                survivors.append(p)
+        if survivors:
+            self.log("  ⚠ 以下进程仍存活：")
+            for p in survivors[:12]:
+                backed = svc_map.get(p["pid"]) or []
+                # 有服务但服务本身拒绝停止 → 是软件自我保护；
+                # 没有服务 → 被别的守护进程拉起来，或权限不足
+                why = ("被服务保护，无法远程停止" if backed
+                       else "被守护进程拉起 / 权限不足")
+                self.log(f"      {p['name']} (PID {p['pid']}) — 疑似{why}")
         return closed, failed
+
+    # -- 服务 -------------------------------------------------------------
+    def stop_gaming_services(self, names: list[str] | None = None,
+                             disable: bool = False) -> tuple[int, int]:
+        """停掉打游戏时可牺牲的系统服务。
+
+        ``names`` 为空时用 ``services.GAMING_SERVICES`` 里那份推荐清单。
+        ``disable`` 为真时顺带把启动类型改成"禁用"（重启后不会自己回来），
+        原始启动类型会记进配置，可还原。
+        """
+        from . import services as _svc
+        targets = list(names) if names else list(_svc.GAMING_SERVICES)
+        ok_n = fail_n = 0
+        rec = self.cfg.setdefault("stopped_services", [])
+        for sname in targets:
+            cur = _svc.start_type(sname)
+            if cur is None:
+                self.log(f"  [跳过] {sname} — 服务不存在")
+                continue
+            if cur == _svc.SERVICE_DISABLED:
+                self.log(f"  [跳过] {sname} — 已经是禁用状态")
+                continue
+            ok, msg = _svc.stop_service(sname)
+            if not ok:
+                fail_n += 1
+                self.log(f"  [失败] {sname} — {msg}")
+                continue
+            ok_n += 1
+            self.log(f"  [停服务] {sname} — {msg}")
+            entry = {"name": sname, "start_type": cur}
+            if disable:
+                dok, dmsg = _svc.set_start_type(sname, _svc.SERVICE_DISABLED)
+                if dok:
+                    entry["disabled"] = True
+                    self.log(f"          已设为「禁用」启动（重启后不会自己回来）")
+                else:
+                    self.log(f"          设为禁用失败：{dmsg}")
+            if not any(r.get("name") == sname for r in rec):
+                rec.append(entry)
+        if ok_n or fail_n:
+            save_config(self.cfg)
+        return ok_n, fail_n
+
+    def restart_stopped_services(self) -> tuple[int, int]:
+        """还原之前停掉的服务（恢复启动类型 + 启动服务）。"""
+        from . import services as _svc
+        rec = self.cfg.get("stopped_services") or []
+        if not rec:
+            self.log("  没有需要还原的服务")
+            return 0, 0
+        ok_n = fail_n = 0
+        keep: list[dict] = []
+        for r in rec:
+            sname = r.get("name") or ""
+            orig = r.get("start_type")
+            if r.get("disabled") and orig is not None:
+                sok, smsg = _svc.set_start_type(sname, int(orig))
+                self.log(f"  [恢复启动类型] {sname} → "
+                         f"{_svc.START_TEXT.get(int(orig), orig)}"
+                         f"{'' if sok else '（' + smsg + '）'}")
+            ok, msg = _svc.start_service(sname)
+            if ok:
+                ok_n += 1
+                self.log(f"  [启动] {sname} — {msg}")
+            else:
+                fail_n += 1
+                self.log(f"  [失败] {sname} — {msg}")
+                keep.append(r)          # 没还原成功的留着下次再试
+        self.cfg["stopped_services"] = keep
+        save_config(self.cfg)
+        return ok_n, fail_n
 
     def trim_all(self, procs: list[dict]) -> tuple[int, int]:
         total_freed = 0
@@ -1281,16 +1862,31 @@ class Optimizer:
             self.log("  建议关闭后用「以管理员身份运行」重新打开。")
 
         # 1) 关闭后台应用
-        if opts.get("kill_safe") or opts.get("kill_optional"):
+        if opts.get("kill_safe") or opts.get("kill_killable") or opts.get("kill_optional"):
             self.log("\n[1/4] 关闭后台应用")
             targets = []
             for p in procs:
                 n = (p.get("name") or "").lower()
-                if n not in ALL_CLOSABLE or self.is_protected(p):
+                v = self.verdict(p)
+                if not v["closable"] or v["protected"]:
                     continue
+                # 有可见窗口 = 用户正开着的界面，只在勾了"可选级"时才关
+                if p.get("has_window") or n in OPTIONAL_NAMES:
+                    if opts.get("kill_optional"):
+                        targets.append(p)
+                    continue
+                # 运行时宿主（DSH/Electron 应用正在用的 node/python）：
+                # 关掉会直接中断用户正在用的那个应用，同样归到"可选级"。
+                if _hosted_by_runtime(p):
+                    if opts.get("kill_optional"):
+                        targets.append(p)
+                    continue
+                # 名单内且属"安全级"的，只要勾了 kill_safe 就关
                 if n in SAFE_NAMES and opts.get("kill_safe"):
                     targets.append(p)
-                elif n in OPTIONAL_NAMES and opts.get("kill_optional"):
+                    continue
+                # 其余（含名单外的第三方后台程序）归到"托盘类"这一档
+                if opts.get("kill_killable"):
                     targets.append(p)
             if not targets:
                 self.log("  没有发现可关闭的后台应用")
@@ -1298,6 +1894,33 @@ class Optimizer:
                 self.close_processes(targets)
         else:
             self.log("\n[1/4] 跳过关闭后台应用")
+
+        # 1.5) 停止游戏时可牺牲的系统服务
+        #      放在关进程之后：有些进程是服务拉起来的，先停服务再关进程
+        #      才不会"关了又被拉起来"。但服务停了进程通常自己就退了，
+        #      所以顺序是「先服务后进程」更合理 —— 这里补做一次，
+        #      把被服务重新拉起的进程再清一遍。
+        if opts.get("kill_services"):
+            self.log("\n[1.5/4] 停止游戏时可牺牲的系统服务")
+            if not is_admin():
+                self.log("  ⚠ 需要管理员权限，已跳过")
+            else:
+                ok_n, fail_n = self.stop_gaming_services()
+                self.log(f"  共停止 {ok_n} 个服务，失败 {fail_n} 个")
+                # 服务停了，它承载的进程可能刚退；再扫一遍把残留关掉
+                time.sleep(0.8)
+                again = []
+                for p in collect_processes():
+                    if self.is_protected(p):
+                        continue
+                    if self.is_closable(p) and not p.get("has_window"):
+                        again.append(p)
+                if again:
+                    self.log(f"  清理服务退出后的残留进程（{len(again)} 个）")
+                    self.close_processes(again)
+        else:
+            self.log("\n[1.5/4] 跳过系统服务停止")
+
 
         # 2) 清理工作集
         if opts.get("trim"):
